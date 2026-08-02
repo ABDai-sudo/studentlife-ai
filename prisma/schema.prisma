@@ -1,0 +1,636 @@
+// StudentLife AI — Prisma Schema (Phase 1)
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Currency {
+  INR
+  USD
+  GBP
+  EUR
+  AED
+}
+
+enum Country {
+  IN
+  CA
+  US
+  UK
+  AU
+  AE
+}
+
+enum StudentType {
+  HOSTEL
+  DAY_SCHOLAR
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  TRIAL
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExpenseCategory {
+  FOOD
+  TRANSPORT
+  HOSTEL
+  EDUCATION
+  ENTERTAINMENT
+  SHOPPING
+  HEALTH
+  UTILITIES
+  PERSONAL
+  OTHER
+}
+
+enum IncomeSource {
+  POCKET_MONEY
+  PART_TIME
+  FREELANCE
+  SCHOLARSHIP
+  GIFT
+  OTHER
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  SEMESTER
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum AssignmentStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+  OVERDUE
+}
+
+enum ExamType {
+  QUIZ
+  MIDTERM
+  FINAL
+  PRACTICAL
+  OTHER
+}
+
+enum UserRole {
+  USER
+  OWNER
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum AuditSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SystemStatusLevel {
+  OPERATIONAL
+  DEGRADED
+  PARTIAL_OUTAGE
+  UNAVAILABLE
+}
+
+// ─── Users & Auth ────────────────────────────────────────────────────────────
+
+model User {
+  id               String        @id @default(cuid())
+  email            String        @unique
+  passwordHash     String        @map("password_hash")
+  name             String?
+  emailVerified    Boolean       @default(false) @map("email_verified")
+  role             UserRole      @default(USER)
+  status           AccountStatus @default(ACTIVE)
+  failedLoginCount Int           @default(0) @map("failed_login_count")
+  lastLoginAt      DateTime?     @map("last_login_at")
+  lastActiveAt     DateTime?     @map("last_active_at")
+  suspendedAt      DateTime?     @map("suspended_at")
+  mfaEnabled       Boolean       @default(false) @map("mfa_enabled")
+  mfaSecretEnc     String?       @map("mfa_secret_enc")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  profile             StudentProfile?
+  expenses            Expense[]
+  incomes             Income[]
+  budgets             Budget[]
+  savingsGoals        SavingsGoal[]
+  affordabilityChecks AffordabilityCheck[]
+  financialScores     FinancialScore[]
+  attendanceRecords   AttendanceRecord[]
+  assignments         Assignment[]
+  exams               Exam[]
+  cgpaRecords         CgpaRecord[]
+  subscriptions       Subscription[]
+  streaks             Streak[]
+  achievements        Achievement[]
+  authSessions        AuthSession[]
+  analyticsEvents     AnalyticsEvent[]
+  auditLogsAsActor    AuditLog[]          @relation("AuditActor")
+  mfaRecoveryCodes    MfaRecoveryCode[]
+
+  @@index([role])
+  @@index([status])
+  @@index([lastActiveAt])
+  @@map("users")
+}
+
+model StudentProfile {
+  id                String      @id @default(cuid())
+  userId            String      @unique @map("user_id")
+  university        String?
+  course            String?
+  yearOfStudy       Int?        @map("year_of_study")
+  studentType       StudentType @default(DAY_SCHOLAR) @map("student_type")
+  country           Country     @default(IN)
+  currency          Currency    @default(INR)
+  monthlyPocketMoney Decimal?   @map("monthly_pocket_money") @db.Decimal(12, 2)
+  primaryGoal       String?     @map("primary_goal")
+  onboardingComplete Boolean    @default(false) @map("onboarding_complete")
+  timezone          String      @default("Asia/Kolkata")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
+
+// ─── Finance ─────────────────────────────────────────────────────────────────
+
+model Expense {
+  id          String          @id @default(cuid())
+  userId      String          @map("user_id")
+  amount      Decimal         @db.Decimal(12, 2)
+  currency    Currency        @default(INR)
+  category    ExpenseCategory
+  description String?
+  date        DateTime        @default(now()) @db.Date
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, category])
+  @@map("expenses")
+}
+
+model Income {
+  id          String       @id @default(cuid())
+  userId      String       @map("user_id")
+  amount      Decimal      @db.Decimal(12, 2)
+  currency    Currency     @default(INR)
+  source      IncomeSource @default(POCKET_MONEY)
+  description String?
+  date        DateTime     @default(now()) @db.Date
+  isRecurring Boolean      @default(false) @map("is_recurring")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("incomes")
+}
+
+model Budget {
+  id        String          @id @default(cuid())
+  userId    String          @map("user_id")
+  category  ExpenseCategory
+  amount    Decimal         @db.Decimal(12, 2)
+  currency  Currency        @default(INR)
+  period    BudgetPeriod    @default(MONTHLY)
+  startDate DateTime        @map("start_date") @db.Date
+  endDate   DateTime?       @map("end_date") @db.Date
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, period])
+  @@map("budgets")
+}
+
+model SavingsGoal {
+  id                   String     @id @default(cuid())
+  userId               String     @map("user_id")
+  title                String
+  targetAmount         Decimal    @map("target_amount") @db.Decimal(12, 2)
+  currentAmount        Decimal    @default(0) @map("current_amount") @db.Decimal(12, 2)
+  currency             Currency   @default(INR)
+  monthlyContribution  Decimal?   @map("monthly_contribution") @db.Decimal(12, 2)
+  targetDate           DateTime?  @map("target_date") @db.Date
+  estimatedCompletion  DateTime?  @map("estimated_completion") @db.Date
+  status               GoalStatus @default(ACTIVE)
+  imageUrl             String?    @map("image_url")
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@map("savings_goals")
+}
+
+model AffordabilityCheck {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  itemName          String   @map("item_name")
+  itemCost          Decimal  @map("item_cost") @db.Decimal(12, 2)
+  currentSavings    Decimal  @map("current_savings") @db.Decimal(12, 2)
+  monthlySavings    Decimal  @map("monthly_savings") @db.Decimal(12, 2)
+  monthsToAfford    Int      @map("months_to_afford")
+  fasterScenarios   Json?    @map("faster_scenarios") // [{label, months, action}]
+  currency          Currency @default(INR)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("affordability_checks")
+}
+
+model FinancialScore {
+  id                 String    @id @default(cuid())
+  userId             String    @map("user_id")
+  score              Int       // 0–100
+  label              String    // Excellent | Good | Fair | Needs Work
+  savingsRate        Float?    @map("savings_rate")
+  budgetAdherence    Float?    @map("budget_adherence")
+  spendingDiscipline Float?    @map("spending_discipline")
+  goalProgress       Float?    @map("goal_progress")
+  riskLevel          RiskLevel @default(MEDIUM) @map("risk_level")
+  moneyLeft          Decimal?  @map("money_left") @db.Decimal(12, 2)
+  daysRemaining      Int?      @map("days_remaining")
+  safeDailySpend     Decimal?  @map("safe_daily_spend") @db.Decimal(12, 2)
+  insights           Json?     // AI coach insights array
+  periodStart        DateTime  @map("period_start") @db.Date
+  periodEnd          DateTime  @map("period_end") @db.Date
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, periodStart])
+  @@map("financial_scores")
+}
+
+// ─── Student Life ────────────────────────────────────────────────────────────
+
+model AttendanceRecord {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  subject   String
+  date      DateTime         @db.Date
+  status    AttendanceStatus @default(PRESENT)
+  notes     String?
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subject, date])
+  @@index([userId, subject])
+  @@map("attendance_records")
+}
+
+model Assignment {
+  id          String           @id @default(cuid())
+  userId      String           @map("user_id")
+  title       String
+  subject     String?
+  description String?
+  dueDate     DateTime         @map("due_date")
+  status      AssignmentStatus @default(PENDING)
+  priority    Int              @default(2) // 1=high, 2=medium, 3=low
+  grade       String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dueDate])
+  @@index([userId, status])
+  @@map("assignments")
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  title     String
+  subject   String
+  examType  ExamType @default(MIDTERM) @map("exam_type")
+  examDate  DateTime @map("exam_date")
+  location  String?
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, examDate])
+  @@map("exams")
+}
+
+model CgpaRecord {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  semester     Int
+  subject      String
+  credits      Float
+  grade        String   // A+, A, B+, etc. or numeric
+  gradePoint   Float    @map("grade_point")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, semester])
+  @@map("cgpa_records")
+}
+
+// ─── Subscriptions & Gamification ────────────────────────────────────────────
+
+model Subscription {
+  id               String             @id @default(cuid())
+  userId           String             @map("user_id")
+  plan             Plan               @default(FREE)
+  status           SubscriptionStatus @default(ACTIVE)
+  priceMonthly     Decimal?           @map("price_monthly") @db.Decimal(8, 2)
+  currency         Currency           @default(INR)
+  currentPeriodStart DateTime?        @map("current_period_start")
+  currentPeriodEnd   DateTime?        @map("current_period_end")
+  cancelledAt      DateTime?          @map("cancelled_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+model Streak {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  type         String   // expense_logging | budget | saving
+  currentCount Int      @default(0) @map("current_count")
+  bestCount    Int      @default(0) @map("best_count")
+  lastLoggedAt DateTime? @map("last_logged_at") @db.Date
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@map("streaks")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  code        String   // e.g. SAVED_500_WEEK, BUDGET_3_MONTHS
+  title       String
+  description String?
+  unlockedAt  DateTime @default(now()) @map("unlocked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@map("achievements")
+}
+
+// ─── Admin / Security / Analytics ────────────────────────────────────────────
+
+model AuthSession {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  sessionTokenHash  String    @unique @map("session_token_hash")
+  userAgentCategory String?   @map("user_agent_category")
+  ipHash            String?   @map("ip_hash")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  lastSeenAt        DateTime  @default(now()) @map("last_seen_at")
+  expiresAt         DateTime  @map("expires_at")
+  revokedAt         DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("mfa_recovery_codes")
+}
+
+model AnalyticsEvent {
+  id              String   @id @default(cuid())
+  eventName       String   @map("event_name")
+  userId          String?  @map("user_id")
+  anonymousId     String?  @map("anonymous_id")
+  sessionKey      String?  @map("session_key")
+  path            String?
+  referrerDomain  String?  @map("referrer_domain")
+  deviceCategory  String?  @map("device_category")
+  browserCategory String?  @map("browser_category")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventName, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+model AnalyticsSession {
+  id              String    @id @default(cuid())
+  sessionKey      String    @unique @map("session_key")
+  userId          String?   @map("user_id")
+  anonymousId     String?   @map("anonymous_id")
+  startedAt       DateTime  @default(now()) @map("started_at")
+  lastSeenAt      DateTime  @default(now()) @map("last_seen_at")
+  endedAt         DateTime? @map("ended_at")
+  pageCount       Int       @default(1) @map("page_count")
+  deviceCategory  String?   @map("device_category")
+  browserCategory String?   @map("browser_category")
+
+  @@index([startedAt])
+  @@index([userId])
+  @@map("analytics_sessions")
+}
+
+model DailyAnalyticsAggregate {
+  id             String   @id @default(cuid())
+  date           DateTime @db.Date
+  visitors       Int      @default(0)
+  uniqueVisitors Int      @default(0) @map("unique_visitors")
+  pageViews      Int      @default(0) @map("page_views")
+  signups        Int      @default(0)
+  activeUsers    Int      @default(0) @map("active_users")
+  loginSuccess   Int      @default(0) @map("login_success")
+  loginFailure   Int      @default(0) @map("login_failure")
+  apiErrors      Int      @default(0) @map("api_errors")
+  avgSessionSec  Float?   @map("avg_session_sec")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([date])
+  @@map("daily_analytics_aggregates")
+}
+
+model FeatureUsageAggregate {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  featureKey  String   @map("feature_key")
+  eventCount  Int      @default(0) @map("event_count")
+  uniqueUsers Int      @default(0) @map("unique_users")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([date, featureKey])
+  @@index([featureKey, date])
+  @@map("feature_usage_aggregates")
+}
+
+model AuditLog {
+  id           String        @id @default(cuid())
+  actorUserId  String?       @map("actor_user_id")
+  action       String
+  targetType   String?       @map("target_type")
+  targetId     String?       @map("target_id")
+  success      Boolean       @default(true)
+  severity     AuditSeverity @default(INFO)
+  reason       String?
+  requestId    String?       @map("request_id")
+  ipHash       String?       @map("ip_hash")
+  userAgentCat String?       @map("user_agent_cat")
+  metadata     Json?
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([severity, createdAt])
+  @@map("audit_logs")
+}
+
+model AppErrorLog {
+  id          String    @id @default(cuid())
+  requestId   String?   @map("request_id")
+  route       String?
+  method      String?
+  statusCode  Int?      @map("status_code")
+  errorCode   String    @map("error_code")
+  category    String    @default("app")
+  messageSafe String    @map("message_safe")
+  durationMs  Int?      @map("duration_ms")
+  userId      String?   @map("user_id")
+  environment String?
+  resolved    Boolean   @default(false)
+  resolvedAt  DateTime? @map("resolved_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([route, createdAt])
+  @@index([resolved, createdAt])
+  @@map("app_error_logs")
+}
+
+model SecurityEvent {
+  id          String        @id @default(cuid())
+  type        String
+  severity    AuditSeverity @default(LOW)
+  userId      String?       @map("user_id")
+  ipHash      String?       @map("ip_hash")
+  route       String?
+  messageSafe String        @map("message_safe")
+  metadata    Json?
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@index([type, createdAt])
+  @@index([severity, createdAt])
+  @@map("security_events")
+}
+
+model SystemHealthSnapshot {
+  id           String            @id @default(cuid())
+  status       SystemStatusLevel @default(OPERATIONAL)
+  dbOk         Boolean           @default(false) @map("db_ok")
+  dbLatencyMs  Int?              @map("db_latency_ms")
+  apiErrorRate Float?            @map("api_error_rate")
+  avgLatencyMs Float?            @map("avg_latency_ms")
+  notes        String?
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("system_health_snapshots")
+}
+
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("platform_settings")
+}

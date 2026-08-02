@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Dependency audit (non-blocking report)
+        run: npm audit --audit-level=high || true
+      - run: npm run build
+        env:
+          AUTH_SECRET: ci-test-secret-min-16-chars
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ci?schema=public
+          APP_BASE_URL: http://localhost:3000

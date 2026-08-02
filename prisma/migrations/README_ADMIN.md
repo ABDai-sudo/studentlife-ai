@@ -1,0 +1,11 @@
+-- Additive admin/security/analytics migration notes
+-- Prefer: npm run db:push  OR  npx prisma migrate dev --name admin_security_analytics
+-- This SQL is a reference; Prisma migrate will generate the full DDL from schema.prisma.
+
+-- Do not destroy existing student data.
+-- New enums: UserRole, AccountStatus, AuditSeverity, SystemStatusLevel
+-- New User columns: role, status, failed_login_count, last_login_at, last_active_at,
+--   suspended_at, mfa_enabled, mfa_secret_enc
+-- New tables: auth_sessions, mfa_recovery_codes, analytics_events, analytics_sessions,
+--   daily_analytics_aggregates, feature_usage_aggregates, audit_logs, app_error_logs,
+--   security_events, system_health_snapshots, platform_settings
