@@ -26,29 +26,49 @@ export async function getRequestContext() {
 export function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return true; // non-browser clients
 
-  const candidates = [
-    process.env.APP_BASE_URL,
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
-    process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : null,
-  ].filter(Boolean) as string[];
-
-  if (candidates.length === 0) {
-    return process.env.NODE_ENV !== "production";
-  }
-
+  let requestOrigin: string;
+  let requestHost: string;
   try {
-    const requestOrigin = new URL(origin).origin;
-    return candidates.some((base) => {
-      try {
-        return new URL(base).origin === requestOrigin;
-      } catch {
-        return false;
-      }
-    });
+    const u = new URL(origin);
+    requestOrigin = u.origin;
+    requestHost = u.hostname;
   } catch {
     return false;
   }
+
+  const allowed = new Set<string>();
+  const add = (raw?: string | null) => {
+    if (!raw) return;
+    try {
+      const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      allowed.add(new URL(withProto).origin);
+    } catch {
+      // ignore bad env values
+    }
+  };
+
+  add(process.env.APP_BASE_URL);
+  add(process.env.NEXT_PUBLIC_APP_URL);
+  add(process.env.VERCEL_URL);
+  add(process.env.VERCEL_BRANCH_URL);
+  add(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+  add("https://studentlife-ai.vercel.app");
+  add("http://localhost:3000");
+
+  if (allowed.has(requestOrigin)) return true;
+
+  // Vercel preview/production hostnames (alias + deployment URLs)
+  if (
+    process.env.VERCEL === "1" &&
+    requestHost.endsWith(".vercel.app")
+  ) {
+    return true;
+  }
+
+  if (allowed.size === 0) {
+    return process.env.NODE_ENV !== "production";
+  }
+
+  return false;
 }
+
