@@ -62,7 +62,24 @@ export async function POST(request: Request) {
     if (error instanceof AuthError) {
       return fail(error.message, { code: error.code, status: 401 });
     }
-    safeLog("error", "Login failed", { route: "/api/auth/login" });
+    const message = error instanceof Error ? error.message : String(error);
+    safeLog("error", "Login failed", {
+      route: "/api/auth/login",
+      error: message.slice(0, 200),
+    });
+    if (
+      message.includes("AUTH_SECRET") ||
+      message.includes("Environment variable not found") ||
+      message.toLowerCase().includes("datasource") ||
+      message.toLowerCase().includes("can't reach database") ||
+      message.toLowerCase().includes("p1001") ||
+      message.toLowerCase().includes("p1000") ||
+      message.toLowerCase().includes("prisma")
+    ) {
+      return serverError(
+        "Server database or AUTH_SECRET is not configured on Vercel. Check Environment Variables, then Redeploy."
+      );
+    }
     return serverError();
   }
 }
