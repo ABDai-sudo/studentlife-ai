@@ -1,14 +1,12 @@
-import { NotebookPen } from "lucide-react";
-import { ModulePage } from "@/components/app/ModulePage";
+import { requireUser } from "@/lib/auth";
+import { AppShell } from "@/components/app/AppShell";
+import { NotesClient } from "@/components/academics/NotesClient";
 
-export default function NotesPage() {
+export default async function NotesPage() {
+  const user = await requireUser();
   return (
-    <ModulePage
-      title="My Notes"
-      subtitle="Save what you learned in class"
-      icon={NotebookPen}
-      emptyTitle="No notes yet"
-      emptyDescription="Write short notes after class. Example: “Chapter 2 — main points.” Keep it simple."
-    />
+    <AppShell title="Notes" subtitle="Study notes by class" userName={user.name ?? "Student"}>
+      <NotesClient />
+    </AppShell>
   );
 }

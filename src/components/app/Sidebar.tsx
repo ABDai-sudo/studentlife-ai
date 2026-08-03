@@ -17,10 +17,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="flex h-16 items-center border-b border-border px-4">
         <Logo />
       </div>
-      <div className="border-b border-border bg-primary-soft/50 px-4 py-3">
-        <p className="text-xs font-semibold text-primary">Start with money</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-secondary">
-          Check Money Dashboard, then log expenses.
+      <div className="border-b border-border px-4 py-3">
+        <p className="text-xs font-semibold text-foreground">Money workspace</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-muted">
+          Pocket money · expenses · goals
         </p>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3" aria-label="App">

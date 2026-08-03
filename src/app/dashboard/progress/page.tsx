@@ -1,14 +1,12 @@
-import { Target } from "lucide-react";
-import { ModulePage } from "@/components/app/ModulePage";
+import { requireUser } from "@/lib/auth";
+import { AppShell } from "@/components/app/AppShell";
+import { ProgressClient } from "@/components/academics/ProgressClient";
 
-export default function ProgressPage() {
+export default async function ProgressPage() {
+  const user = await requireUser();
   return (
-    <ModulePage
-      title="My Progress"
-      subtitle="See how you are doing"
-      icon={Target}
-      emptyTitle="Progress will show here"
-      emptyDescription="After you add classes and homework, this page will show your progress in simple numbers."
-    />
+    <AppShell title="Progress" subtitle="Attendance and CGPA" userName={user.name ?? "Student"}>
+      <ProgressClient />
+    </AppShell>
   );
 }

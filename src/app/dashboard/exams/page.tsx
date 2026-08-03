@@ -1,14 +1,12 @@
-import { GraduationCap } from "lucide-react";
-import { ModulePage } from "@/components/app/ModulePage";
+import { requireUser } from "@/lib/auth";
+import { AppShell } from "@/components/app/AppShell";
+import { ExamsClient } from "@/components/academics/ExamsClient";
 
-export default function ExamsPage() {
+export default async function ExamsPage() {
+  const user = await requireUser();
   return (
-    <ModulePage
-      title="My Exams"
-      subtitle="Exam dates in one list"
-      icon={GraduationCap}
-      emptyTitle="No exams added"
-      emptyDescription="Add exam name and date. Example: “Maths midterm — 12 August.”"
-    />
+    <AppShell title="Exams" subtitle="Upcoming tests and dates" userName={user.name ?? "Student"}>
+      <ExamsClient />
+    </AppShell>
   );
 }

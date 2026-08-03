@@ -1,14 +1,12 @@
-import { ClipboardList } from "lucide-react";
-import { ModulePage } from "@/components/app/ModulePage";
+import { requireUser } from "@/lib/auth";
+import { AppShell } from "@/components/app/AppShell";
+import { AssignmentsClient } from "@/components/academics/AssignmentsClient";
 
-export default function AssignmentsPage() {
+export default async function AssignmentsPage() {
+  const user = await requireUser();
   return (
-    <ModulePage
-      title="My Homework"
-      subtitle="See what is due and when"
-      icon={ClipboardList}
-      emptyTitle="No homework yet"
-      emptyDescription="Add work you must finish. Example: “Maths worksheet — due Friday.”"
-    />
+    <AppShell title="Homework" subtitle="Due dates and status" userName={user.name ?? "Student"}>
+      <AssignmentsClient />
+    </AppShell>
   );
 }

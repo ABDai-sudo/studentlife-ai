@@ -6,6 +6,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { getDashboardMoneySummary } from "@/services/expense.service";
 import { EXPENSE_CATEGORY_LABELS } from "@/lib/validations/expense";
+import { formatMoney } from "@/lib/money";
 
 function categoryLabel(category: string) {
   return (
@@ -13,18 +14,6 @@ function categoryLabel(category: string) {
       category as keyof typeof EXPENSE_CATEGORY_LABELS
     ] ?? category
   );
-}
-
-function formatMoney(amount: number, currency = "INR") {
-  try {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount.toFixed(0)}`;
-  }
 }
 
 export default async function DashboardPage() {
@@ -65,7 +54,7 @@ export default async function DashboardPage() {
             Money Dashboard
           </Button>
           <Button href="/dashboard/ai-coach" variant="ai" size="lg">
-            Ask AI Money Coach
+            Ask Money Coach
           </Button>
         </div>
       </div>

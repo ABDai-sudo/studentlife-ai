@@ -167,6 +167,9 @@ model User {
   assignments         Assignment[]
   exams               Exam[]
   cgpaRecords         CgpaRecord[]
+  subjects            Subject[]
+  notes               Note[]
+  timetableSlots      TimetableSlot[]
   subscriptions       Subscription[]
   streaks             Streak[]
   achievements        Achievement[]
@@ -322,6 +325,60 @@ model FinancialScore {
 }
 
 // ─── Student Life ────────────────────────────────────────────────────────────
+
+model Subject {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  name       String
+  code       String?
+  instructor String?
+  color      String?
+  credits    Float?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes          Note[]
+  timetableSlots TimetableSlot[]
+
+  @@index([userId])
+  @@map("subjects")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  subjectId String?  @map("subject_id")
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
+  @@map("notes")
+}
+
+model TimetableSlot {
+  id          String  @id @default(cuid())
+  userId      String  @map("user_id")
+  subjectId   String? @map("subject_id")
+  title       String
+  dayOfWeek   Int     @map("day_of_week") // 0=Sun … 6=Sat
+  startTime   String  @map("start_time") // HH:mm
+  endTime     String  @map("end_time")
+  location    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId, dayOfWeek])
+  @@map("timetable_slots")
+}
 
 model AttendanceRecord {
   id        String           @id @default(cuid())

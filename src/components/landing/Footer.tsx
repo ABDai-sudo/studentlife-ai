@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
+import { COMPANY } from "@/lib/company";
 
 const columns = [
   {
@@ -17,7 +18,7 @@ const columns = [
     links: [
       { href: "#pocket-money", label: "Pocket Money Mode" },
       { href: "#safe-spend", label: "Safe Daily Spend" },
-      { href: "#coach", label: "AI Money Coach" },
+      { href: "#coach", label: "Money Coach" },
       { href: "#reports", label: "Reports" },
     ],
   },
@@ -33,8 +34,8 @@ const columns = [
   {
     title: "Company",
     links: [
-      { href: "#problems", label: "About" },
-      { href: "mailto:hello@studentlife.ai", label: "Contact" },
+      { href: `mailto:${COMPANY.supportEmail}`, label: "Contact" },
+      { href: `mailto:${COMPANY.supportEmail}`, label: "Support" },
       { href: "#", label: "Privacy" },
       { href: "#", label: "Terms" },
     ],
@@ -49,8 +50,10 @@ export function Footer() {
           <div>
             <Logo />
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-secondary">
-              AI-powered financial management for students — with academic tools
-              when you need them.
+              {COMPANY.tagline}
+            </p>
+            <p className="mt-3 text-xs text-muted">
+              A product of {COMPANY.legalName}
             </p>
           </div>
 
@@ -78,8 +81,8 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-border pt-6 text-xs text-muted">
-          © {new Date().getFullYear()} StudentLife AI. Budgeting tools only — not a
-          bank, lender, or investment platform.
+          © {new Date().getFullYear()} {COMPANY.legalName}. {COMPANY.productName}{" "}
+          — budgeting tools only; not a bank, lender, or investment platform.
         </div>
       </div>
     </footer>

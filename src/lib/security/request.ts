@@ -25,10 +25,29 @@ export async function getRequestContext() {
 
 export function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return true; // non-browser clients
-  const base = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL;
-  if (!base) return process.env.NODE_ENV !== "production";
+
+  const candidates = [
+    process.env.APP_BASE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : null,
+  ].filter(Boolean) as string[];
+
+  if (candidates.length === 0) {
+    return process.env.NODE_ENV !== "production";
+  }
+
   try {
-    return new URL(origin).origin === new URL(base).origin;
+    const requestOrigin = new URL(origin).origin;
+    return candidates.some((base) => {
+      try {
+        return new URL(base).origin === requestOrigin;
+      } catch {
+        return false;
+      }
+    });
   } catch {
     return false;
   }

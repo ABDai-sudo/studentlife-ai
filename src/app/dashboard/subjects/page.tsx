@@ -1,14 +1,12 @@
-import { BookOpen } from "lucide-react";
-import { ModulePage } from "@/components/app/ModulePage";
+import { requireUser } from "@/lib/auth";
+import { AppShell } from "@/components/app/AppShell";
+import { SubjectsClient } from "@/components/academics/SubjectsClient";
 
-export default function SubjectsPage() {
+export default async function SubjectsPage() {
+  const user = await requireUser();
   return (
-    <ModulePage
-      title="My Classes"
-      subtitle="Add each class name and time"
-      icon={BookOpen}
-      emptyTitle="No classes yet"
-      emptyDescription="Tap below ideas: write class name like Maths, Science, or English. Then add the day and time."
-    />
+    <AppShell title="Classes" subtitle="Your subjects this term" userName={user.name ?? "Student"}>
+      <SubjectsClient />
+    </AppShell>
   );
 }

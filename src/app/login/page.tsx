@@ -31,6 +31,7 @@ export default function LoginPage() {
       let json: {
         success?: boolean;
         error?: { message?: string };
+        data?: { user?: { onboardingComplete?: boolean } };
       } = {};
 
       try {
@@ -52,7 +53,9 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(
+        json.data?.user?.onboardingComplete ? "/dashboard" : "/onboarding"
+      );
       router.refresh();
     } catch {
       setError(

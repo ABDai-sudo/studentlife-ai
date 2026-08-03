@@ -1,14 +1,12 @@
-import { CalendarDays } from "lucide-react";
-import { ModulePage } from "@/components/app/ModulePage";
+import { requireUser } from "@/lib/auth";
+import { AppShell } from "@/components/app/AppShell";
+import { TimetableClient } from "@/components/academics/TimetableClient";
 
-export default function TimetablePage() {
+export default async function TimetablePage() {
+  const user = await requireUser();
   return (
-    <ModulePage
-      title="My Schedule"
-      subtitle="Your class times for the week"
-      icon={CalendarDays}
-      emptyTitle="No schedule yet"
-      emptyDescription="Add when each class happens. Example: “Science — Tuesday 2 PM.”"
-    />
+    <AppShell title="Timetable" subtitle="Weekly class schedule" userName={user.name ?? "Student"}>
+      <TimetableClient />
+    </AppShell>
   );
 }

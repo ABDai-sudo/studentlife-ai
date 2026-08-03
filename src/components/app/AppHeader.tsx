@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Menu, Search, X } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Avatar } from "@/components/ui/Avatar";
@@ -54,22 +54,14 @@ export function AppHeader({
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <label className="relative hidden md:block">
-            <span className="sr-only">Search</span>
-            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input
-              className="h-9 w-56 rounded-lg border border-border bg-background pr-3 pl-9 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              placeholder="Search workspace"
-            />
-          </label>
-
-          <button
-            type="button"
+          <Link
+            href="/settings"
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-secondary hover:bg-surface-secondary"
-            aria-label="Notifications"
+            aria-label="Notifications and settings"
+            title="Settings"
           >
             <Bell className="h-4 w-4" />
-          </button>
+          </Link>
 
           <Link
             href="/dashboard/profile"
