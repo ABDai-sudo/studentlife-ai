@@ -2,16 +2,13 @@ import { loginSchema } from "@/lib/validations/auth";
 import { loginUser, AuthError } from "@/services/auth.service";
 import { ok, fail, serverError } from "@/lib/api";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
+import { getRequestContext } from "@/lib/security/request";
 import { recordSecurityEvent } from "@/services/audit.service";
 import { safeLog } from "@/lib/security/safe-log";
 
 export async function POST(request: Request) {
   try {
     const ctx = await getRequestContext();
-    if (!isAllowedOrigin(ctx.origin)) {
-      return fail("Invalid origin", { code: "FORBIDDEN", status: 403 });
-    }
 
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);

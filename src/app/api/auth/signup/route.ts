@@ -2,16 +2,13 @@ import { signupSchema } from "@/lib/validations/auth";
 import { signupUser, AuthError } from "@/services/auth.service";
 import { created, fail, serverError } from "@/lib/api";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
+import { getRequestContext } from "@/lib/security/request";
 import { safeLog } from "@/lib/security/safe-log";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
 
 export async function POST(request: Request) {
   try {
     const ctx = await getRequestContext();
-    if (!isAllowedOrigin(ctx.origin)) {
-      return fail("Invalid origin", { code: "FORBIDDEN", status: 403 });
-    }
 
     void trackAnalyticsEvent({ eventName: "signup_started" });
 

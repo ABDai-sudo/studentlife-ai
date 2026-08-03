@@ -24,51 +24,45 @@ export async function getRequestContext() {
 }
 
 export function isAllowedOrigin(origin: string | null): boolean {
-  if (!origin) return true; // non-browser clients
+  // Allow non-browser clients and same-site form posts without Origin.
+  if (!origin) return true;
 
-  let requestOrigin: string;
-  let requestHost: string;
   try {
-    const u = new URL(origin);
-    requestOrigin = u.origin;
-    requestHost = u.hostname;
+    const { hostname, origin: requestOrigin } = new URL(origin);
+
+    // Local development
+    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+
+    // Any Vercel deployment / production alias (temporary public test links)
+    if (hostname.endsWith(".vercel.app")) return true;
+
+    const allowed = new Set<string>();
+    const add = (raw?: string | null) => {
+      if (!raw) return;
+      try {
+        const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+        allowed.add(new URL(withProto).origin);
+      } catch {
+        // ignore bad env values
+      }
+    };
+
+    add(process.env.APP_BASE_URL);
+    add(process.env.NEXT_PUBLIC_APP_URL);
+    add(process.env.VERCEL_URL);
+    add(process.env.VERCEL_BRANCH_URL);
+    add(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+    add("https://studentlife-ai.vercel.app");
+
+    if (allowed.has(requestOrigin)) return true;
+
+    // If no app URLs configured, don't block production logins.
+    if (allowed.size === 0) return true;
+
+    return false;
   } catch {
     return false;
   }
-
-  const allowed = new Set<string>();
-  const add = (raw?: string | null) => {
-    if (!raw) return;
-    try {
-      const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      allowed.add(new URL(withProto).origin);
-    } catch {
-      // ignore bad env values
-    }
-  };
-
-  add(process.env.APP_BASE_URL);
-  add(process.env.NEXT_PUBLIC_APP_URL);
-  add(process.env.VERCEL_URL);
-  add(process.env.VERCEL_BRANCH_URL);
-  add(process.env.VERCEL_PROJECT_PRODUCTION_URL);
-  add("https://studentlife-ai.vercel.app");
-  add("http://localhost:3000");
-
-  if (allowed.has(requestOrigin)) return true;
-
-  // Vercel preview/production hostnames (alias + deployment URLs)
-  if (
-    process.env.VERCEL === "1" &&
-    requestHost.endsWith(".vercel.app")
-  ) {
-    return true;
-  }
-
-  if (allowed.size === 0) {
-    return process.env.NODE_ENV !== "production";
-  }
-
-  return false;
 }
+
 
