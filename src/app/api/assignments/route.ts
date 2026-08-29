@@ -17,6 +17,7 @@ import {
   listAssignments,
   updateAssignment,
 } from "@/services/academics.service";
+import { incrementWeeklyChallenge } from "@/services/gamification.service";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { safeLog } from "@/lib/security/safe-log";
 
@@ -68,7 +69,8 @@ export async function PATCH(request: Request) {
     const body = await request.json().catch(() => null);
     const id = body?.id as string | undefined;
     if (!id) return fail("Missing id", { status: 422 });
-    const { id: _id, ...rest } = body ?? {};
+    const rest = { ...(body as Record<string, unknown>) };
+    delete rest.id;
     const parsed = updateAssignmentSchema.safeParse(rest);
     if (!parsed.success) {
       return fail("Validation failed", {
@@ -79,6 +81,12 @@ export async function PATCH(request: Request) {
     }
     const assignment = await updateAssignment(user.id, id, parsed.data);
     if (!assignment) return notFound("Assignment not found");
+    const becameDone =
+      (parsed.data.status === "SUBMITTED" || parsed.data.status === "GRADED") &&
+      assignment.priority === 1;
+    if (becameDone) {
+      await incrementWeeklyChallenge(user.id, "high_priority_tasks");
+    }
     return ok({ assignment });
   } catch (error) {
     safeLog("error", "Update assignment failed", { error: String(error) });
