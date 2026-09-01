@@ -9,10 +9,10 @@ type BadgeProps = {
 const tones = {
   neutral: "bg-surface-secondary text-secondary border-border",
   primary: "bg-primary-soft text-primary border-primary/15",
-  ai: "bg-ai-soft text-ai border-ai/15",
-  success: "bg-green-50 text-success border-green-100",
-  warning: "bg-amber-50 text-warning border-amber-100",
-  error: "bg-red-50 text-error border-red-100",
+  ai: "bg-primary-soft text-primary border-primary/15",
+  success: "bg-success-soft text-success border-success/25",
+  warning: "bg-warning-soft text-warning border-warning/25",
+  error: "bg-error-soft text-error border-error/25",
 };
 
 export function Badge({

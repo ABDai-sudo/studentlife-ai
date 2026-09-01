@@ -1,10 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { PERSONALITY_LABELS } from "@/lib/languages";
+import { PERSONALITY_MODES, type PersonalityMode } from "@/lib/personality";
+import { LanguageSelector } from "@/components/i18n/LanguageSelector";
+import { getExplanationLanguages } from "@/lib/i18n/languages-registry";
 
 export function OnboardingClient() {
   const router = useRouter();
@@ -12,9 +16,17 @@ export function OnboardingClient() {
   const [studentType, setStudentType] = useState<"HOSTEL" | "DAY_SCHOLAR">(
     "DAY_SCHOLAR"
   );
-  const [primaryGoal, setPrimaryGoal] = useState("Make pocket money last the month");
+  const [primaryGoal, setPrimaryGoal] = useState(
+    "Make pocket money last the month"
+  );
   const [currency, setCurrency] = useState("INR");
   const [university, setUniversity] = useState("");
+  const [course, setCourse] = useState("");
+  const [classOrSemester, setClassOrSemester] = useState("");
+  const [preferredExplanationLang, setPreferredExplanationLang] =
+    useState("English");
+  const [personalityMode, setPersonalityMode] =
+    useState<PersonalityMode>("PROFESSIONAL");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +45,12 @@ export function OnboardingClient() {
           currency,
           country: currency === "INR" ? "IN" : "US",
           university: university || undefined,
+          institutionName: university || undefined,
+          course: course || undefined,
+          classOrSemester: classOrSemester || undefined,
+          preferredExplanationLang,
+          personalityMode,
+          studyGoal: primaryGoal,
         }),
       });
       const json = await res.json().catch(() => null);
@@ -51,11 +69,15 @@ export function OnboardingClient() {
 
   return (
     <AuthShell
-      title="Set up your money plan"
-      subtitle="Tell us your monthly pocket money so safe daily spend can work."
+      title="Set up StudentLife AI"
+      subtitle="Money basics + study preferences. You can change these later."
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <FormField id="pocket" label="Monthly pocket money" hint="What you usually get each month">
+        <FormField
+          id="pocket"
+          label="Monthly pocket money"
+          hint="What you usually get each month"
+        >
           <input
             id="pocket"
             type="number"
@@ -96,7 +118,7 @@ export function OnboardingClient() {
           </select>
         </FormField>
 
-        <FormField id="goal" label="Primary money goal">
+        <FormField id="goal" label="Primary goal">
           <input
             id="goal"
             required
@@ -107,7 +129,7 @@ export function OnboardingClient() {
           />
         </FormField>
 
-        <FormField id="university" label="University (optional)">
+        <FormField id="university" label="School / college (optional)">
           <input
             id="university"
             value={university}
@@ -117,14 +139,64 @@ export function OnboardingClient() {
           />
         </FormField>
 
+        <div className="grid gap-3 sm:grid-cols-2">
+          <FormField id="course" label="Course (optional)">
+            <input
+              id="course"
+              value={course}
+              onChange={(e) => setCourse(e.target.value)}
+              className="field-input"
+              placeholder="B.Tech CSE"
+            />
+          </FormField>
+          <FormField id="semester" label="Semester / class (optional)">
+            <input
+              id="semester"
+              value={classOrSemester}
+              onChange={(e) => setClassOrSemester(e.target.value)}
+              className="field-input"
+              placeholder="Sem 3"
+            />
+          </FormField>
+        </div>
+
+        <FormField id="lang" label="AI explanation language">
+          <LanguageSelector
+            id="lang"
+            value={preferredExplanationLang}
+            options={getExplanationLanguages()}
+            onlyReadySelectable={false}
+            searchPlaceholder="Search languages…"
+            comingSoonLabel="Coming soon"
+            onChange={setPreferredExplanationLang}
+          />
+        </FormField>
+
+        <FormField id="personality" label="App personality">
+          <select
+            id="personality"
+            className="field-input"
+            value={personalityMode}
+            onChange={(e) =>
+              setPersonalityMode(e.target.value as PersonalityMode)
+            }
+          >
+            {PERSONALITY_MODES.map((m) => (
+              <option key={m} value={m}>
+                {PERSONALITY_LABELS[m] || m}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
         {error ? (
-          <div className="rounded-[10px] border border-error/20 bg-red-50 px-3.5 py-2.5 text-sm text-error">
+          <div className="rounded-[10px] border border-error/25 bg-error-soft px-3.5 py-2.5 text-sm text-error">
             {error}
           </div>
         ) : null}
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Saving…" : "Start money dashboard"}
+          {loading ? "Saving…" : "Continue to dashboard"}
         </Button>
       </form>
     </AuthShell>

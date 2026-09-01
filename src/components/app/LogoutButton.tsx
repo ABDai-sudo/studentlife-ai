@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export function LogoutButton() {
   const router = useRouter();
+  const { t } = useT();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,13 +17,13 @@ export function LogoutButton() {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (!res.ok) {
-        setError("Could not log out. Please try again.");
+        setError(t("errors.generic"));
         return;
       }
       router.push("/");
       router.refresh();
     } catch {
-      setError("Could not reach the server.");
+      setError(t("errors.network"));
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,7 @@ export function LogoutButton() {
         onClick={logout}
         disabled={loading}
       >
-        {loading ? "Signing out…" : "Log out"}
+        {loading ? t("loading.generic") : t("actions.signOut")}
       </Button>
     </div>
   );

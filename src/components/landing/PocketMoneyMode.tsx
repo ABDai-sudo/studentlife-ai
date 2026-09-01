@@ -11,25 +11,22 @@ export function PocketMoneyMode() {
           description="StudentLife AI calculates a safe daily budget and updates it after every expense you log. Guidance only — based on numbers you enter."
         />
 
-        <div className="card-elevated p-5 sm:p-6">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <div className="grid gap-6 sm:grid-cols-2">
             {[
               ["Monthly pocket money", "₹5,000"],
               ["Part-time / scholarship", "₹1,200"],
               ["Hostel or day scholar", "Hostel"],
               ["Fixed monthly costs", "₹2,400"],
             ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-border bg-background p-3"
-              >
+              <div key={label}>
                 <p className="text-xs text-muted">{label}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 rounded-xl border border-primary/20 bg-primary-soft/60 p-4">
+          <div className="mt-6 border-t border-border pt-5">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-xs font-medium text-primary">Expected plan</p>

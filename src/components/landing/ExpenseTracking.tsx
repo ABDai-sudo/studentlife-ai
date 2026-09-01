@@ -20,16 +20,16 @@ export function ExpenseTracking() {
           className="mb-10"
         />
 
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="card-elevated p-5">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
             <p className="mb-4 text-sm font-semibold text-foreground">
               Categories this month · sample
             </p>
-            <div className="space-y-3">
+            <div className="divide-y divide-border border-t border-border">
               {categories.map(([name, amount, used]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between rounded-xl border border-border bg-background px-3.5 py-3 text-sm"
+                  className="flex items-center justify-between py-3 text-sm"
                 >
                   <span className="font-medium text-foreground">{name}</span>
                   <span className="text-secondary">
@@ -40,10 +40,11 @@ export function ExpenseTracking() {
             </div>
           </div>
 
-          <div className="card-surface p-5">
+          <div>
             <p className="mb-4 text-sm font-semibold text-foreground">
               Recent transactions
             </p>
+            <div className="divide-y divide-border border-t border-border">
             {[
               ["Canteen lunch", "Today", "−₹120"],
               ["Auto to campus", "Yesterday", "−₹80"],
@@ -52,7 +53,7 @@ export function ExpenseTracking() {
             ].map(([name, when, amount]) => (
               <div
                 key={name}
-                className="mb-2.5 flex items-center justify-between rounded-lg bg-background px-3 py-2.5 last:mb-0"
+                className="flex items-center justify-between py-2.5"
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">{name}</p>
@@ -61,6 +62,7 @@ export function ExpenseTracking() {
                 <span className="text-sm font-semibold text-foreground">{amount}</span>
               </div>
             ))}
+            </div>
           </div>
         </div>
       </div>

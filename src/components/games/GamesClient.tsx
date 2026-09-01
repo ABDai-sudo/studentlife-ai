@@ -298,7 +298,7 @@ export function GamesClient({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-primary/20 bg-primary-soft/60 px-4 py-3 text-sm text-secondary">
+      <div className="text-sm leading-relaxed text-secondary">
         {t("games.intro")}
       </div>
 
@@ -326,7 +326,7 @@ export function GamesClient({
           />
         </div>
       ) : loadState === "error" ? (
-        <div className="card-surface alert-error border-error/25 px-5 py-4">
+        <div className="border-s-2 border-error/40 px-4 py-3">
           <p className="text-sm font-semibold text-error">
             {error || t("games.loadError")}
           </p>
@@ -350,13 +350,13 @@ export function GamesClient({
       )}
 
       {data?.quests?.length ? (
-        <section className="card-surface p-5 transition-shadow hover:shadow-md">
+        <section className="border-t border-border pt-6">
           <h2 className="text-base font-semibold">{t("games.dailyQuests")}</h2>
           <ul className="mt-3 space-y-2">
             {data.quests.map((q) => (
               <li
                 key={q.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5 text-sm last:border-b-0"
               >
                 <span>{q.title}</span>
                 {q.status === "COMPLETED" ? (
@@ -402,7 +402,7 @@ export function GamesClient({
         </section>
       ) : null}
 
-      <section className="card-surface space-y-3 p-5 transition-shadow hover:shadow-md">
+      <section className="space-y-3 border-t border-border pt-6">
         <h2 className="text-base font-semibold">{t("games.focusSprint")}</h2>
         <p className="text-sm text-secondary">
           Distraction-free timer. XP only after meaningful completion.
@@ -414,7 +414,7 @@ export function GamesClient({
               type="button"
               disabled={!!sessionId}
               onClick={() => setMinutes(m)}
-              className={`rounded-full border px-3 py-1 text-xs disabled:opacity-50 ${
+              className={`rounded-md border px-3 py-1.5 text-xs disabled:opacity-50 ${
                 minutes === m
                   ? "border-primary bg-primary-soft text-primary"
                   : "border-border"
@@ -431,7 +431,7 @@ export function GamesClient({
         ) : null}
         {!sessionId ? (
           <Button type="button" onClick={() => void startSprint()}>
-            Start Focus Sprint
+            {t("games.startSprint")}
           </Button>
         ) : (
           <Button type="button" onClick={() => void completeSprint()}>
@@ -440,7 +440,7 @@ export function GamesClient({
         )}
       </section>
 
-      <section className="card-surface space-y-3 p-5">
+      <section className="space-y-3 border-t border-border pt-6">
         <h2 className="text-base font-semibold">{t("games.quizRush")}</h2>
         <p className="text-sm text-secondary">
           Timed-style multiple choice with explanations and XP.
@@ -456,7 +456,7 @@ export function GamesClient({
               setLastExplain(null);
             }}
           >
-            Start Quiz Rush
+            {t("games.startQuiz")}
           </Button>
         ) : null}
         {quizActive ? (
@@ -507,7 +507,7 @@ export function GamesClient({
         ) : null}
       </section>
 
-      <section className="card-surface space-y-3 p-5">
+      <section className="space-y-3 border-t border-border pt-6">
         <h2 className="text-base font-semibold">{t("games.flashcardFlip")}</h2>
         <p className="text-sm text-secondary">
           Tap card to flip. Mark Know or Review again.
@@ -569,14 +569,14 @@ export function GamesClient({
         ) : null}
       </section>
 
-      <section className="card-surface space-y-3 p-5">
+      <section className="space-y-3 border-t border-border pt-6">
         <h2 className="text-base font-semibold">{t("games.examBoss")}</h2>
         <p className="text-sm text-secondary">
-          Treat your next exam as the boss. Progress rises when you complete
+          Track prep for your next exam. Progress rises when you complete
           sprints, quizzes, and quests.
         </p>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted">Boss (exam / subject)</span>
+          <span className="mb-1 block text-muted">Exam or subject</span>
           <input
             className="field-input"
             value={bossSubject}
@@ -589,7 +589,7 @@ export function GamesClient({
             <span>Prep progress</span>
             <span>{bossProgress}%</span>
           </div>
-          <ProgressBar value={bossProgress} tone="ai" />
+          <ProgressBar value={bossProgress} />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button href="/dashboard/exam-prep" variant="secondary" size="sm">

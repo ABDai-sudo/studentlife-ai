@@ -66,29 +66,33 @@ export default function SignupPage() {
 
   return (
     <AuthShell
-      title="Create free account"
-      subtitle="Start with a student budget. Add classes whenever you need."
+      title="Create your free account"
+      subtitle="Start with AI Tutor, streaks, and student budget tools — no credit card needed."
     >
-      <form onSubmit={onSubmit} className="space-y-4">
-        <FormField id="name" label="Your name" hint="Example: Riya or Alex">
+      <form onSubmit={onSubmit} className="auth-form space-y-5">
+        <FormField id="name" label="Name" hint="Example: Riya or Alex">
           <input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="field-input"
-            placeholder="Type your name"
+            className="field-input auth-input"
+            placeholder="Your name"
             autoComplete="name"
           />
         </FormField>
 
-        <FormField id="email" label="Your email" hint="We will use this to log you in.">
+        <FormField
+          id="email"
+          label="Email"
+          hint="We’ll use this email when you log in."
+        >
           <input
             id="email"
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="field-input"
+            className="field-input auth-input"
             placeholder="name@email.com"
             autoComplete="email"
           />
@@ -96,8 +100,8 @@ export default function SignupPage() {
 
         <FormField
           id="password"
-          label="Make a password"
-          hint="Use 8+ characters with letters and a number. Example: Study123"
+          label="Password"
+          hint="At least 8 characters with letters and a number."
         >
           <div className="relative">
             <input
@@ -106,20 +110,20 @@ export default function SignupPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="field-input pr-11"
-              placeholder="Type a new password"
+              className="field-input auth-input pr-12"
+              placeholder="Create a password"
               autoComplete="new-password"
             />
             <button
               type="button"
-              className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-1.5 text-muted hover:text-foreground"
+              className="auth-eye absolute top-1/2 right-2.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4" />
+                <EyeOff className="h-4 w-4" strokeWidth={1.75} />
               ) : (
-                <Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4" strokeWidth={1.75} />
               )}
             </button>
           </div>
@@ -127,21 +131,24 @@ export default function SignupPage() {
 
         {error ? (
           <div
-            className="rounded-[10px] border border-error/20 bg-red-50 px-3.5 py-2.5 text-sm text-error"
+            className="rounded-xl border border-error/25 bg-error-soft px-4 py-3 text-[0.9375rem] leading-relaxed text-error"
             role="alert"
           >
             {error}
           </div>
         ) : null}
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" size="lg" className="auth-submit w-full" disabled={loading}>
           {loading ? "Creating account…" : "Create free account"}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-secondary">
-        Already have an account?{" "}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+      <p className="auth-footer mt-7 flex flex-wrap items-baseline justify-center gap-x-1.5 text-center text-[0.9375rem] leading-relaxed tracking-normal text-secondary">
+        <span>Already have an account?{"\u00A0"}</span>
+        <Link
+          href="/login"
+          className="font-semibold tracking-normal text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
           Log in
         </Link>
       </p>

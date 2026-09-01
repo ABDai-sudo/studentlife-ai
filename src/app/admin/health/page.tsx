@@ -82,7 +82,7 @@ export default async function AdminHealthPage() {
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card-surface p-4">
+    <div className="border-t border-border pt-4">
       <p className="text-xs uppercase text-muted">{label}</p>
       <p className="mt-2 break-all text-sm font-medium">{value}</p>
     </div>

@@ -212,7 +212,7 @@ export function ProfileClient({
         onStatusChange={(status) => patchSocial({ avatarStatus: status })}
       />
 
-      <div className="card-surface space-y-3 p-5 text-sm">
+      <div className="space-y-3 border-t border-border pt-6 text-sm">
         <div>
           <p className="text-muted">{t("settings.name")}</p>
           <p className="font-medium">{name ?? "Not set"}</p>
@@ -235,7 +235,7 @@ export function ProfileClient({
         ) : null}
       </div>
 
-      <form onSubmit={onSubmit} className="card-surface space-y-4 p-5">
+      <form onSubmit={onSubmit} className="space-y-4 border-t border-border pt-6">
         <h3 className="font-semibold">{t("profile.academicContext")}</h3>
         <p className="text-xs text-muted">{t("profile.academicHint")}</p>
         <FormField id="institution" label={t("profile.institution")}>

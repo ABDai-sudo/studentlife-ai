@@ -54,6 +54,13 @@ export async function PATCH(request: Request) {
     const profile = await updateProfileForUser(user.id, parsed.data);
     return ok({ profile });
   } catch (error) {
+    const msg = error instanceof Error ? error.message : "";
+    if (msg === "INVALID_AVATAR_PRESET" || msg === "INVALID_AVATAR_STATUS") {
+      return fail("Invalid avatar selection.", {
+        code: "VALIDATION_ERROR",
+        status: 422,
+      });
+    }
     safeLog("error", "Update profile failed", { error: String(error) });
     return serverError();
   }

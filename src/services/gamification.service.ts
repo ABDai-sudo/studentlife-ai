@@ -2,13 +2,13 @@ import { prisma } from "@/lib/db";
 import { listAssignments, listNotes, listSubjects } from "@/services/academics.service";
 
 export const LEVELS = [
-  { level: 1, xp: 0, name: "Starting the Arc" },
-  { level: 2, xp: 100, name: "Focused Learner" },
-  { level: 3, xp: 300, name: "Deadline Survivor" },
-  { level: 4, xp: 600, name: "Academic Grinder" },
-  { level: 5, xp: 1000, name: "Comeback Specialist" },
-  { level: 6, xp: 1500, name: "Final Boss Ready" },
-  { level: 7, xp: 2500, name: "Academic Legend" },
+  { level: 1, xp: 0, name: "Getting started" },
+  { level: 2, xp: 100, name: "Focused learner" },
+  { level: 3, xp: 300, name: "On schedule" },
+  { level: 4, xp: 600, name: "Consistent" },
+  { level: 5, xp: 1000, name: "Strong semester" },
+  { level: 6, xp: 1500, name: "Exam ready" },
+  { level: 7, xp: 2500, name: "Top of class" },
 ] as const;
 
 const DAILY_CAPS: Record<string, number> = {
@@ -19,6 +19,7 @@ const DAILY_CAPS: Record<string, number> = {
   assignment_task: 60,
   notes_review: 40,
   emergency_plan: 30,
+  study_buddy: 60,
   default: 50,
 };
 
@@ -47,6 +48,23 @@ export function levelFromXp(xp: number) {
     if (xp >= row.xp) current = row;
   }
   return current;
+}
+
+function isUniqueConflict(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
+async function upsertIgnoreConflict(operation: () => Promise<unknown>) {
+  try {
+    await operation();
+  } catch (error) {
+    if (!isUniqueConflict(error)) throw error;
+  }
 }
 
 export async function awardXp(
@@ -226,23 +244,25 @@ export async function ensureDailyQuests(userId: string) {
   ];
 
   for (const seed of seeds) {
-    await prisma.dailyQuest.upsert({
-      where: {
-        userId_questDate_code: {
+    await upsertIgnoreConflict(() =>
+      prisma.dailyQuest.upsert({
+        where: {
+          userId_questDate_code: {
+            userId,
+            questDate,
+            code: seed.code,
+          },
+        },
+        create: {
           userId,
           questDate,
-          code: seed.code,
+          ...seed,
+          target: 1,
+          progress: 0,
         },
-      },
-      create: {
-        userId,
-        questDate,
-        ...seed,
-        target: 1,
-        progress: 0,
-      },
-      update: {},
-    });
+        update: {},
+      })
+    );
   }
 
   return prisma.dailyQuest.findMany({
@@ -315,24 +335,26 @@ export async function ensureWeeklyChallenges(userId: string) {
   ];
 
   for (const seed of seeds) {
-    await prisma.weeklyChallenge.upsert({
-      where: {
-        userId_weekStart_code: {
+    await upsertIgnoreConflict(() =>
+      prisma.weeklyChallenge.upsert({
+        where: {
+          userId_weekStart_code: {
+            userId,
+            weekStart,
+            code: seed.code,
+          },
+        },
+        create: {
           userId,
           weekStart,
+          title: seed.title,
           code: seed.code,
+          target: seed.target,
+          xpReward: seed.xpReward,
         },
-      },
-      create: {
-        userId,
-        weekStart,
-        title: seed.title,
-        code: seed.code,
-        target: seed.target,
-        xpReward: seed.xpReward,
-      },
-      update: {},
-    });
+        update: {},
+      })
+    );
   }
 
   return prisma.weeklyChallenge.findMany({

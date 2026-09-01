@@ -5,8 +5,8 @@
   --surface: #ffffff;
   --surface-secondary: #f1f5f9;
   --foreground: #0f172a;
-  --secondary: #475569;
-  --muted: #64748b;
+  --secondary: #334155;
+  --muted: #475569;
   --primary: #2563eb;
   --primary-dark: #1e40af;
   --primary-hover: #1d4ed8;
@@ -16,16 +16,56 @@
   --ai-soft: #f5f3ff;
   --border: #e2e8f0;
   --success: #16a34a;
-  --warning: #f59e0b;
+  --success-soft: #f0fdf4;
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
   --error: #dc2626;
+  --error-soft: #fef2f2;
   --sidebar: #0f172a;
   --sidebar-text: #cbd5e1;
   --sidebar-active: #1e293b;
   --ring: rgba(37, 99, 235, 0.28);
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 8px 24px -12px rgba(15, 23, 42, 0.18);
-  --shadow-lg: 0 24px 48px -20px rgba(15, 23, 42, 0.28);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 12px -4px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 12px 28px -16px rgba(15, 23, 42, 0.2);
+  --code-bg: #f1f5f9;
+  --code-fg: #0f172a;
 }
+
+.dark,
+html.dark {
+  --background: #0b1220;
+  --surface: #111827;
+  --surface-secondary: #1e293b;
+  --foreground: #f1f5f9;
+  --secondary: #cbd5e1;
+  --muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-hover: #60a5fa;
+  --primary-soft: #1e3a5f;
+  --accent: #22d3ee;
+  --ai: #818cf8;
+  --ai-soft: #1e1b4b;
+  --border: #334155;
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --error: #f87171;
+  --error-soft: rgba(248, 113, 113, 0.14);
+  --sidebar: #020617;
+  --sidebar-text: #94a3b8;
+  --sidebar-active: #1e293b;
+  --ring: rgba(59, 130, 246, 0.35);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 28px -16px rgba(0, 0, 0, 0.55);
+  --code-bg: #0f172a;
+  --code-fg: #e2e8f0;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -43,12 +83,15 @@
   --color-ai-soft: var(--ai-soft);
   --color-border: var(--border);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
   --color-sidebar: var(--sidebar);
   --color-sidebar-text: var(--sidebar-text);
   --color-sidebar-active: var(--sidebar-active);
-  --font-sans: var(--font-jakarta);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -63,10 +106,93 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1rem;
   min-height: 100%;
-  line-height: 1.55;
-  letter-spacing: -0.011em;
+  line-height: 1.65;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Prefer Indic fonts only when that UI language is active (html lang set by LocaleHydrator). */
+html[lang="hi"] body {
+  font-family: var(--font-noto-devanagari), var(--font-jakarta), ui-sans-serif,
+    system-ui, sans-serif;
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+
+html[lang="gu"] body {
+  font-family: var(--font-noto-gujarati), var(--font-jakarta), ui-sans-serif,
+    system-ui, sans-serif;
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+
+/* RTL architecture — activates when a ready RTL UI locale sets dir=rtl. */
+html[dir="rtl"] body {
+  font-family: var(--font-noto-arabic), var(--font-jakarta), ui-sans-serif,
+    system-ui, sans-serif;
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+
+html[dir="rtl"] .no-rtl-flip {
+  transform: none;
+}
+
+/* System stacks for planned locales / native labels in the language picker. */
+:lang(ar),
+:lang(ur),
+:lang(fa) {
+  font-family: var(--font-noto-arabic), "Noto Naskh Arabic", "Segoe UI",
+    Tahoma, sans-serif;
+}
+
+:lang(bn) {
+  font-family: "Noto Sans Bengali", "Vrinda", var(--font-jakarta), sans-serif;
+}
+
+:lang(pa) {
+  font-family: "Noto Sans Gurmukhi", "Raavi", var(--font-jakarta), sans-serif;
+}
+
+:lang(ta) {
+  font-family: "Noto Sans Tamil", "Latha", var(--font-jakarta), sans-serif;
+}
+
+:lang(te) {
+  font-family: "Noto Sans Telugu", "Gautami", var(--font-jakarta), sans-serif;
+}
+
+:lang(kn) {
+  font-family: "Noto Sans Kannada", "Tunga", var(--font-jakarta), sans-serif;
+}
+
+:lang(ml) {
+  font-family: "Noto Sans Malayalam", "Kartika", var(--font-jakarta),
+    sans-serif;
+}
+
+:lang(th) {
+  font-family: "Noto Sans Thai", "Leelawadee UI", var(--font-jakarta),
+    sans-serif;
+}
+
+:lang(zh-Hans),
+:lang(zh-Hant),
+:lang(zh) {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei",
+    var(--font-jakarta), sans-serif;
+}
+
+:lang(ja) {
+  font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", var(--font-jakarta),
+    sans-serif;
+}
+
+:lang(ko) {
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+    var(--font-jakarta), sans-serif;
 }
 
 h1,
@@ -103,12 +229,52 @@ h4 {
 }
 
 .section-y {
-  padding-block: 4.5rem;
+  padding-block: 3.5rem;
+}
+
+.section-y-compact {
+  padding-block: 2.75rem;
 }
 
 @media (min-width: 1024px) {
   .section-y {
-    padding-block: 5.5rem;
+    padding-block: 4.25rem;
+  }
+
+  .section-y-compact {
+    padding-block: 3.25rem;
+  }
+}
+
+/* Sticky landing navbar is h-16 (4rem) — keep section titles visible */
+main section[id] {
+  scroll-margin-top: 5rem;
+}
+
+.landing-label {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.personality-preview {
+  animation: fadeIn 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personality-preview {
+    animation: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.65;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -121,6 +287,12 @@ h4 {
   padding: 0.7rem 0.875rem;
   font-size: 0.9375rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  color-scheme: light;
+}
+
+.dark .field-input,
+html.dark .field-input {
+  color-scheme: dark;
 }
 
 .field-input::placeholder {
@@ -133,52 +305,287 @@ h4 {
   box-shadow: 0 0 0 3px var(--ring);
 }
 
-.card-surface {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.875rem;
-  box-shadow: var(--shadow-sm);
+/* Auth screens — premium spacing without changing global type scale */
+.auth-shell {
+  letter-spacing: 0;
 }
 
+.auth-shell .auth-title,
+.auth-shell .auth-panel-title {
+  letter-spacing: -0.02em;
+}
+
+.auth-shell .auth-subtitle,
+.auth-shell .auth-panel-copy,
+.auth-shell .auth-field label,
+.auth-shell .auth-field p {
+  letter-spacing: 0.01em;
+}
+
+.auth-shell .auth-footer {
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.auth-shell .auth-footer a {
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.auth-shell .auth-input {
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+.auth-shell .auth-input::placeholder {
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+  letter-spacing: 0.01em;
+}
+
+.auth-shell .auth-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.auth-shell .auth-submit {
+  min-height: 2.85rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+
+.auth-shell .auth-form > div > label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.auth-shell .auth-form > div > p {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.auth-shell .auth-mark {
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+}
+
+@media (max-width: 639px) {
+  .auth-shell .auth-card {
+    border-radius: 1.125rem;
+    padding: 1.35rem 1.15rem;
+  }
+}
+
+.card-surface,
 .card-elevated {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-md);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+svg.lucide {
+  stroke-width: 1.75;
+}
+
+.avatar-face {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.dark .avatar-face,
+html.dark .avatar-face {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.avatar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  padding: 0.5rem 0.35rem 0.45rem;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.avatar-option:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--primary) 28%, var(--border));
+  background: var(--surface-secondary);
+}
+
+.avatar-option:active:not(:disabled) {
+  background: var(--surface-secondary);
+}
+
+.avatar-option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.avatar-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.avatar-option-selected {
+  border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+  background: color-mix(in oklab, var(--primary-soft) 78%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 28%, transparent);
+}
+
+.avatar-status-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--secondary);
+  line-height: 1.3;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.avatar-status-chip:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--primary) 30%, var(--border));
+  background: var(--surface-secondary);
+}
+
+.avatar-status-chip:active:not(:disabled) {
+  background: var(--surface-secondary);
+}
+
+.avatar-status-chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.avatar-status-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.avatar-status-chip-selected {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .hero-canvas {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 55% 45% at 8% 0%, rgba(37, 99, 235, 0.09), transparent 55%),
-    radial-gradient(ellipse 40% 35% at 95% 15%, rgba(124, 58, 237, 0.06), transparent 50%),
-    linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  background: var(--surface);
+}
+
+.dark .hero-canvas,
+html.dark .hero-canvas {
+  background: var(--surface);
+}
+
+.alert-error {
+  border: 1px solid color-mix(in srgb, var(--error) 28%, transparent);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.alert-warning {
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  background: var(--warning-soft);
+  color: var(--foreground);
+}
+
+.alert-success {
+  border: 1px solid color-mix(in srgb, var(--success) 28%, transparent);
+  background: var(--success-soft);
+  color: var(--foreground);
+}
+
+.markdown-body pre,
+.markdown-body code,
+pre code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+}
+
+.markdown-body pre {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  padding: 0.85rem 1rem;
+}
+
+.markdown-body :not(pre) > code {
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+}
+
+@media print {
+  :root,
+  .dark,
+  html.dark {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-secondary: #f8fafc;
+    --foreground: #0f172a;
+    --secondary: #334155;
+    --muted: #475569;
+    --border: #e2e8f0;
+    --primary: #2563eb;
+    --code-bg: #f1f5f9;
+    --code-fg: #0f172a;
+    color-scheme: light;
+  }
+
+  html.dark {
+    /* Force readable light print — avoid dark ink-heavy backgrounds */
+  }
+
+  body {
+    background: #fff !important;
+    color: #0f172a !important;
+  }
+
+  .card-surface,
+  .card-elevated {
+    box-shadow: none !important;
+  }
 }
 
 .app-window {
   overflow: hidden;
-  border-radius: 1rem;
   border: 1px solid var(--border);
   background: var(--surface);
-  box-shadow: var(--shadow-lg);
 }
 
 .app-window-chrome {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface-secondary);
   padding: 0.7rem 0.9rem;
-}
-
-.app-window-dot {
-  height: 0.55rem;
-  width: 0.55rem;
-  border-radius: 999px;
-  background: #cbd5e1;
 }
 
 @media (prefers-reduced-motion: reduce) {

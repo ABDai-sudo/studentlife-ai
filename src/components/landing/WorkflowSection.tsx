@@ -1,4 +1,3 @@
-import { BookOpen, Brain, CalendarDays } from "lucide-react";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
 const steps = [
@@ -6,7 +5,6 @@ const steps = [
     step: "Step 1",
     title: "Add your classes",
     description: "Write each class name and when it happens. Keep it short.",
-    icon: CalendarDays,
     preview: ["Maths — Mon 10 AM", "Science — Tue 2 PM", "English — Wed 11 AM"],
   },
   {
@@ -14,15 +12,13 @@ const steps = [
     title: "Save homework and notes",
     description:
       "Add what you must finish and short notes from class. One page at a time.",
-    icon: BookOpen,
     preview: ["Homework due Friday", "Exam next week", "Class notes saved"],
   },
   {
     step: "Step 3",
-    title: "Ask AI when you need help",
+    title: "Ask the tutor when you need help",
     description:
-      "Type your question in normal language. Example: “Explain this chapter simply.”",
-    icon: Brain,
+      "Type your question in plain language. Example: “Explain this chapter simply.”",
     preview: ["Simple explanation", "Study plan", "Practice questions"],
   },
 ];
@@ -33,36 +29,24 @@ export function WorkflowSection() {
       <div className="container-shell">
         <SectionHeader
           eyebrow="How to use"
-          title="Three easy steps. That’s it."
+          title="Three steps to get started"
           description="Open the app every day, check what’s next, and finish one task at a time."
           className="mb-10"
         />
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          {steps.map(({ step, title, description, icon: Icon, preview }) => (
-            <article key={step} className="card-elevated p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="rounded-md bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
-                  {step}
-                </span>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                  <Icon className="h-4 w-4" />
-                </span>
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <div className="grid gap-8 lg:grid-cols-3">
+          {steps.map(({ step, title, description, preview }) => (
+            <article key={step} className="border-t border-border pt-5 lg:border-t-0 lg:pt-0">
+              <p className="text-xs font-medium text-muted">{step}</p>
+              <h3 className="mt-2 text-lg font-semibold text-foreground">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary">
                 {description}
               </p>
-              <div className="mt-4 space-y-2 rounded-xl border border-border bg-background p-3">
+              <ul className="mt-4 space-y-1.5 text-sm text-secondary">
                 {preview.map((line) => (
-                  <div
-                    key={line}
-                    className="rounded-lg bg-surface-secondary px-2.5 py-2 text-sm font-medium text-foreground"
-                  >
-                    {line}
-                  </div>
+                  <li key={line}>{line}</li>
                 ))}
-              </div>
+              </ul>
             </article>
           ))}
         </div>

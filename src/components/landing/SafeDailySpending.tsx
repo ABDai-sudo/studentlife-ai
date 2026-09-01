@@ -11,25 +11,22 @@ export function SafeDailySpending() {
           description="Safe per day = money available after fixed costs, divided across remaining days. This is budgeting guidance from your entries — not financial advice."
         />
 
-        <div className="card-elevated p-5 sm:p-6">
-          <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="grid grid-cols-2 gap-6">
             {[
               ["Money left", "₹1,350"],
               ["Days remaining", "11"],
               ["Fixed upcoming costs", "₹200"],
               ["Safe amount / day", "₹122"],
             ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-border bg-background p-3"
-              >
+              <div key={label}>
                 <p className="text-xs text-muted">{label}</p>
                 <p className="mt-1 text-lg font-semibold text-foreground">{value}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             <Badge tone="success">Safe</Badge>
             <Badge tone="warning">Caution</Badge>
             <Badge tone="error">High risk</Badge>

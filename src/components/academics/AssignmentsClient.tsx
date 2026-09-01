@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type Assignment = {
   id: string;
@@ -39,8 +40,21 @@ export function AssignmentsClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return mountFetch("/api/assignments", ({ ok, json }) => {
+      const body = json as {
+        success?: boolean;
+        data?: { assignments: (Assignment & { dueDate: string | Date })[] };
+      } | null;
+      if (ok && body?.success) {
+        setItems(
+          body.data!.assignments.map((a) => ({
+            ...a,
+            dueDate: String(a.dueDate).slice(0, 10),
+          }))
+        );
+      }
+    });
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -77,24 +91,25 @@ export function AssignmentsClient() {
 
   return (
     <div className="space-y-5">
-      <form onSubmit={onSubmit} className="card-surface grid gap-3 p-5 sm:grid-cols-3">
-        <FormField id="title" label="Homework title">
+      <form onSubmit={onSubmit} className="grid gap-3 border-b border-border pb-6 sm:grid-cols-3">
+        <FormField id="title" label="Assignment title">
           <input id="title" className="field-input" required value={title} onChange={(e) => setTitle(e.target.value)} />
         </FormField>
-        <FormField id="subject" label="Class">
+        <FormField id="subject" label="Subject">
           <input id="subject" className="field-input" value={subject} onChange={(e) => setSubject(e.target.value)} />
         </FormField>
         <FormField id="due" label="Due date">
           <input id="due" type="date" className="field-input" required value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </FormField>
         <div className="sm:col-span-3">
-          <Button type="submit">Add homework</Button>
+          <Button type="submit">Add assignment</Button>
         </div>
       </form>
       {error ? <p className="text-sm text-error">{error}</p> : null}
-      <ul className="space-y-2">
+      {items.length === 0 ? <p className="text-sm text-muted">No assignments yet.</p> : null}
+      <ul className="divide-y divide-border">
         {items.map((a) => (
-          <li key={a.id} className="card-surface flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+          <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
             <div>
               <p className="font-semibold">{a.title}</p>
               <p className="text-xs text-muted">

@@ -82,19 +82,15 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="card-surface scroll-mt-24 overflow-hidden">
-      <div className="border-b border-border px-5 py-4">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-surface-secondary text-secondary">
-            <Icon className="h-4 w-4" />
-          </span>
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            <p className="mt-0.5 text-xs text-muted">{description}</p>
-          </div>
+    <section id={id} className="scroll-mt-24 border-t border-border pt-8">
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          <p className="mt-0.5 text-xs text-muted">{description}</p>
         </div>
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }

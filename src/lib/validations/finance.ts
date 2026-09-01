@@ -16,6 +16,41 @@ export const updateProfileSchema = z
     university: z.string().trim().max(200).optional().or(z.literal("")),
     course: z.string().trim().max(200).optional().or(z.literal("")),
     yearOfStudy: z.coerce.number().int().min(1).max(10).optional().nullable(),
+    institutionName: z.string().trim().max(200).optional().or(z.literal("")),
+    boardOrUniversity: z.string().trim().max(200).optional().or(z.literal("")),
+    classOrSemester: z.string().trim().max(80).optional().or(z.literal("")),
+    preferredExplanationLang: z
+      .string()
+      .trim()
+      .max(80)
+      .optional()
+      .or(z.literal("")),
+    preferredUiLanguage: z.string().trim().max(80).optional().or(z.literal("")),
+    personalityMode: z
+      .enum([
+        "PROFESSIONAL",
+        "FRIENDLY",
+        "CAMPUS_BRO",
+        "CHRONICALLY_ONLINE",
+        "ACADEMIC_VILLAIN",
+      ])
+      .optional(),
+    themeMode: z.enum(["LIGHT", "DARK", "SYSTEM"]).optional(),
+    studyGoal: z.string().trim().max(200).optional().or(z.literal("")),
+    dailyStudyMinutes: z.coerce
+      .number()
+      .int()
+      .min(10)
+      .max(720)
+      .optional()
+      .nullable(),
+    weakSubjects: z.string().trim().max(500).optional().or(z.literal("")),
+    displayName: z.string().trim().max(80).optional().or(z.literal("")),
+    shareRecapsEnabled: z.boolean().optional(),
+    leaderboardOptIn: z.boolean().optional(),
+    avatarPresetId: z.string().trim().max(40).optional().nullable().or(z.literal("")),
+    avatarStatus: z.string().trim().max(40).optional().nullable().or(z.literal("")),
+    leaderboardShowAvatar: z.boolean().optional(),
   })
   .strict();
 

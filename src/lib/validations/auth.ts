@@ -38,6 +38,19 @@ export const onboardingSchema = z.object({
   university: z.string().trim().max(200).optional(),
   course: z.string().trim().max(200).optional(),
   yearOfStudy: z.coerce.number().int().min(1).max(10).optional(),
+  institutionName: z.string().trim().max(200).optional(),
+  classOrSemester: z.string().trim().max(80).optional(),
+  studyGoal: z.string().trim().max(200).optional(),
+  preferredExplanationLang: z.string().trim().max(80).optional(),
+  personalityMode: z
+    .enum([
+      "PROFESSIONAL",
+      "FRIENDLY",
+      "CAMPUS_BRO",
+      "CHRONICALLY_ONLINE",
+      "ACADEMIC_VILLAIN",
+    ])
+    .optional(),
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;

@@ -6,38 +6,40 @@ const columns = [
   {
     title: "Product",
     links: [
-      { href: "#product", label: "Money Dashboard" },
-      { href: "#expenses", label: "Expenses" },
-      { href: "#goals", label: "Savings Goals" },
-      { href: "#afford", label: "Can I Afford It?" },
-      { href: "#health", label: "Financial Health" },
+      { href: "#product", label: "Overview" },
+      { href: "#ai-tutor", label: "AI Tutor" },
+      { href: "#assignments", label: "Assignments" },
+      { href: "#exam-prep", label: "Exam Prep" },
+      { href: "#games", label: "Games & Streaks" },
     ],
   },
   {
-    title: "Budget Tools",
+    title: "Study tools",
     links: [
-      { href: "#pocket-money", label: "Pocket Money Mode" },
-      { href: "#safe-spend", label: "Safe Daily Spend" },
-      { href: "#coach", label: "Money Coach" },
-      { href: "#reports", label: "Reports" },
+      { href: "#emergency", label: "Emergency Plan" },
+      { href: "#personality", label: "Personality Modes" },
+      { href: "#recap", label: "Weekly Recap" },
+      { href: "#pricing", label: "Pricing" },
     ],
   },
   {
-    title: "Student Tools",
+    title: "Budget",
     links: [
-      { href: "#academics", label: "Subjects & notes" },
-      { href: "#academics", label: "Assignments" },
-      { href: "#academics", label: "Timetable" },
-      { href: "#academics", label: "Exams" },
+      { href: "#budget", label: "Money Dashboard" },
+      { href: "#budget", label: "Safe Daily Spend" },
+      { href: "#budget", label: "Savings Goals" },
+      { href: "#budget", label: "AI Money Coach" },
     ],
   },
   {
     title: "Company",
     links: [
       { href: `mailto:${COMPANY.supportEmail}`, label: "Contact" },
-      { href: `mailto:${COMPANY.supportEmail}`, label: "Support" },
-      { href: "#", label: "Privacy" },
-      { href: "#", label: "Terms" },
+      { href: "/support", label: "Support" },
+      { href: "/privacy", label: "Privacy" },
+      { href: "/terms", label: "Terms" },
+      { href: "/login", label: "Log in" },
+      { href: "/signup", label: "Create a free account" },
     ],
   },
 ];
@@ -45,7 +47,7 @@ const columns = [
 export function Footer() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="container-shell py-12">
+      <div className="container-shell py-10">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_2.4fr]">
           <div>
             <Logo />
@@ -68,7 +70,7 @@ export function Footer() {
                     <li key={`${column.title}-${link.label}`}>
                       <Link
                         href={link.href}
-                        className="text-sm text-secondary hover:text-foreground"
+                        className="text-sm text-secondary transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       >
                         {link.label}
                       </Link>
@@ -82,7 +84,8 @@ export function Footer() {
 
         <div className="mt-10 border-t border-border pt-6 text-xs text-muted">
           © {new Date().getFullYear()} {COMPANY.legalName}. {COMPANY.productName}{" "}
-          — budgeting tools only; not a bank, lender, or investment platform.
+          — academic tools and budgeting guidance; not a
+          bank, lender, or investment platform.
         </div>
       </div>
     </footer>

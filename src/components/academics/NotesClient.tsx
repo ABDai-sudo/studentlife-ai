@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 
@@ -33,8 +33,25 @@ export function NotesClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    Promise.all([
+      fetch("/api/notes", { cache: "no-store" }).then(async (res) => ({
+        res,
+        json: await res.json().catch(() => null),
+      })),
+      fetch("/api/subjects", { cache: "no-store" }).then(async (res) => ({
+        res,
+        json: await res.json().catch(() => null),
+      })),
+    ]).then(([n, s]) => {
+      if (cancelled) return;
+      if (n.res.ok && n.json?.success) setNotes(n.json.data.notes);
+      if (s.res.ok && s.json?.success) setSubjects(s.json.data.subjects);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -66,11 +83,11 @@ export function NotesClient() {
 
   return (
     <div className="space-y-5">
-      <form onSubmit={onSubmit} className="card-surface space-y-3 p-5">
+      <form onSubmit={onSubmit} className="space-y-3 border-b border-border pb-6">
         <FormField id="title" label="Title">
           <input id="title" className="field-input" required value={title} onChange={(e) => setTitle(e.target.value)} />
         </FormField>
-        <FormField id="subject" label="Class (optional)">
+        <FormField id="subject" label="Subject (optional)">
           <select id="subject" className="field-input" value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
             <option value="">General</option>
             {subjects.map((s) => (
@@ -84,9 +101,9 @@ export function NotesClient() {
         <Button type="submit">Save note</Button>
       </form>
       {error ? <p className="text-sm text-error">{error}</p> : null}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="divide-y divide-border">
         {notes.map((n) => (
-          <article key={n.id} className="card-surface p-4">
+          <article key={n.id} className="py-5">
             <div className="mb-2 flex items-start justify-between gap-2">
               <div>
                 <h3 className="font-semibold">{n.title}</h3>

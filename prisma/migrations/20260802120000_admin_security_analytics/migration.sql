@@ -1,0 +1,29 @@
+-- Migration: 20260802120000_admin_security_analytics
+--
+-- STRICT COMPARISON RESULT (2026-08-07)
+-- Compared:
+--   - prisma/live-neon-schema.prisma  (live Neon introspection)
+--   - prisma/schema.prisma            (repo target)
+--   - this migration folder's intended admin/security/analytics scope
+--
+-- Finding: Every object this migration historically intended to create
+-- ALREADY EXISTS on live Neon (likely via prior `db push` / manual apply):
+--   Enums: UserRole, AccountStatus, AuditSeverity, SystemStatusLevel
+--   users columns: role, status, failed_login_count, last_login_at,
+--     last_active_at, suspended_at, mfa_enabled, mfa_secret_enc
+--   Tables: auth_sessions, mfa_recovery_codes, analytics_events,
+--     analytics_sessions, daily_analytics_aggregates, feature_usage_aggregates,
+--     audit_logs, app_error_logs, security_events, system_health_snapshots,
+--     platform_settings
+--
+-- Therefore this file must NOT re-run CREATE TYPE / ALTER TABLE / CREATE TABLE
+-- for those objects (duplicate-object failure risk / non-atomic apply).
+--
+-- Remaining repo schema NOT covered by this migration name (do not fold here):
+--   NotificationChannel, NotificationCategory, notification_preferences,
+--   user_notifications, push_subscriptions, notification_deliveries
+-- Those require a separate additive migration later.
+--
+-- Safe no-op so `migrate deploy` can mark history without changing data.
+
+SELECT 1;

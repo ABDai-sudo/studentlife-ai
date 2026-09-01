@@ -1,19 +1,18 @@
-import { AcademicHub } from "@/components/landing/AcademicHub";
-import { AIFinancialCoach } from "@/components/landing/AIFinancialCoach";
-import { CanIAffordIt } from "@/components/landing/CanIAffordIt";
+import { AssignmentHelperSection } from "@/components/landing/AssignmentHelperSection";
+import { AITutorSection } from "@/components/landing/AITutorSection";
 import { CTASection } from "@/components/landing/CTASection";
-import { ExpenseTracking } from "@/components/landing/ExpenseTracking";
-import { FinancialHealthScore } from "@/components/landing/FinancialHealthScore";
+import { EmergencyModeSection } from "@/components/landing/EmergencyModeSection";
+import { ExamPrepSection } from "@/components/landing/ExamPrepSection";
 import { Footer } from "@/components/landing/Footer";
+import { GamificationSection } from "@/components/landing/GamificationSection";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { MoneyProblemsSection } from "@/components/landing/MoneyProblemsSection";
-import { MonthlyReports } from "@/components/landing/MonthlyReports";
 import { Navbar } from "@/components/landing/Navbar";
-import { PocketMoneyMode } from "@/components/landing/PocketMoneyMode";
+import { PersonalityModesSection } from "@/components/landing/PersonalityModesSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { ProductOverview } from "@/components/landing/ProductOverview";
-import { SafeDailySpending } from "@/components/landing/SafeDailySpending";
-import { SavingsGoals } from "@/components/landing/SavingsGoals";
+import { StudentBudgetSection } from "@/components/landing/StudentBudgetSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { WeeklyRecapSection } from "@/components/landing/WeeklyRecapSection";
 
 export default function Home() {
   return (
@@ -22,16 +21,15 @@ export default function Home() {
       <main className="flex-1">
         <HeroSection />
         <ProductOverview />
-        <MoneyProblemsSection />
-        <PocketMoneyMode />
-        <AIFinancialCoach />
-        <SafeDailySpending />
-        <ExpenseTracking />
-        <SavingsGoals />
-        <CanIAffordIt />
-        <FinancialHealthScore />
-        <MonthlyReports />
-        <AcademicHub />
+        <AITutorSection />
+        <AssignmentHelperSection />
+        <ExamPrepSection />
+        <GamificationSection />
+        <EmergencyModeSection />
+        <PersonalityModesSection />
+        <StudentBudgetSection />
+        <WeeklyRecapSection />
+        <TestimonialsSection />
         <PricingSection />
         <CTASection />
       </main>

@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -32,8 +33,14 @@ export function TimetableClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return mountFetch("/api/timetable", ({ ok, json }) => {
+      const body = json as {
+        success?: boolean;
+        data?: { slots: Slot[] };
+      } | null;
+      if (ok && body?.success) setSlots(body.data!.slots);
+    });
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -61,7 +68,7 @@ export function TimetableClient() {
 
   return (
     <div className="space-y-5">
-      <form onSubmit={onSubmit} className="card-surface grid gap-3 p-5 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
         <FormField id="title" label="Class / activity">
           <input id="title" className="field-input" required value={title} onChange={(e) => setTitle(e.target.value)} />
         </FormField>
@@ -91,7 +98,7 @@ export function TimetableClient() {
           const daySlots = slots.filter((s) => s.dayOfWeek === i);
           if (daySlots.length === 0) return null;
           return (
-            <section key={day} className="card-surface p-4">
+            <section key={day} className="border-t border-border pt-4">
               <h3 className="mb-2 text-sm font-semibold">{day}</h3>
               <ul className="space-y-2 text-sm">
                 {daySlots.map((s) => (

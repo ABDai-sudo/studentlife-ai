@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { StatCard } from "@/components/ui/StatCard";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type Progress = {
   subjects: number;
@@ -38,8 +39,14 @@ export function ProgressClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return mountFetch("/api/progress", ({ ok, json }) => {
+      const body = json as {
+        success?: boolean;
+        data?: { progress: Progress };
+      } | null;
+      if (ok && body?.success) setProgress(body.data!.progress);
+    });
+  }, []);
 
   async function saveAttendance(e: FormEvent) {
     e.preventDefault();
@@ -86,8 +93,8 @@ export function ProgressClient() {
     <div className="space-y-5">
       {progress ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Classes" value={String(progress.subjects)} />
-          <StatCard label="Pending homework" value={String(progress.pendingAssignments)} />
+          <StatCard label="Subjects" value={String(progress.subjects)} />
+          <StatCard label="Pending assignments" value={String(progress.pendingAssignments)} />
           <StatCard
             label="Attendance"
             value={progress.attendanceRate == null ? "—" : `${progress.attendanceRate}%`}
@@ -100,7 +107,7 @@ export function ProgressClient() {
       ) : null}
 
       {progress?.upcomingExams?.length ? (
-        <section className="card-surface p-5">
+        <section className="border-t border-border pt-6">
           <h3 className="mb-3 text-sm font-semibold">Upcoming exams</h3>
           <ul className="space-y-2 text-sm">
             {progress.upcomingExams.map((e) => (
@@ -113,9 +120,9 @@ export function ProgressClient() {
         </section>
       ) : null}
 
-      <form onSubmit={saveAttendance} className="card-surface grid gap-3 p-5 sm:grid-cols-3">
+      <form onSubmit={saveAttendance} className="grid gap-3 border-t border-border pt-6 sm:grid-cols-3">
         <h3 className="sm:col-span-3 text-sm font-semibold">Log attendance</h3>
-        <FormField id="asubject" label="Class">
+        <FormField id="asubject" label="Subject">
           <input id="asubject" className="field-input" required value={subject} onChange={(e) => setSubject(e.target.value)} />
         </FormField>
         <FormField id="adate" label="Date">
@@ -134,7 +141,7 @@ export function ProgressClient() {
         </div>
       </form>
 
-      <form onSubmit={saveCgpa} className="card-surface grid gap-3 p-5 sm:grid-cols-3">
+      <form onSubmit={saveCgpa} className="grid gap-3 border-t border-border pt-6 sm:grid-cols-3">
         <h3 className="sm:col-span-3 text-sm font-semibold">Add CGPA entry</h3>
         <FormField id="sem" label="Semester">
           <input id="sem" type="number" min={1} className="field-input" required value={semester} onChange={(e) => setSemester(e.target.value)} />

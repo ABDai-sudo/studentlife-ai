@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/admin/ui";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type Settings = {
   analyticsRetentionDays: number;
@@ -16,16 +17,11 @@ export default function AdminSettingsPage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const res = await fetch("/api/admin/settings", { cache: "no-store" });
-      if (!res.ok || cancelled) return;
-      const json = await res.json();
-      setSettings(json.data.settings);
-    })();
-    return () => {
-      cancelled = true;
-    };
+    return mountFetch("/api/admin/settings", ({ ok, json }) => {
+      if (!ok) return;
+      const body = json as { data?: { settings: Settings } } | null;
+      if (body?.data?.settings) setSettings(body.data.settings);
+    });
   }, []);
 
   async function save() {
@@ -60,7 +56,7 @@ export default function AdminSettingsPage() {
           Retention and privacy controls. No compliance certifications claimed.
         </p>
       </div>
-      <div className="card-surface space-y-4 p-5">
+      <div className="space-y-4 border-t border-border pt-5">
         <Field
           label="Analytics retention (days)"
           value={settings.analyticsRetentionDays}

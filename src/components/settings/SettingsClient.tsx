@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  Bell,
+  type FormEvent,
+  useLayoutEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import {
   Building2,
   Globe2,
   Lock,
   Mail,
+  Palette,
   Shield,
   UserRound,
 } from "lucide-react";
@@ -15,32 +21,48 @@ import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { LogoutButton } from "@/components/app/LogoutButton";
 import { COMPANY } from "@/lib/company";
+import { useTheme } from "@/components/theme/ThemeProvider";
+import { ThemeSelector } from "@/components/theme/ThemeSelector";
+import {
+  PERSONALITY_MODES,
+  type PersonalityMode,
+} from "@/lib/personality";
+import { seriousCopy } from "@/lib/personality/copy";
+import { PERSONALITY_LABELS } from "@/lib/languages";
+import {
+  getExplanationLanguages,
+  getUiLanguagePickerList,
+  isReadyUiLanguageName,
+} from "@/lib/i18n/languages-registry";
+import {
+  enableClientSettingsPrefsReads,
+  getServerSettingsPrefsSnapshot,
+  getSettingsPrefsSnapshot,
+  subscribeSettingsPrefs,
+  writeSettingsPrefs,
+  type SettingsPrefs,
+} from "@/lib/settings/prefs-store";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { LanguageSelector } from "@/components/i18n/LanguageSelector";
+import { PersonalityVibeCard } from "@/components/i18n/PersonalityVibeCard";
+import { EngagementSettings } from "@/components/settings/EngagementSettings";
+import { t as translate } from "@/lib/i18n/translator";
+import { languageNameToLocale } from "@/lib/i18n/config";
 
-type Profile = {
+type InitialProfile = {
   currency: string;
   country: string;
   timezone: string;
   studentType: string;
   monthlyPocketMoney: number | null;
+  preferredExplanationLang: string | null;
+  preferredUiLanguage: string | null;
+  displayName: string | null;
+  leaderboardOptIn: boolean;
+  leaderboardShowAvatar: boolean;
+  avatarPresetId: string | null;
+  avatarStatus: string | null;
 };
-
-type Prefs = {
-  weeklyDigest: boolean;
-  expenseReminders: boolean;
-  goalAlerts: boolean;
-  productUpdates: boolean;
-  shareAnonymousAnalytics: boolean;
-};
-
-const DEFAULT_PREFS: Prefs = {
-  weeklyDigest: true,
-  expenseReminders: true,
-  goalAlerts: true,
-  productUpdates: false,
-  shareAnonymousAnalytics: true,
-};
-
-const PREFS_KEY = "sl_settings_prefs_v1";
 
 const TIMEZONES = [
   "Asia/Kolkata",
@@ -78,8 +100,8 @@ function Toggle({
         }`}
       >
         <span
-          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0"
+          className={`absolute top-0.5 start-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-5 rtl:-translate-x-5" : "translate-x-0"
           }`}
         />
       </button>
@@ -96,22 +118,18 @@ function Section({
   icon: typeof UserRound;
   title: string;
   description: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <section className="card-surface overflow-hidden">
-      <div className="border-b border-border px-5 py-4">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-surface-secondary text-secondary">
-            <Icon className="h-4 w-4" />
-          </span>
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            <p className="mt-0.5 text-xs text-muted">{description}</p>
-          </div>
+    <section className="border-t border-border pt-8 first:border-t-0 first:pt-0">
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          <p className="mt-0.5 text-xs text-muted">{description}</p>
         </div>
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -120,54 +138,64 @@ export function SettingsClient({
   email,
   name,
   plan,
+  initialProfile,
+  initialNotifPrefs = null,
 }: {
   email: string;
   name: string | null;
   plan: string;
+  initialProfile: InitialProfile | null;
+  initialNotifPrefs?: {
+    pauseAll: boolean;
+    streakAtRisk: boolean;
+    streakFinalReminder: boolean;
+    dailyQuests: boolean;
+    assignmentDeadline: boolean;
+    upcomingExam: boolean;
+    overspending: boolean;
+    savingsGoal: boolean;
+    weeklyRecap: boolean;
+    lowMoney: boolean;
+  } | null;
 }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [currency, setCurrency] = useState("INR");
-  const [country, setCountry] = useState("IN");
-  const [timezone, setTimezone] = useState("Asia/Kolkata");
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
+  const { setPersonality, personality } = useTheme();
+  const { t, setLocaleFromLanguageName } = useT();
+  const [mounted, setMounted] = useState(false);
+
+  // Server-provided profile seeds form state — no mount-effect hydration.
+  const [profile, setProfile] = useState<InitialProfile | null>(initialProfile);
+  const [currency, setCurrency] = useState(initialProfile?.currency || "INR");
+  const [country, setCountry] = useState(initialProfile?.country || "IN");
+  const [timezone, setTimezone] = useState(
+    initialProfile?.timezone || "Asia/Kolkata"
+  );
+  const [explainLang, setExplainLang] = useState(
+    initialProfile?.preferredExplanationLang || "English"
+  );
+  const [uiLang, setUiLang] = useState(
+    initialProfile?.preferredUiLanguage || "English"
+  );
+
+  const prefs = useSyncExternalStore(
+    subscribeSettingsPrefs,
+    getSettingsPrefsSnapshot,
+    getServerSettingsPrefsSnapshot
+  );
+
+  useLayoutEffect(() => {
+    enableClientSettingsPrefsReads();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration gate
+    setMounted(true);
+  }, []);
+
+  const displayPersonality = mounted ? personality : "PROFESSIONAL";
+
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const raw = localStorage.getItem(PREFS_KEY);
-      if (raw) setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(raw) });
-    } catch {
-      // ignore
-    }
-
-    const res = await fetch("/api/profile", { cache: "no-store" });
-    const json = await res.json().catch(() => null);
-    if (!res.ok || !json?.success) {
-      setError(json?.error?.message || "Could not load settings.");
-      return;
-    }
-    const p = json.data.profile as Profile | null;
-    if (p) {
-      setProfile(p);
-      setCurrency(p.currency || "INR");
-      setCountry(p.country || "IN");
-      setTimezone(p.timezone || "Asia/Kolkata");
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  function savePrefs(next: Prefs) {
-    setPrefs(next);
-    try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(next));
-    } catch {
-      // ignore
-    }
+  function savePrefs(next: SettingsPrefs) {
+    writeSettingsPrefs(next);
   }
 
   async function onSaveRegion(e: FormEvent) {
@@ -183,57 +211,57 @@ export function SettingsClient({
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.success) {
-        setError(json?.error?.message || "Could not save preferences.");
+        setError(json?.error?.message || t("errors.saveFailed"));
         return;
       }
       setProfile(json.data.profile);
-      setMsg("Preferences saved.");
+      setMsg(t("settings.saved"));
     } catch {
-      setError("Could not reach the server.");
+      setError(t("errors.network"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto max-w-2xl">
       <Section
         icon={UserRound}
-        title="Account"
-        description="Signed-in identity for this workspace"
+        title={t("settings.account")}
+        description={t("settings.accountDesc")}
       >
         <dl className="space-y-3 text-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <dt className="text-muted">Name</dt>
+              <dt className="text-muted">{t("settings.name")}</dt>
               <dd className="mt-0.5 font-medium text-foreground">
-                {name ?? "Not set"}
+                {name ?? t("settings.notSet")}
               </dd>
             </div>
             <span className="rounded-md border border-border bg-surface-secondary px-2 py-1 text-xs font-medium text-secondary">
-              {plan} plan
+              {plan} {t("settings.plan").toLowerCase()}
             </span>
           </div>
           <div>
-            <dt className="text-muted">Email</dt>
+            <dt className="text-muted">{t("settings.email")}</dt>
             <dd className="mt-0.5 font-medium text-foreground">{email}</dd>
           </div>
         </dl>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button href="/dashboard/profile" variant="secondary" size="sm">
-            Edit profile & pocket money
+            {t("settings.editProfile")}
           </Button>
         </div>
       </Section>
 
       <Section
         icon={Globe2}
-        title="Region & currency"
-        description="Controls how money amounts are shown"
+        title={t("settings.region")}
+        description={t("settings.regionDesc")}
       >
         <form onSubmit={onSaveRegion} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField id="currency" label="Currency">
+            <FormField id="currency" label={t("settings.currency")}>
               <select
                 id="currency"
                 className="field-input"
@@ -247,7 +275,7 @@ export function SettingsClient({
                 <option value="AED">AED — UAE Dirham</option>
               </select>
             </FormField>
-            <FormField id="country" label="Country">
+            <FormField id="country" label={t("settings.country")}>
               <select
                 id="country"
                 className="field-input"
@@ -263,7 +291,7 @@ export function SettingsClient({
               </select>
             </FormField>
           </div>
-          <FormField id="timezone" label="Timezone">
+          <FormField id="timezone" label={t("settings.timezone")}>
             <select
               id="timezone"
               className="field-input"
@@ -279,56 +307,216 @@ export function SettingsClient({
           </FormField>
           {profile?.monthlyPocketMoney == null ? (
             <p className="text-xs text-muted">
-              Pocket money is not set yet.{" "}
+              {t("settings.pocketUnset")}{" "}
               <Link href="/dashboard/profile" className="text-primary underline">
-                Add it in Profile
+                {t("settings.addInProfile")}
               </Link>
-              .
             </p>
           ) : null}
           <Button type="submit" size="sm" disabled={saving}>
-            {saving ? "Saving…" : "Save region"}
+            {saving ? t("loading.generic") : t("actions.save")}
           </Button>
         </form>
       </Section>
 
       <Section
-        icon={Bell}
-        title="Notifications"
-        description="Choose what we remind you about on this device"
+        icon={Palette}
+        title={t("settings.appearance")}
+        description={t("settings.languageDesc")}
       >
-        <div className="divide-y divide-border">
-          <Toggle
-            checked={prefs.expenseReminders}
-            onChange={(v) => savePrefs({ ...prefs, expenseReminders: v })}
-            label="Expense reminders"
-            description="Nudge when you have not logged spending for a while"
+        <div className="space-y-4">
+          <FormField
+            id="explainLang"
+            label={t("settings.explanationLanguage")}
+            hint={t("settings.explanationLanguageHint")}
+          >
+            <LanguageSelector
+              id="explainLang"
+              value={explainLang}
+              options={getExplanationLanguages()}
+              disabled={saving}
+              onlyReadySelectable={false}
+              searchPlaceholder={t("settings.languageSearch")}
+              comingSoonLabel={t("settings.languageComingSoon")}
+              onChange={async (value) => {
+                setExplainLang(value);
+                setSaving(true);
+                setError(null);
+                try {
+                  const res = await fetch("/api/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      preferredExplanationLang: value,
+                    }),
+                  });
+                  const json = await res.json().catch(() => null);
+                  if (!res.ok || !json?.success) {
+                    setError(json?.error?.message || t("errors.generic"));
+                    return;
+                  }
+                  setMsg(t("toast.saved"));
+                } catch {
+                  setError(t("errors.network"));
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            />
+          </FormField>
+
+          <FormField
+            id="uiLang"
+            label={t("settings.uiLanguage")}
+            hint={t("settings.uiLanguageHint")}
+          >
+            <LanguageSelector
+              id="uiLang"
+              value={uiLang}
+              options={getUiLanguagePickerList()}
+              disabled={saving}
+              onlyReadySelectable
+              searchPlaceholder={t("settings.languageSearch")}
+              comingSoonLabel={t("settings.languageComingSoon")}
+              onChange={async (value) => {
+                if (!isReadyUiLanguageName(value)) return;
+                setUiLang(value);
+                setLocaleFromLanguageName(value);
+                setSaving(true);
+                setError(null);
+                try {
+                  const res = await fetch("/api/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ preferredUiLanguage: value }),
+                  });
+                  const json = await res.json().catch(() => null);
+                  if (!res.ok || !json?.success) {
+                    setError(json?.error?.message || t("errors.generic"));
+                    return;
+                  }
+                  setMsg(
+                    translate(
+                      "settings.languageUpdated",
+                      languageNameToLocale(value)
+                    )
+                  );
+                } catch {
+                  setError(t("errors.network"));
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            />
+          </FormField>
+
+          <PersonalityVibeCard
+            personality={displayPersonality}
+            title={t("settings.appVibe")}
+            hint={t("settings.appVibeHint")}
+            editLabel={t("settings.editTone")}
+            editHref="#personality"
           />
-          <Toggle
-            checked={prefs.weeklyDigest}
-            onChange={(v) => savePrefs({ ...prefs, weeklyDigest: v })}
-            label="Weekly money summary"
-            description="A short review of spend vs safe daily budget"
+
+          <div id="personality" className="scroll-mt-24 space-y-4">
+          <FormField
+            id="personalitySelect"
+            label={t("settings.personality")}
+            hint={t("settings.personalityHint")}
+          >
+            <select
+              id="personalitySelect"
+              className="field-input"
+              value={displayPersonality}
+              onChange={async (e) => {
+                const mode = e.target.value as PersonalityMode;
+                setPersonality(mode);
+                setSaving(true);
+                setError(null);
+                try {
+                  const res = await fetch("/api/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ personalityMode: mode }),
+                  });
+                  const json = await res.json().catch(() => null);
+                  if (!res.ok || !json?.success) {
+                    setError(json?.error?.message || t("errors.generic"));
+                    return;
+                  }
+                  setMsg(t("toast.saved"));
+                } catch {
+                  setError(t("errors.network"));
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            >
+              {PERSONALITY_MODES.map((m) => (
+                <option key={m} value={m}>
+                  {PERSONALITY_LABELS[m] || m}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          </div>
+
+          <ThemeSelector
+            disabled={saving}
+            onPersist={async (mode) => {
+              setSaving(true);
+              setError(null);
+              try {
+                const res = await fetch("/api/profile", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ themeMode: mode }),
+                });
+                const json = await res.json().catch(() => null);
+                if (!res.ok || !json?.success) {
+                  setError(json?.error?.message || t("errors.generic"));
+                  return;
+                }
+                setMsg(t("toast.saved"));
+              } catch {
+                setError(t("errors.network"));
+              } finally {
+                setSaving(false);
+              }
+            }}
           />
-          <Toggle
-            checked={prefs.goalAlerts}
-            onChange={(v) => savePrefs({ ...prefs, goalAlerts: v })}
-            label="Savings goal alerts"
-            description="Updates when you reach milestones"
-          />
-          <Toggle
-            checked={prefs.productUpdates}
-            onChange={(v) => savePrefs({ ...prefs, productUpdates: v })}
-            label="Product updates"
-            description="Occasional notes about new StudentLife features"
-          />
+
+          <div className="rounded-lg border border-border bg-surface-secondary/50 px-3 py-2 text-xs text-muted">
+            {t("settings.collegeLinkLead")}{" "}
+            <Link href="/dashboard/profile" className="text-primary underline">
+              {t("nav.profile")}
+            </Link>
+            . {t("settings.gamesLinkLead")}{" "}
+            <Link href="/dashboard/games" className="text-primary underline">
+              {t("nav.games")}
+            </Link>
+            .
+          </div>
         </div>
       </Section>
 
+      <EngagementSettings
+        initialSocial={{
+          displayName: initialProfile?.displayName ?? name ?? "",
+          leaderboardOptIn: initialProfile?.leaderboardOptIn ?? false,
+          leaderboardShowAvatar: initialProfile?.leaderboardShowAvatar ?? true,
+          avatarPresetId: initialProfile?.avatarPresetId ?? null,
+          avatarStatus: initialProfile?.avatarStatus ?? null,
+        }}
+        initialPrefs={initialNotifPrefs}
+        onMessage={(m) => setMsg(m)}
+        onError={(e) => setError(e)}
+      />
+
       <Section
         icon={Shield}
-        title="Privacy"
-        description="How usage data helps improve the product"
+        title={t("settings.privacy")}
+        description={seriousCopy.privacyBody}
       >
         <div className="divide-y divide-border">
           <Toggle
@@ -336,8 +524,14 @@ export function SettingsClient({
             onChange={(v) =>
               savePrefs({ ...prefs, shareAnonymousAnalytics: v })
             }
-            label="Anonymous product analytics"
-            description="Helps us fix bugs and improve money tools. No bank access."
+            label={t("settings.analytics")}
+            description={t("settings.analyticsDesc")}
+          />
+          <Toggle
+            checked={prefs.productUpdates}
+            onChange={(v) => savePrefs({ ...prefs, productUpdates: v })}
+            label={t("settings.notifProduct")}
+            description={t("settings.notifProductDesc")}
           />
         </div>
         <p className="mt-3 text-xs text-muted">
@@ -348,11 +542,11 @@ export function SettingsClient({
 
       <Section
         icon={Lock}
-        title="Security"
-        description="Session controls for this browser"
+        title={t("settings.security")}
+        description={t("settings.securityDesc")}
       >
         <p className="text-sm text-secondary">
-          You are signed in on this device. Sign out when using a shared computer.
+          {t("settings.securityBody")}
         </p>
         <div className="mt-4">
           <LogoutButton />
@@ -361,24 +555,24 @@ export function SettingsClient({
 
       <Section
         icon={Building2}
-        title="About"
+        title={t("settings.about")}
         description={`${COMPANY.productName} by ${COMPANY.legalName}`}
       >
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between gap-3">
-            <dt className="text-muted">Product</dt>
+            <dt className="text-muted">{t("settings.product")}</dt>
             <dd className="font-medium text-foreground">{COMPANY.productName}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-muted">Company</dt>
+            <dt className="text-muted">{t("settings.company")}</dt>
             <dd className="font-medium text-foreground">{COMPANY.legalName}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-muted">Version</dt>
+            <dt className="text-muted">{t("settings.version")}</dt>
             <dd className="font-medium text-foreground">{COMPANY.version}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-muted">Support</dt>
+            <dt className="text-muted">{t("settings.support")}</dt>
             <dd>
               <a
                 href={`mailto:${COMPANY.supportEmail}`}
@@ -394,6 +588,17 @@ export function SettingsClient({
           © {new Date().getFullYear()} {COMPANY.legalName}. {COMPANY.tagline}{" "}
           Not a bank, lender, or investment platform.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button href="/privacy" variant="secondary" size="sm">
+            {t("settings.linkPrivacy")}
+          </Button>
+          <Button href="/support" variant="secondary" size="sm">
+            {t("settings.support")}
+          </Button>
+          <Button href="/terms" variant="secondary" size="sm">
+            {t("settings.linkTerms")}
+          </Button>
+        </div>
       </Section>
 
       {error ? (

@@ -104,7 +104,7 @@ export function AdminShell({ ownerEmail, ownerName, children }: Props) {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 py-3 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -122,7 +122,7 @@ export function AdminShell({ ownerEmail, ownerName, children }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 sm:inline">
+            <span className="hidden rounded-md bg-success-soft px-3 py-1 text-xs font-medium text-success sm:inline">
               Owner
             </span>
             <span className="max-w-[140px] truncate text-xs text-muted sm:max-w-none">

@@ -11,7 +11,7 @@ export function SimpleBarChart({
 }) {
   const max = Math.max(...data.map((d) => d.value), 0);
   return (
-    <div className="card-surface p-4 md:p-5">
+    <div className="border-t border-border pt-4 md:pt-5">
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       {data.length === 0 || max === 0 ? (
         <p className="mt-6 text-sm text-muted">{emptyMessage}</p>
@@ -51,7 +51,7 @@ export function MetricCard({
   delta?: number | null;
 }) {
   return (
-    <div className="card-surface p-4">
+    <div className="border-t border-border pt-4">
       <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
@@ -62,9 +62,9 @@ export function MetricCard({
           <span
             className={
               delta > 0
-                ? "text-emerald-600"
+                ? "text-success"
                 : delta < 0
-                  ? "text-rose-600"
+                  ? "text-error"
                   : "text-muted"
             }
           >
@@ -79,7 +79,7 @@ export function MetricCard({
 
 export function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="card-surface flex flex-col items-start gap-2 p-8">
+    <div className="flex flex-col items-start gap-2 border-t border-border py-8">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       <p className="max-w-xl text-sm text-muted">{body}</p>
     </div>
@@ -89,13 +89,13 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
 export function StatusPill({ status }: { status: string }) {
   const tone =
     status === "Operational"
-      ? "bg-emerald-50 text-emerald-700"
+      ? "bg-success-soft text-success"
       : status === "Degraded" || status === "Partial outage"
-        ? "bg-amber-50 text-amber-800"
-        : "bg-slate-100 text-slate-700";
+        ? "bg-warning-soft text-warning"
+        : "bg-surface-secondary text-secondary";
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${tone}`}
+      className={`inline-flex rounded-md px-2.5 py-1 text-xs font-medium ${tone}`}
     >
       {status}
     </span>

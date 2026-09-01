@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/admin/ui";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type UserRow = {
   id: string;
@@ -51,10 +52,26 @@ export default function AdminUsersPage() {
   }, [q, role, status, page]);
 
   useEffect(() => {
-    // Initial + dependency-driven fetch for admin user list
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional remote data load
-    void load();
-  }, [load]);
+    const params = new URLSearchParams({
+      q,
+      role,
+      status,
+      page: String(page),
+      pageSize: "20",
+    });
+    return mountFetch(`/api/admin/users?${params}`, ({ ok, json }) => {
+      if (!ok) {
+        setError("Unable to load users");
+        return;
+      }
+      const body = json as {
+        data?: { users: UserRow[]; total: number };
+      } | null;
+      setUsers(body?.data?.users ?? []);
+      setTotal(body?.data?.total ?? 0);
+      setError(null);
+    });
+  }, [q, role, status, page]);
 
   async function runAction(
     action: "suspend" | "reactivate" | "revoke_sessions" | "reset_failed_logins"
@@ -134,7 +151,7 @@ export default function AdminUsersPage() {
           Export CSV
         </a>
       </div>
-      <div className="card-surface overflow-x-auto">
+      <div className="overflow-x-auto border-t border-border">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-border text-xs uppercase text-muted">
             <tr>

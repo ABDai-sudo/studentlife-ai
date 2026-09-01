@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { AppShell } from "@/components/app/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
+import { getProfileForUser } from "@/services/profile.service";
 
 type ModulePageProps = {
   title: string;
@@ -23,12 +24,16 @@ export async function ModulePage({
   children,
 }: ModulePageProps) {
   const user = await requireUser();
+  const profile = await getProfileForUser(user.id);
 
   return (
     <AppShell
       title={title}
       subtitle={subtitle}
       userName={user.name ?? "Student"}
+      displayName={profile?.displayName}
+      avatarPresetId={profile?.avatarPresetId}
+      avatarStatus={profile?.avatarStatus}
     >
       {children ?? (
         <EmptyState

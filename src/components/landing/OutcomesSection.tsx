@@ -47,17 +47,15 @@ export function OutcomesSection() {
       <div className="container-shell">
         <SectionHeader
           eyebrow="Outcomes"
-          title="Practical results students actually care about"
-          description="No inflated claims—just clearer academic routines and fewer dropped tasks."
+          title="Results students actually use"
+          description="Clearer academic routines and fewer dropped tasks — without inflated claims."
           className="mb-10"
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {outcomes.map(({ icon: Icon, title, description }) => (
-            <article key={title} className="card-surface p-5 transition-shadow hover:shadow-md">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Icon className="h-4 w-4" />
-              </span>
-              <h3 className="mt-4 text-base font-semibold text-foreground">
+            <article key={title} className="border-t border-border pt-5">
+              <Icon className="h-4 w-4 text-primary" aria-hidden />
+              <h3 className="mt-3 text-base font-semibold text-foreground">
                 {title}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary">

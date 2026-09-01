@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { StatCard } from "@/components/ui/StatCard";
@@ -63,7 +63,7 @@ export function AffordClient() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <form onSubmit={onSubmit} className="card-surface space-y-4 p-5">
+      <form onSubmit={onSubmit} className="space-y-4">
         <FormField id="item" label="What do you want to buy?">
           <input
             id="item"
@@ -91,13 +91,13 @@ export function AffordClient() {
       </form>
 
       {error ? (
-        <div className="rounded-xl border border-error/20 bg-red-50 px-4 py-3 text-sm text-error">
+        <div className="border-s-2 border-error/40 px-4 py-3 text-sm text-error">
           {error}
         </div>
       ) : null}
 
       {result ? (
-        <div className="card-surface space-y-4 p-5">
+        <div className="space-y-4 border-t border-border pt-6">
           <h3 className="text-lg font-semibold">{verdictLabel}</h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <StatCard

@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type Exam = {
   id: string;
@@ -40,8 +41,21 @@ export function ExamsClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return mountFetch("/api/exams", ({ ok, json }) => {
+      const body = json as {
+        success?: boolean;
+        data?: { exams: (Exam & { examDate: string })[] };
+      } | null;
+      if (ok && body?.success) {
+        setItems(
+          body.data!.exams.map((e) => ({
+            ...e,
+            examDate: String(e.examDate).slice(0, 10),
+          }))
+        );
+      }
+    });
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -70,7 +84,7 @@ export function ExamsClient() {
 
   return (
     <div className="space-y-5">
-      <form onSubmit={onSubmit} className="card-surface grid gap-3 p-5 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
         <FormField id="title" label="Exam title">
           <input id="title" className="field-input" required value={title} onChange={(e) => setTitle(e.target.value)} />
         </FormField>
@@ -97,9 +111,9 @@ export function ExamsClient() {
         </div>
       </form>
       {error ? <p className="text-sm text-error">{error}</p> : null}
-      <ul className="space-y-2">
+      <ul className="divide-y divide-border">
         {items.map((e) => (
-          <li key={e.id} className="card-surface flex items-center justify-between gap-3 px-4 py-3 text-sm">
+          <li key={e.id} className="flex items-center justify-between gap-3 py-3 text-sm">
             <div>
               <p className="font-semibold">{e.title}</p>
               <p className="text-xs text-muted">

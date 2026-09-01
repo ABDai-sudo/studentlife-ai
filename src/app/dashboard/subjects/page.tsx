@@ -5,7 +5,12 @@ import { SubjectsClient } from "@/components/academics/SubjectsClient";
 export default async function SubjectsPage() {
   const user = await requireUser();
   return (
-    <AppShell title="Classes" subtitle="Your subjects this term" userName={user.name ?? "Student"}>
+    <AppShell
+      title="Subjects"
+      subtitle="Your subjects this term"
+      titleKey="nav.subjects"
+      userName={user.name ?? "Student"}
+    >
       <SubjectsClient />
     </AppShell>
   );

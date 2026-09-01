@@ -52,7 +52,7 @@ export function AcademicWorkspaceTabs() {
           ))}
         </div>
 
-        <div className="mt-4 card-elevated p-5 sm:p-6" role="tabpanel">
+        <div className="mt-4 border-t border-border pt-5" role="tabpanel">
           {active === "Subjects" && <SubjectsView />}
           {active === "Notes" && <NotesView />}
           {active === "Assignments" && <AssignmentsView />}
@@ -67,7 +67,7 @@ export function AcademicWorkspaceTabs() {
 
 function SubjectsView() {
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-border">
       {[
         ["Computer Networks", "CSE301", 78, 86],
         ["Operating Systems", "CSE302", 64, 91],
@@ -75,7 +75,7 @@ function SubjectsView() {
       ].map(([name, code, progress, attendance]) => (
         <div
           key={String(name)}
-          className="rounded-xl border border-border bg-background p-4"
+          className="py-4 first:pt-0"
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -93,14 +93,14 @@ function SubjectsView() {
 
 function NotesView() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-6 sm:grid-cols-2">
       {[
         ["Normalization forms", "DBMS · Updated yesterday"],
         ["TCP congestion control", "Networks · Updated Mon"],
         ["CPU scheduling", "OS · Updated Sun"],
         ["ER diagram checklist", "DBMS · Updated Fri"],
       ].map(([title, meta]) => (
-        <div key={title} className="rounded-xl border border-border bg-background p-4">
+        <div key={title} className="border-t border-border pt-4">
           <p className="font-semibold text-foreground">{title}</p>
           <p className="mt-1 text-xs text-muted">{meta}</p>
           <p className="mt-3 text-sm leading-relaxed text-secondary">
@@ -114,7 +114,7 @@ function NotesView() {
 
 function AssignmentsView() {
   return (
-    <div className="space-y-2.5">
+    <div className="divide-y divide-border">
       {[
         ["DBMS project draft", "In progress", "Fri 5:00 PM"],
         ["Networks quiz prep", "Pending", "Mon 10:00 AM"],
@@ -122,7 +122,7 @@ function AssignmentsView() {
       ].map(([title, status, due]) => (
         <div
           key={title}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3"
+          className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
         >
           <div>
             <p className="font-semibold text-foreground">{title}</p>
@@ -147,7 +147,7 @@ function AssignmentsView() {
 
 function TimetableView() {
   return (
-    <div className="grid gap-2 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-3">
       {[
         ["Thu 10:00", "Algorithms", "Room 204"],
         ["Thu 14:00", "Database Lab", "Lab B"],
@@ -156,7 +156,7 @@ function TimetableView() {
         ["Mon 11:00", "Operating Systems", "Room 210"],
         ["Tue 15:00", "Seminar", "Auditorium"],
       ].map(([time, title, place]) => (
-        <div key={time} className="rounded-xl border border-border bg-background p-3">
+        <div key={time} className="border-t border-border pt-3">
           <p className="text-xs font-semibold text-primary">{time}</p>
           <p className="mt-1 text-sm font-semibold text-foreground">{title}</p>
           <p className="text-xs text-muted">{place}</p>
@@ -168,7 +168,7 @@ function TimetableView() {
 
 function ExamsView() {
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-border">
       {[
         ["Networks midterm", "12 Aug", "9 days"],
         ["OS quiz", "18 Aug", "15 days"],
@@ -176,7 +176,7 @@ function ExamsView() {
       ].map(([title, date, left]) => (
         <div
           key={title}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3"
+          className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
         >
           <div>
             <p className="font-semibold text-foreground">{title}</p>
@@ -191,13 +191,13 @@ function ExamsView() {
 
 function AttendanceView() {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-3">
       {[
         ["Computer Networks", 86],
         ["Operating Systems", 91],
         ["Database Systems", 82],
       ].map(([name, value]) => (
-        <div key={String(name)} className="rounded-xl border border-border bg-background p-4">
+        <div key={String(name)} className="border-t border-border pt-4">
           <p className="text-sm font-semibold text-foreground">{name}</p>
           <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
             {value}%

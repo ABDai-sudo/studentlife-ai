@@ -14,12 +14,7 @@ export function ProductWindow({
   return (
     <div className={`app-window ${className}`}>
       <div className="app-window-chrome">
-        <span className="app-window-dot" />
-        <span className="app-window-dot" />
-        <span className="app-window-dot" />
-        <span className="ml-3 truncate text-xs font-medium text-muted">
-          {title}
-        </span>
+        <span className="truncate text-xs font-medium text-muted">{title}</span>
       </div>
       <div>{children}</div>
     </div>

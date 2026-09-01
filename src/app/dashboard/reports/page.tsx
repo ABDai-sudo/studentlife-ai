@@ -20,10 +20,12 @@ export default async function ReportsPage() {
     <AppShell
       title="Reports"
       subtitle="Weekly & monthly money review"
+      titleKey="reports.title"
+      subtitleKey="reports.subtitle"
       userName={user.name ?? "Student"}
     >
       {!report ? (
-        <div className="card-surface border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+        <div className="border-s-2 border-warning/50 px-4 py-3 text-sm text-secondary">
           Could not load report.
         </div>
       ) : (
@@ -58,8 +60,8 @@ export default async function ReportsPage() {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <section className="card-surface p-5">
+          <div className="grid gap-8 border-t border-border pt-6 lg:grid-cols-2">
+            <section>
               <h3 className="mb-4 text-sm font-semibold">Category mix</h3>
               {report.categories.length === 0 ? (
                 <p className="text-sm text-muted">No expenses this month.</p>
@@ -76,7 +78,7 @@ export default async function ReportsPage() {
               )}
             </section>
 
-            <section className="card-surface p-5">
+            <section className="border-t border-border pt-6 lg:border-t-0 lg:border-s lg:ps-8 lg:pt-0">
               <h3 className="mb-4 text-sm font-semibold">Coach insights</h3>
               <ul className="space-y-2 text-sm text-secondary">
                 {report.score.insights.map((tip) => (

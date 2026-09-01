@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState, StatusPill } from "@/components/admin/ui";
+import { fetchJson, mountFetch } from "@/lib/react/mount-fetch";
 
 type LivePayload = {
   available: boolean;
@@ -27,13 +28,13 @@ export default function AdminLivePage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/live", { cache: "no-store" });
-      if (res.status === 403 || res.status === 401) {
+      const { status, json } = await fetchJson("/api/admin/live");
+      if (status === 403 || status === 401) {
         setError("Access denied");
         return;
       }
-      const json = await res.json();
-      setData(json.data as LivePayload);
+      const body = json as { data?: LivePayload } | null;
+      setData(body?.data as LivePayload);
       setError(null);
     } catch {
       setError("Could not load live activity");
@@ -41,17 +42,46 @@ export default function AdminLivePage() {
   }, []);
 
   useEffect(() => {
-    // Poll live activity endpoint
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional remote data load
-    void load();
-    const id = setInterval(() => void load(), 20000);
-    return () => clearInterval(id);
-  }, [load]);
+    const stop = mountFetch(
+      "/api/admin/live",
+      ({ status, json }) => {
+        if (status === 403 || status === 401) {
+          setError("Access denied");
+          return;
+        }
+        const body = json as { data?: LivePayload } | null;
+        setData(body?.data as LivePayload);
+        setError(null);
+      },
+      () => {
+        setError("Could not load live activity");
+      }
+    );
+    const id = setInterval(() => {
+      fetchJson("/api/admin/live")
+        .then(({ status, json }) => {
+          if (status === 403 || status === 401) {
+            setError("Access denied");
+            return;
+          }
+          const body = json as { data?: LivePayload } | null;
+          setData(body?.data as LivePayload);
+          setError(null);
+        })
+        .catch(() => {
+          setError("Could not load live activity");
+        });
+    }, 20000);
+    return () => {
+      stop();
+      clearInterval(id);
+    };
+  }, []);
 
   if (error) return <EmptyState title="Live activity" body={error} />;
   if (!data) {
     return (
-      <div className="card-surface animate-pulse p-8 text-sm text-muted">
+      <div className="animate-pulse py-8 text-sm text-muted">
         Loading live activity…
       </div>
     );
@@ -83,19 +113,19 @@ export default function AdminLivePage() {
         </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Approx. active</p>
           <p className="mt-2 text-2xl font-semibold">
             {data.approximateActiveUsers}
           </p>
         </div>
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">API health</p>
           <div className="mt-2">
             <StatusPill status={data.apiHealth} />
           </div>
         </div>
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Login burst watch</p>
           <p className="mt-2 text-sm font-medium">
             {data.suspiciousLoginBursts
@@ -137,7 +167,7 @@ export default function AdminLivePage() {
 
 function Feed({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="card-surface p-4">
+    <div className="border-t border-border pt-4">
       <h2 className="text-sm font-semibold">{title}</h2>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-muted">Nothing in the last 15 minutes.</p>

@@ -11,25 +11,22 @@ export function CanIAffordIt() {
           description="See the impact on your safe daily budget and savings goals before you spend. Example preview only — not a guarantee."
         />
 
-        <div className="card-elevated p-5 sm:p-6">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <div className="grid gap-6 sm:grid-cols-2">
             {[
               ["Item", "Running shoes"],
               ["Price", "₹500"],
               ["Money left", "₹1,350"],
               ["Days left", "11"],
             ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-border bg-background px-3 py-3"
-              >
+              <div key={label}>
                 <p className="text-xs text-muted">{label}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 rounded-xl border border-warning/30 bg-amber-50 p-4">
+          <div className="mt-6 border-t border-border pt-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="warning">Affordable with caution</Badge>
             </div>

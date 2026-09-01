@@ -4,6 +4,7 @@ import { monthBounds } from "@/lib/money";
 import { getDashboardMoneySummary } from "@/services/expense.service";
 import { listBudgetsForUser } from "@/services/budget.service";
 import { listGoalsForUser } from "@/services/goal.service";
+import { EXPENSE_CATEGORY_LABELS } from "@/lib/validations/expense";
 
 export type FinancialScoreDto = {
   score: number;
@@ -110,9 +111,11 @@ export async function computeFinancialScoreForUser(
     insights.push("Add category budgets so adherence can guide your month.");
   }
   if (summary.categories[0]) {
-    insights.push(
-      `Top spend category this month: ${summary.categories[0].category} (${summary.categories[0].percent}%).`
-    );
+    const top = summary.categories[0];
+    const topLabel =
+      EXPENSE_CATEGORY_LABELS[top.category as keyof typeof EXPENSE_CATEGORY_LABELS] ??
+      top.category;
+    insights.push(`Top spend category this month: ${topLabel} (${top.percent}%).`);
   }
   if (summary.safePerDay != null) {
     insights.push(

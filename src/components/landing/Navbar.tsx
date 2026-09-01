@@ -2,61 +2,67 @@
 
 import Link from "next/link";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
 
 type MenuLink = { href: string; label: string };
 
 const productLinks: MenuLink[] = [
-  { href: "#product", label: "Financial Dashboard" },
-  { href: "#expenses", label: "Expense Tracker" },
-  { href: "#goals", label: "Savings Goals" },
-  { href: "#health", label: "Financial Health" },
-  { href: "#academics", label: "Student Workspace" },
+  { href: "#product", label: "Product overview" },
+  { href: "#ai-tutor", label: "AI Tutor" },
+  { href: "#assignments", label: "Assignment Helper" },
+  { href: "#exam-prep", label: "Exam Prep" },
+  { href: "#games", label: "Games & Streaks" },
+  { href: "#budget", label: "Student Budget" },
 ];
 
-const coachLinks: MenuLink[] = [
-  { href: "#coach", label: "Spending Insights" },
-  { href: "#safe-spend", label: "Safe Daily Budget" },
-  { href: "#afford", label: "Can I Afford It?" },
-  { href: "#goals", label: "Goal Planning" },
-  { href: "#reports", label: "Monthly Review" },
+const aiTutorLinks: MenuLink[] = [
+  { href: "#ai-tutor", label: "Ask Anything" },
+  { href: "#ai-tutor", label: "Explain Notes" },
+  { href: "#assignments", label: "Upload a Question" },
+  { href: "#ai-tutor", label: "Create Study Plan" },
+];
+
+const examPrepLinks: MenuLink[] = [
+  { href: "#exam-prep", label: "Question Generator" },
+  { href: "#exam-prep", label: "Mock Tests" },
+  { href: "#games", label: "Quiz Rush" },
+  { href: "#exam-prep", label: "Viva Practice" },
 ];
 
 const budgetLinks: MenuLink[] = [
-  { href: "#pocket-money", label: "Monthly Budget" },
-  { href: "#pocket-money", label: "Pocket Money Mode" },
-  { href: "#expenses", label: "Expense Categories" },
-  { href: "#reports", label: "Subscription Tracker" },
-  { href: "#goals", label: "Emergency Fund" },
+  { href: "#budget", label: "Money Dashboard" },
+  { href: "#budget", label: "Expenses" },
+  { href: "#budget", label: "Safe Daily Spend" },
+  { href: "#budget", label: "Savings Goals" },
+  { href: "#budget", label: "AI Money Coach" },
 ];
 
-const studentLinks: MenuLink[] = [
-  { href: "#academics", label: "Subjects" },
-  { href: "#academics", label: "Notes" },
-  { href: "#academics", label: "Assignments" },
-  { href: "#academics", label: "Timetable" },
-  { href: "#academics", label: "Exams" },
-  { href: "#academics", label: "Attendance" },
-];
+type OpenMenu = "product" | "tutor" | "exam" | "budget" | null;
 
-type OpenMenu = "product" | "coach" | "budget" | "student" | null;
+function subscribeScroll(onStoreChange: () => void) {
+  window.addEventListener("scroll", onStoreChange, { passive: true });
+  return () => window.removeEventListener("scroll", onStoreChange);
+}
+
+function getScrollSnapshot() {
+  return window.scrollY > 8;
+}
+
+function getServerScrollSnapshot() {
+  return false;
+}
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const scrolled = useSyncExternalStore(
+    subscribeScroll,
+    getScrollSnapshot,
+    getServerScrollSnapshot
+  );
   const [menu, setMenu] = useState<OpenMenu>(null);
   const navRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onScroll() {
-      setScrolled(window.scrollY > 8);
-    }
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -93,14 +99,14 @@ export function Navbar() {
     <header
       className={`sticky top-0 z-50 border-b transition-colors ${
         scrolled
-          ? "border-border bg-surface/90 backdrop-blur-xl"
-          : "border-transparent bg-surface/70 backdrop-blur-md"
+          ? "border-border bg-surface"
+          : "border-transparent bg-background"
       }`}
     >
-      <nav className="container-shell flex h-16 items-center justify-between">
+      <nav className="container-shell flex h-16 items-center justify-between gap-3">
         <Logo />
 
-        <div className="hidden items-center gap-1 lg:flex" ref={navRef}>
+        <div className="hidden items-center gap-0.5 xl:flex" ref={navRef}>
           <NavDropdown
             label="Product"
             open={menu === "product"}
@@ -109,99 +115,130 @@ export function Navbar() {
             onPick={() => setMenu(null)}
           />
           <NavDropdown
-            label="AI Money Coach"
-            open={menu === "coach"}
-            onToggle={() => toggle("coach")}
-            links={coachLinks}
+            label="AI Tutor"
+            open={menu === "tutor"}
+            onToggle={() => toggle("tutor")}
+            links={aiTutorLinks}
             onPick={() => setMenu(null)}
           />
+          <a
+            href="#assignments"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Assignments
+          </a>
           <NavDropdown
-            label="Budget Tools"
+            label="Exam Prep"
+            open={menu === "exam"}
+            onToggle={() => toggle("exam")}
+            links={examPrepLinks}
+            onPick={() => setMenu(null)}
+          />
+          <a
+            href="#games"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Games & Streaks
+          </a>
+          <NavDropdown
+            label="Budget"
             open={menu === "budget"}
             onToggle={() => toggle("budget")}
             links={budgetLinks}
             onPick={() => setMenu(null)}
           />
-          <NavDropdown
-            label="Student Tools"
-            open={menu === "student"}
-            onToggle={() => toggle("student")}
-            links={studentLinks}
-            onPick={() => setMenu(null)}
-          />
           <a
             href="#pricing"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Pricing
           </a>
-          <a
-            href="#problems"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground"
+          <Link
+            href="/support"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Resources
-          </a>
+          </Link>
         </div>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <Button href="/login" variant="ghost" size="sm">
             Log in
           </Button>
           <Button href="/signup" size="sm">
-            Start free
+            Create account
           </Button>
         </div>
 
-        <button
-          type="button"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-foreground lg:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </button>
+        <div className="flex items-center gap-2 xl:hidden">
+          <Button href="/signup" size="sm">
+            Create account
+          </Button>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:bg-surface-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
       </nav>
 
       {open ? (
         <div
           id="mobile-nav"
-          className="max-h-[80vh] overflow-y-auto border-t border-border bg-surface lg:hidden"
+          className="max-h-[min(80vh,32rem)] overflow-y-auto border-t border-border bg-surface xl:hidden"
         >
           <div className="container-shell space-y-4 py-4">
             <MobileGroup title="Product" links={productLinks} onPick={() => setOpen(false)} />
-            <MobileGroup title="AI Money Coach" links={coachLinks} onPick={() => setOpen(false)} />
-            <MobileGroup title="Budget Tools" links={budgetLinks} onPick={() => setOpen(false)} />
-            <MobileGroup title="Student Tools" links={studentLinks} onPick={() => setOpen(false)} />
+            <MobileGroup title="AI Tutor" links={aiTutorLinks} onPick={() => setOpen(false)} />
+            <a
+              href="#assignments"
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+              onClick={() => setOpen(false)}
+            >
+              Assignments
+            </a>
+            <MobileGroup title="Exam Prep" links={examPrepLinks} onPick={() => setOpen(false)} />
+            <a
+              href="#games"
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+              onClick={() => setOpen(false)}
+            >
+              Games & Streaks
+            </a>
+            <MobileGroup title="Budget" links={budgetLinks} onPick={() => setOpen(false)} />
             <a
               href="#pricing"
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium"
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
               onClick={() => setOpen(false)}
             >
               Pricing
             </a>
-            <a
-              href="#problems"
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium"
+            <Link
+              href="/support"
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
               onClick={() => setOpen(false)}
             >
               Resources
-            </a>
+            </Link>
             <div className="grid gap-2 border-t border-border pt-3">
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-border text-sm font-semibold"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-border text-sm font-semibold transition-colors hover:bg-surface-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                Start free
+                Create account
               </Link>
             </div>
           </div>
@@ -228,12 +265,12 @@ function NavDropdown({
     <div className="relative">
       <button
         type="button"
-        className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground"
+        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm font-medium text-secondary hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         aria-expanded={open}
         onClick={onToggle}
       >
         {label}
-        <ChevronDown className="h-3.5 w-3.5" />
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open ? (
         <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-surface p-1.5 shadow-md">
@@ -241,7 +278,7 @@ function NavDropdown({
             <a
               key={`${label}-${link.label}`}
               href={link.href}
-              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-surface-secondary hover:text-foreground"
+              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={onPick}
             >
               {link.label}

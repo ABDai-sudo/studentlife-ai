@@ -1,10 +1,11 @@
 export const COMPANY = {
   legalName: "Alad Technologies",
   productName: "StudentLife AI",
-  tagline: "Student money tools that keep the month on track.",
+  tagline:
+    "Study, assignment, exam, streak, and budget tools for students.",
   supportEmail: "support@studentlife.ai",
   website: "https://studentlife.ai",
   foundedYear: 2026,
-  version: "1.3.0",
+  version: "1.5.0",
   addressLine: "Built for students worldwide",
 } as const;

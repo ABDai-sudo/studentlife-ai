@@ -47,7 +47,7 @@ export default async function AdminAuditPage() {
           Append-only style records · not editable from this dashboard
         </p>
       </div>
-      <div className="card-surface overflow-x-auto">
+      <div className="overflow-x-auto border-t border-border">
         <table className="min-w-full text-sm">
           <thead className="border-b border-border text-xs uppercase text-muted">
             <tr>

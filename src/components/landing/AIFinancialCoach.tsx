@@ -29,29 +29,29 @@ export function AIFinancialCoach() {
               "Build a weekly savings plan for a goal",
             ].map((item) => (
               <li key={item} className="flex gap-2 text-sm text-foreground">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ai" />
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                 {item}
               </li>
             ))}
           </ul>
           <div className="mt-7">
-            <Button href="/signup" variant="ai">
-              Try AI Money Coach
+            <Button href="/signup">
+              Try Money Coach
             </Button>
           </div>
         </div>
 
-        <div className="card-elevated overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border bg-ai-soft/40 px-4 py-3">
+        <div className="overflow-hidden border-t border-border">
+          <div className="flex items-center justify-between border-b border-border bg-surface-secondary px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-foreground">AI Money Coach</p>
+              <p className="text-sm font-semibold text-foreground">Money Coach</p>
               <p className="text-xs text-muted">Example conversation · sample data</p>
             </div>
-            <Badge tone="ai">Coach</Badge>
+            <Badge tone="primary">Coach</Badge>
           </div>
 
           <div className="space-y-3 bg-background px-4 py-4">
-            <div className="ml-auto max-w-[90%] rounded-2xl rounded-br-md bg-ai px-3.5 py-2.5 text-sm text-white">
+            <div className="ml-auto max-w-[90%] rounded-xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-white">
               I have ₹1,350 left and 11 days remaining. Can I spend ₹500 on shoes?
             </div>
             <div className="max-w-[94%] rounded-2xl rounded-bl-md border border-border bg-surface px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
@@ -90,7 +90,7 @@ export function AIFinancialCoach() {
             </div>
             <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
               <span className="flex-1 text-sm text-muted">Ask about your budget…</span>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ai text-white">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
                 <Send className="h-3.5 w-3.5" />
               </span>
             </div>

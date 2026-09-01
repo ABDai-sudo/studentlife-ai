@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -9,6 +9,7 @@ import {
   EXPENSE_CATEGORY_LABELS,
 } from "@/lib/validations/expense";
 import { formatMoney } from "@/lib/money";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type Budget = {
   id: string;
@@ -49,8 +50,29 @@ export function BudgetsClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return mountFetch(
+      "/api/budgets",
+      ({ ok, json }) => {
+        const body = json as {
+          success?: boolean;
+          data?: { budgets: Budget[] };
+          error?: { message?: string };
+        } | null;
+        if (!ok || !body?.success) {
+          setError(body?.error?.message || "Could not load budgets.");
+          setLoading(false);
+          return;
+        }
+        setBudgets(body.data!.budgets);
+        setError(null);
+        setLoading(false);
+      },
+      () => {
+        setError("Could not reach the server.");
+        setLoading(false);
+      }
+    );
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -89,7 +111,7 @@ export function BudgetsClient() {
 
   return (
     <div className="space-y-5">
-      <form onSubmit={onSubmit} className="card-surface grid gap-3 p-5 sm:grid-cols-3">
+      <form onSubmit={onSubmit} className="grid gap-3 border-b border-border pb-6 sm:grid-cols-3">
         <FormField id="category" label="Category">
           <select
             id="category"
@@ -125,7 +147,7 @@ export function BudgetsClient() {
       </form>
 
       {error ? (
-        <div className="rounded-xl border border-error/20 bg-red-50 px-4 py-3 text-sm text-error">
+        <div className="border-s-2 border-error/40 px-4 py-3 text-sm text-error">
           {error}
         </div>
       ) : null}
@@ -137,7 +159,7 @@ export function BudgetsClient() {
           No category budgets yet. Set limits for food, travel, and more.
         </p>
       ) : (
-        <div className="card-surface space-y-4 p-5">
+        <div className="space-y-4">
           {budgets.map((b) => (
             <div key={b.id}>
               <div className="mb-1 flex items-center justify-between gap-3 text-sm">

@@ -71,7 +71,7 @@ export default async function AdminSecurityPage() {
         <Stat label="Unauthorized admin attempts" value={unauthorized} />
         <Stat label="Suspended users" value={suspended} />
       </div>
-      <div className="card-surface p-4">
+      <div className="border-t border-border pt-4">
         <h2 className="text-sm font-semibold">Configuration status</h2>
         <ul className="mt-3 space-y-2 text-sm text-secondary">
           <li>OWNER MFA enforcement: incomplete (models ready)</li>
@@ -89,7 +89,7 @@ export default async function AdminSecurityPage() {
           <li>Last backup status: configure on hosting provider</li>
         </ul>
       </div>
-      <div className="card-surface overflow-x-auto">
+      <div className="overflow-x-auto border-t border-border">
         <table className="min-w-full text-sm">
           <thead className="border-b border-border text-xs uppercase text-muted">
             <tr>
@@ -127,7 +127,7 @@ export default async function AdminSecurityPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="card-surface p-4">
+    <div className="border-t border-border pt-4">
       <p className="text-xs uppercase text-muted">{label}</p>
       <p className="mt-2 text-2xl font-semibold">{value}</p>
     </div>

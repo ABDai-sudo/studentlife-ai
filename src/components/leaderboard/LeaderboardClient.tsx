@@ -75,7 +75,7 @@ export function LeaderboardClient({
 
   if (!enabled || data?.enabled === false) {
     return (
-      <div className="card-surface p-5 text-sm text-secondary">
+      <div className="text-sm text-secondary">
         {t("leaderboard.disabled")}
       </div>
     );
@@ -83,7 +83,7 @@ export function LeaderboardClient({
 
   if (!optedIn) {
     return (
-      <div className="card-surface space-y-3 p-5">
+      <div className="space-y-3">
         <p className="text-sm font-semibold text-foreground">
           {t("leaderboard.hiddenTitle")}
         </p>
@@ -97,7 +97,7 @@ export function LeaderboardClient({
 
   return (
     <div className="space-y-4">
-      <div className="card-surface overflow-hidden">
+      <div className="overflow-hidden border-t border-border">
         <div className="flex items-center gap-2 border-b border-border px-4 py-3">
           <Trophy className="h-4 w-4 text-primary" aria-hidden />
           <h2 className="text-sm font-semibold text-foreground">
@@ -152,7 +152,7 @@ export function LeaderboardClient({
       </div>
 
       {data?.viewer && data.viewer.rank > (data.entries.at(-1)?.rank ?? 0) ? (
-        <div className="card-surface flex items-center gap-3 px-4 py-3">
+        <div className="flex items-center gap-3 border-t border-border py-3">
           <span className="w-8 text-sm font-semibold text-muted">
             #{data.viewer.rank}
           </span>

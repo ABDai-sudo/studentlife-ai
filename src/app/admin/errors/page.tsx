@@ -58,7 +58,7 @@ export default async function AdminErrorsPage() {
           Safe metadata only · {countWeek} events in 7 days
         </p>
       </div>
-      <div className="card-surface p-4">
+      <div className="border-t border-border pt-4">
         <h2 className="text-sm font-semibold">Most failing routes</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {routes.length === 0 ? (
@@ -76,7 +76,7 @@ export default async function AdminErrorsPage() {
           )}
         </ul>
       </div>
-      <div className="card-surface overflow-x-auto">
+      <div className="overflow-x-auto border-t border-border">
         <table className="min-w-full text-sm">
           <thead className="border-b border-border text-xs uppercase text-muted">
             <tr>

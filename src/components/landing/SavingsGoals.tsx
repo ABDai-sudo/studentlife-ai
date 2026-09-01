@@ -50,9 +50,9 @@ export function SavingsGoals() {
           description="Each goal shows target, progress, weekly contribution, and a practical coach tip."
           className="mb-10"
         />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-2">
           {goals.map((goal) => (
-            <article key={goal.title} className="card-elevated p-5">
+            <article key={goal.title} className="border-t border-border pt-5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <h3 className="text-base font-semibold text-foreground">
                   {goal.title}
@@ -63,8 +63,8 @@ export function SavingsGoals() {
                 {goal.current} of {goal.target} · {goal.weekly}
               </p>
               <ProgressBar value={goal.value} className="mt-3" />
-              <p className="mt-3 rounded-lg bg-ai-soft/70 px-3 py-2 text-xs leading-relaxed text-secondary">
-                AI tip: {goal.tip}
+              <p className="mt-3 text-xs leading-relaxed text-secondary">
+                Tip: {goal.tip}
               </p>
             </article>
           ))}

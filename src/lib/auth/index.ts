@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { prisma, withDbRetry } from "@/lib/db";
 import {
   SESSION_COOKIE,
   getSessionFromCookies,
@@ -41,24 +41,26 @@ export async function getSession(): Promise<SessionPayload | null> {
 
 async function loadAuthUser(userId: string): Promise<AuthUser | null> {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        status: true,
-        mfaEnabled: true,
-        profile: { select: { onboardingComplete: true } },
-        subscriptions: {
-          where: { status: "ACTIVE" },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { plan: true },
+    const user = await withDbRetry(() =>
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          status: true,
+          mfaEnabled: true,
+          profile: { select: { onboardingComplete: true } },
+          subscriptions: {
+            where: { status: "ACTIVE" },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { plan: true },
+          },
         },
-      },
-    });
+      })
+    );
     if (!user) return null;
     return {
       id: user.id,

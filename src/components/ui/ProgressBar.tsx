@@ -7,7 +7,7 @@ type ProgressBarProps = {
 
 const barTone = {
   primary: "bg-primary",
-  ai: "bg-ai",
+  ai: "bg-primary",
   success: "bg-success",
   accent: "bg-accent",
 };

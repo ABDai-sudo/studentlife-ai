@@ -1,102 +1,84 @@
+import {
+  AlertTriangle,
+  ClipboardList,
+  GraduationCap,
+  MessageCircle,
+  Timer,
+  Wallet,
+} from "lucide-react";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ProductWindow } from "@/components/landing/ProductWindow";
-import { Badge } from "@/components/ui/Badge";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+
+const modules = [
+  {
+    href: "#ai-tutor",
+    title: "Personalized AI Tutor",
+    body: "Ask anything with context from your course, semester, and notes.",
+    icon: MessageCircle,
+  },
+  {
+    href: "#assignments",
+    title: "Assignment Helper",
+    body: "Outlines, drafts, and viva prep — review before you submit.",
+    icon: ClipboardList,
+  },
+  {
+    href: "#exam-prep",
+    title: "Exam Preparation",
+    body: "Question papers, mock tests, MCQs, and answer keys.",
+    icon: GraduationCap,
+  },
+  {
+    href: "#games",
+    title: "Streaks & Games",
+    body: "Quests, XP, levels, and short study games that keep you consistent.",
+    icon: Timer,
+  },
+  {
+    href: "#emergency",
+    title: "Catch-up study plan",
+    body: "When you’re short on time, get a clear do-now plan.",
+    icon: AlertTriangle,
+  },
+  {
+    href: "#budget",
+    title: "Student Budget",
+    body: "Safe daily spend, expenses, goals, and an AI money coach.",
+    icon: Wallet,
+  },
+];
 
 export function ProductOverview() {
   return (
-    <section id="product" className="section-y border-b border-border bg-surface">
+    <section id="product" className="section-y-compact border-b border-border bg-surface">
       <div className="container-shell">
         <SectionHeader
-          eyebrow="Financial dashboard"
-          title="See money left, safe daily spend, and goals in one place"
-          description="Example preview of the Money Dashboard students use to survive the month. Sample figures only."
-          className="mb-10"
+          eyebrow="Product"
+          title="One workspace for study, deadlines, and money"
+          description="StudentLife AI is a student workspace. Budget tools are one module — not the whole product."
+          align="center"
+          className="mb-8"
         />
 
-        <ProductWindow title="StudentLife AI · Money Dashboard">
-          <div className="grid min-h-[400px] bg-background lg:grid-cols-[200px_1fr]">
-            <aside className="hidden border-r border-border bg-surface p-3 lg:block">
-              <p className="px-2 pb-2 text-[0.65rem] font-semibold text-muted">
-                FINANCE
-              </p>
-              {[
-                "Money Dashboard",
-                "Expenses",
-                "Budget",
-                "AI Money Coach",
-                "Savings Goals",
-                "Can I Afford It?",
-              ].map((item, i) => (
-                <div
-                  key={item}
-                  className={`rounded-lg px-2.5 py-2 text-sm ${
-                    i === 0
-                      ? "bg-primary-soft font-semibold text-primary"
-                      : "text-secondary"
-                  }`}
-                >
-                  {item}
-                </div>
-              ))}
-              <p className="mt-4 px-2 pb-2 text-[0.65rem] font-semibold text-muted">
-                STUDIES
-              </p>
-              {["Subjects", "Notes", "Assignments"].map((item) => (
-                <div key={item} className="rounded-lg px-2.5 py-2 text-sm text-secondary">
-                  {item}
-                </div>
-              ))}
-            </aside>
-
-            <div className="p-4 sm:p-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="text-lg font-semibold text-foreground">
-                    Money left this month
-                  </p>
-                  <p className="text-sm text-muted">11 days remaining · sample data</p>
-                </div>
-                <Badge tone="warning">Caution risk</Badge>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-4">
-                {[
-                  ["Money left", "₹1,350"],
-                  ["Safe / day", "₹122"],
-                  ["Spent", "₹4,050"],
-                  ["Saved", "₹800"],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="rounded-xl border border-border bg-surface p-3"
-                  >
-                    <p className="text-xs text-muted">{label}</p>
-                    <p className="mt-1 text-lg font-semibold text-foreground">
-                      {value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <div className="rounded-xl border border-border bg-surface p-4">
-                  <p className="mb-3 text-sm font-semibold">Category budgets</p>
-                  <ProgressBar value={78} label="Food" className="mb-2.5" />
-                  <ProgressBar value={54} label="Travel" className="mb-2.5" tone="accent" />
-                  <ProgressBar value={40} label="Education" tone="ai" />
-                </div>
-                <div className="rounded-xl border border-ai/20 bg-ai-soft/50 p-4">
-                  <p className="mb-2 text-sm font-semibold">AI Money Coach</p>
-                  <p className="text-sm leading-relaxed text-secondary">
-                    Food is up 31% vs last month. Cap cafeteria spend at ₹40/day
-                    to keep your ₹122 safe daily limit.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </ProductWindow>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map((mod) => {
+            const Icon = mod.icon;
+            return (
+              <a
+                key={mod.title}
+                href={mod.href}
+                className="group border-t border-border pt-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <Icon className="h-4 w-4 text-primary" aria-hidden />
+                <p className="mt-3 text-sm font-semibold text-foreground group-hover:text-primary">
+                  {mod.title}
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-secondary">
+                  {mod.body}
+                </p>
+              </a>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

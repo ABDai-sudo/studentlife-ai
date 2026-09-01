@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { formatMoney } from "@/lib/money";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type Goal = {
   id: string;
@@ -46,8 +47,29 @@ export function GoalsClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return mountFetch(
+      "/api/goals",
+      ({ ok, json }) => {
+        const body = json as {
+          success?: boolean;
+          data?: { goals: Goal[] };
+          error?: { message?: string };
+        } | null;
+        if (!ok || !body?.success) {
+          setError(body?.error?.message || "Could not load goals.");
+          setLoading(false);
+          return;
+        }
+        setGoals(body.data!.goals);
+        setError(null);
+        setLoading(false);
+      },
+      () => {
+        setError("Could not reach the server.");
+        setLoading(false);
+      }
+    );
+  }, []);
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
@@ -103,7 +125,7 @@ export function GoalsClient() {
 
   return (
     <div className="space-y-5">
-      <form onSubmit={onCreate} className="card-surface grid gap-3 p-5 sm:grid-cols-2">
+      <form onSubmit={onCreate} className="grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
         <FormField id="title" label="Goal title">
           <input
             id="title"
@@ -143,7 +165,7 @@ export function GoalsClient() {
       </form>
 
       {error ? (
-        <div className="rounded-xl border border-error/20 bg-red-50 px-4 py-3 text-sm text-error">
+        <div className="border-s-2 border-error/40 px-4 py-3 text-sm text-error">
           {error}
         </div>
       ) : null}
@@ -153,9 +175,9 @@ export function GoalsClient() {
       ) : goals.length === 0 ? (
         <p className="text-sm text-muted">No goals yet. Add your first dream purchase.</p>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           {goals.map((g) => (
-            <div key={g.id} className="card-surface p-5">
+            <div key={g.id} className="border-t border-border pt-5">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-foreground">{g.title}</h3>

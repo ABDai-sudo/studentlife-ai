@@ -137,6 +137,88 @@ enum SystemStatusLevel {
   UNAVAILABLE
 }
 
+enum PersonalityMode {
+  PROFESSIONAL
+  FRIENDLY
+  CAMPUS_BRO
+  CHRONICALLY_ONLINE
+  ACADEMIC_VILLAIN
+}
+
+enum ThemeMode {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  FILL_BLANK
+  ONE_WORD
+  VERY_SHORT
+  SHORT
+  LONG
+  CODING
+  NUMERICAL
+  PRACTICAL
+  VIVA
+  CASE_STUDY
+}
+
+enum PaperMode {
+  QUICK_PRACTICE
+  CLASS_TEST
+  INTERNAL_EXAM
+  SEMESTER_MOCK
+  CHAPTER_TEST
+  VIVA_PRACTICE
+  PRACTICAL_EXAM
+  REVISION_QUIZ
+}
+
+enum AssignmentDraftMode {
+  OUTLINE
+  GUIDED_DRAFT
+  FULL_DRAFT
+  EXAM_STYLE
+  PRESENTATION
+  VIVA_PREP
+}
+
+enum QuestStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+
+enum StudyBuddyItemKind {
+  STUDY_NOW
+  DEADLINE
+  EXAM
+  WEAK_TOPIC
+  REVISION
+  TIMETABLE
+  CONTINUE_SESSION
+}
+
+enum DocumentKind {
+  PDF
+  IMAGE
+  NOTES
+  QUESTION_PAPER
+  SYLLABUS
+  ASSIGNMENT
+  TEXT
+  OTHER
+}
+
 // ─── Users & Auth ────────────────────────────────────────────────────────────
 
 model User {
@@ -175,8 +257,28 @@ model User {
   achievements        Achievement[]
   authSessions        AuthSession[]
   analyticsEvents     AnalyticsEvent[]
-  auditLogsAsActor    AuditLog[]          @relation("AuditActor")
+  auditLogsAsActor    AuditLog[]               @relation("AuditActor")
   mfaRecoveryCodes    MfaRecoveryCode[]
+  aiConversations     AiConversation[]
+  uploadedDocuments   UploadedDocument[]
+  questionPapers      GeneratedQuestionPaper[]
+  assignmentDrafts    AssignmentDraft[]
+  quizAttempts        QuizAttempt[]
+  flashcardDecks      FlashcardDeck[]
+  studySessions       StudySession[]
+  dailyQuests         DailyQuest[]
+  xpTransactions      XpTransaction[]
+  weeklyChallenges    WeeklyChallenge[]
+  weeklyRecaps        WeeklyRecap[]
+  classHubMemberships ClassHubMember[]
+  classAnnouncements  ClassAnnouncement[]
+  sharedResources     SharedResource[]
+  classReports        ClassHubReport[]
+  notificationPreference NotificationPreference?
+  notifications       UserNotification[]
+  pushSubscriptions   PushSubscription[]
+  notificationDeliveries NotificationDelivery[]
+  studyBuddyPlans     StudyBuddyPlan[]
 
   @@index([role])
   @@index([status])
@@ -185,20 +287,43 @@ model User {
 }
 
 model StudentProfile {
-  id                String      @id @default(cuid())
-  userId            String      @unique @map("user_id")
-  university        String?
-  course            String?
-  yearOfStudy       Int?        @map("year_of_study")
-  studentType       StudentType @default(DAY_SCHOLAR) @map("student_type")
-  country           Country     @default(IN)
-  currency          Currency    @default(INR)
-  monthlyPocketMoney Decimal?   @map("monthly_pocket_money") @db.Decimal(12, 2)
-  primaryGoal       String?     @map("primary_goal")
-  onboardingComplete Boolean    @default(false) @map("onboarding_complete")
-  timezone          String      @default("Asia/Kolkata")
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
+  id                       String          @id @default(cuid())
+  userId                   String          @unique @map("user_id")
+  university               String?
+  course                   String?
+  yearOfStudy              Int?            @map("year_of_study")
+  studentType              StudentType     @default(DAY_SCHOLAR) @map("student_type")
+  country                  Country         @default(IN)
+  currency                 Currency        @default(INR)
+  monthlyPocketMoney       Decimal?        @map("monthly_pocket_money") @db.Decimal(12, 2)
+  primaryGoal              String?         @map("primary_goal")
+  onboardingComplete       Boolean         @default(false) @map("onboarding_complete")
+  timezone                 String          @default("Asia/Kolkata")
+  institutionName          String?         @map("institution_name")
+  boardOrUniversity        String?         @map("board_or_university")
+  classOrSemester          String?         @map("class_or_semester")
+  preferredExplanationLang String?         @map("preferred_explanation_lang")
+  preferredUiLanguage      String?         @map("preferred_ui_language")
+  personalityMode          PersonalityMode @default(PROFESSIONAL) @map("personality_mode")
+  themeMode                ThemeMode       @default(SYSTEM) @map("theme_mode")
+  studyGoal                String?         @map("study_goal")
+  dailyStudyMinutes        Int?            @map("daily_study_minutes")
+  weakSubjects             String?         @map("weak_subjects") @db.Text
+  displayName              String?         @map("display_name")
+  shareRecapsEnabled       Boolean         @default(true) @map("share_recaps_enabled")
+  leaderboardOptIn         Boolean         @default(false) @map("leaderboard_opt_in")
+  /// Curated StudentLife avatar preset id (optional). Initials used when null.
+  avatarPresetId           String?         @map("avatar_preset_id")
+  /// Optional social status chip (e.g. Locking In) — not a UI language.
+  avatarStatus             String?         @map("avatar_status")
+  /// When false, hide avatar image on public leaderboard (show initials).
+  leaderboardShowAvatar    Boolean         @default(true) @map("leaderboard_show_avatar")
+  xpTotal                  Int             @default(0) @map("xp_total")
+  level                    Int             @default(1)
+  academicAura             Int             @default(50) @map("academic_aura")
+  streakFreezeCount        Int             @default(1) @map("streak_freeze_count")
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -262,19 +387,19 @@ model Budget {
 }
 
 model SavingsGoal {
-  id                   String     @id @default(cuid())
-  userId               String     @map("user_id")
-  title                String
-  targetAmount         Decimal    @map("target_amount") @db.Decimal(12, 2)
-  currentAmount        Decimal    @default(0) @map("current_amount") @db.Decimal(12, 2)
-  currency             Currency   @default(INR)
-  monthlyContribution  Decimal?   @map("monthly_contribution") @db.Decimal(12, 2)
-  targetDate           DateTime?  @map("target_date") @db.Date
-  estimatedCompletion  DateTime?  @map("estimated_completion") @db.Date
-  status               GoalStatus @default(ACTIVE)
-  imageUrl             String?    @map("image_url")
-  createdAt            DateTime   @default(now()) @map("created_at")
-  updatedAt            DateTime   @updatedAt @map("updated_at")
+  id                  String     @id @default(cuid())
+  userId              String     @map("user_id")
+  title               String
+  targetAmount        Decimal    @map("target_amount") @db.Decimal(12, 2)
+  currentAmount       Decimal    @default(0) @map("current_amount") @db.Decimal(12, 2)
+  currency            Currency   @default(INR)
+  monthlyContribution Decimal?   @map("monthly_contribution") @db.Decimal(12, 2)
+  targetDate          DateTime?  @map("target_date") @db.Date
+  estimatedCompletion DateTime?  @map("estimated_completion") @db.Date
+  status              GoalStatus @default(ACTIVE)
+  imageUrl            String?    @map("image_url")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -283,16 +408,16 @@ model SavingsGoal {
 }
 
 model AffordabilityCheck {
-  id                String   @id @default(cuid())
-  userId            String   @map("user_id")
-  itemName          String   @map("item_name")
-  itemCost          Decimal  @map("item_cost") @db.Decimal(12, 2)
-  currentSavings    Decimal  @map("current_savings") @db.Decimal(12, 2)
-  monthlySavings    Decimal  @map("monthly_savings") @db.Decimal(12, 2)
-  monthsToAfford    Int      @map("months_to_afford")
-  fasterScenarios   Json?    @map("faster_scenarios") // [{label, months, action}]
-  currency          Currency @default(INR)
-  createdAt         DateTime @default(now()) @map("created_at")
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  itemName        String   @map("item_name")
+  itemCost        Decimal  @map("item_cost") @db.Decimal(12, 2)
+  currentSavings  Decimal  @map("current_savings") @db.Decimal(12, 2)
+  monthlySavings  Decimal  @map("monthly_savings") @db.Decimal(12, 2)
+  monthsToAfford  Int      @map("months_to_afford")
+  fasterScenarios Json?    @map("faster_scenarios") // [{label, months, action}]
+  currency        Currency @default(INR)
+  createdAt       DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -303,8 +428,8 @@ model AffordabilityCheck {
 model FinancialScore {
   id                 String    @id @default(cuid())
   userId             String    @map("user_id")
-  score              Int       // 0–100
-  label              String    // Excellent | Good | Fair | Needs Work
+  score              Int // 0–100
+  label              String // Excellent | Good | Fair | Needs Work
   savingsRate        Float?    @map("savings_rate")
   budgetAdherence    Float?    @map("budget_adherence")
   spendingDiscipline Float?    @map("spending_discipline")
@@ -313,7 +438,7 @@ model FinancialScore {
   moneyLeft          Decimal?  @map("money_left") @db.Decimal(12, 2)
   daysRemaining      Int?      @map("days_remaining")
   safeDailySpend     Decimal?  @map("safe_daily_spend") @db.Decimal(12, 2)
-  insights           Json?     // AI coach insights array
+  insights           Json? // AI coach insights array
   periodStart        DateTime  @map("period_start") @db.Date
   periodEnd          DateTime  @map("period_end") @db.Date
   createdAt          DateTime  @default(now()) @map("created_at")
@@ -362,16 +487,16 @@ model Note {
 }
 
 model TimetableSlot {
-  id          String  @id @default(cuid())
-  userId      String  @map("user_id")
-  subjectId   String? @map("subject_id")
-  title       String
-  dayOfWeek   Int     @map("day_of_week") // 0=Sun … 6=Sat
-  startTime   String  @map("start_time") // HH:mm
-  endTime     String  @map("end_time")
-  location    String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  subjectId String?  @map("subject_id")
+  title     String
+  dayOfWeek Int      @map("day_of_week") // 0=Sun … 6=Sat
+  startTime String   @map("start_time") // HH:mm
+  endTime   String   @map("end_time")
+  location  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
@@ -436,15 +561,15 @@ model Exam {
 }
 
 model CgpaRecord {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  semester     Int
-  subject      String
-  credits      Float
-  grade        String   // A+, A, B+, etc. or numeric
-  gradePoint   Float    @map("grade_point")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  semester   Int
+  subject    String
+  credits    Float
+  grade      String // A+, A, B+, etc. or numeric
+  gradePoint Float    @map("grade_point")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -455,17 +580,17 @@ model CgpaRecord {
 // ─── Subscriptions & Gamification ────────────────────────────────────────────
 
 model Subscription {
-  id               String             @id @default(cuid())
-  userId           String             @map("user_id")
-  plan             Plan               @default(FREE)
-  status           SubscriptionStatus @default(ACTIVE)
-  priceMonthly     Decimal?           @map("price_monthly") @db.Decimal(8, 2)
-  currency         Currency           @default(INR)
-  currentPeriodStart DateTime?        @map("current_period_start")
-  currentPeriodEnd   DateTime?        @map("current_period_end")
-  cancelledAt      DateTime?          @map("cancelled_at")
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
+  id                 String             @id @default(cuid())
+  userId             String             @map("user_id")
+  plan               Plan               @default(FREE)
+  status             SubscriptionStatus @default(ACTIVE)
+  priceMonthly       Decimal?           @map("price_monthly") @db.Decimal(8, 2)
+  currency           Currency           @default(INR)
+  currentPeriodStart DateTime?          @map("current_period_start")
+  currentPeriodEnd   DateTime?          @map("current_period_end")
+  cancelledAt        DateTime?          @map("cancelled_at")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -474,14 +599,14 @@ model Subscription {
 }
 
 model Streak {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  type         String   // expense_logging | budget | saving
-  currentCount Int      @default(0) @map("current_count")
-  bestCount    Int      @default(0) @map("best_count")
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  type         String // expense_logging | budget | saving
+  currentCount Int       @default(0) @map("current_count")
+  bestCount    Int       @default(0) @map("best_count")
   lastLoggedAt DateTime? @map("last_logged_at") @db.Date
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -492,7 +617,7 @@ model Streak {
 model Achievement {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
-  code        String   // e.g. SAVED_500_WEEK, BUDGET_3_MONTHS
+  code        String // e.g. SAVED_500_WEEK, BUDGET_3_MONTHS
   title       String
   description String?
   unlockedAt  DateTime @default(now()) @map("unlocked_at")
@@ -501,6 +626,396 @@ model Achievement {
 
   @@unique([userId, code])
   @@map("achievements")
+}
+
+// ─── AI, Academic tools, Gamification expansion ──────────────────────────────
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  title     String   @default("New conversation")
+  subject   String?
+  pinned    Boolean  @default(false)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId, updatedAt])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String        @id @default(cuid())
+  conversationId String        @map("conversation_id")
+  role           AiMessageRole
+  content        String        @db.Text
+  feedback       Int? // 1 up, -1 down
+  provider       String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+model UploadedDocument {
+  id          String       @id @default(cuid())
+  userId      String       @map("user_id")
+  kind        DocumentKind @default(OTHER)
+  fileName    String       @map("file_name")
+  mimeType    String       @map("mime_type")
+  sizeBytes   Int          @map("size_bytes")
+  storageKey  String?      @map("storage_key")
+  textExcerpt String?      @map("text_excerpt") @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("uploaded_documents")
+}
+
+model AssignmentDraft {
+  id            String              @id @default(cuid())
+  userId        String              @map("user_id")
+  assignmentId  String?             @map("assignment_id")
+  title         String
+  subject       String?
+  institution   String?
+  course        String?
+  semester      String?
+  question      String              @db.Text
+  marks         Int?
+  wordLimit     Int?                @map("word_limit")
+  dueDate       DateTime?           @map("due_date") @db.Date
+  format        String?
+  instructions  String?             @db.Text
+  citationStyle String?             @map("citation_style")
+  language      String?
+  difficulty    String?
+  mode          AssignmentDraftMode @default(GUIDED_DRAFT)
+  output        String              @db.Text
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@map("assignment_drafts")
+}
+
+model GeneratedQuestionPaper {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  title           String
+  institution     String?
+  course          String?
+  semester        String?
+  subject         String
+  unit            String?
+  chapter         String?
+  topics          String?   @db.Text
+  mode            PaperMode @default(QUICK_PRACTICE)
+  difficulty      String?
+  durationMinutes Int?      @map("duration_minutes")
+  totalMarks      Int?      @map("total_marks")
+  includeAnswers  Boolean   @default(true) @map("include_answers")
+  instructions    String?   @db.Text
+  syllabusNote    String?   @map("syllabus_note") @db.Text
+  shareToken      String?   @unique @map("share_token")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions GeneratedQuestion[]
+
+  @@index([userId, updatedAt])
+  @@map("generated_question_papers")
+}
+
+model GeneratedQuestion {
+  id          String       @id @default(cuid())
+  paperId     String       @map("paper_id")
+  orderIndex  Int          @map("order_index")
+  type        QuestionType
+  prompt      String       @db.Text
+  options     Json?
+  answer      String?      @db.Text
+  explanation String?      @db.Text
+  marks       Int          @default(1)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  paper GeneratedQuestionPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@index([paperId, orderIndex])
+  @@map("generated_questions")
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  paperId     String?  @map("paper_id")
+  title       String
+  score       Int
+  maxScore    Int      @map("max_score")
+  durationSec Int?     @map("duration_sec")
+  answersJson Json?    @map("answers_json")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("quiz_attempts")
+}
+
+model FlashcardDeck {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  title     String
+  subject   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards Flashcard[]
+
+  @@index([userId, updatedAt])
+  @@map("flashcard_decks")
+}
+
+model Flashcard {
+  id           String    @id @default(cuid())
+  deckId       String    @map("deck_id")
+  front        String    @db.Text
+  back         String    @db.Text
+  easeFactor   Float     @default(2.5) @map("ease_factor")
+  intervalDays Int       @default(0) @map("interval_days")
+  dueAt        DateTime? @map("due_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  deck FlashcardDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@index([deckId])
+  @@map("flashcards")
+}
+
+model StudySession {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  subject        String?
+  taskTitle      String?   @map("task_title")
+  plannedMinutes Int       @map("planned_minutes")
+  actualMinutes  Int?      @map("actual_minutes")
+  completed      Boolean   @default(false)
+  startedAt      DateTime  @default(now()) @map("started_at")
+  endedAt        DateTime? @map("ended_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@map("study_sessions")
+}
+
+model StudyBuddyPlan {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  planDate       DateTime @map("plan_date") @db.Date
+  headline       String
+  summary        String   @db.Text
+  factsJson      Json     @map("facts_json")
+  conversationId String?  @map("conversation_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items StudyBuddyPlanItem[]
+
+  @@unique([userId, planDate])
+  @@index([userId, createdAt])
+  @@map("study_buddy_plans")
+}
+
+model StudyBuddyPlanItem {
+  id             String             @id @default(cuid())
+  planId         String             @map("plan_id")
+  kind           StudyBuddyItemKind
+  title          String
+  subject        String?
+  sourceType     String?            @map("source_type")
+  sourceId       String?            @map("source_id")
+  minutes        Int                @default(25)
+  sortOrder      Int                @default(0) @map("sort_order")
+  completed      Boolean            @default(false)
+  completedAt    DateTime?          @map("completed_at")
+  fromDatabase   Boolean            @default(true) @map("from_database")
+  reason         String?
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  plan StudyBuddyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId, sortOrder])
+  @@map("study_buddy_plan_items")
+}
+
+model DailyQuest {
+  id          String      @id @default(cuid())
+  userId      String      @map("user_id")
+  questDate   DateTime    @map("quest_date") @db.Date
+  code        String
+  title       String
+  description String?
+  xpReward    Int         @default(25) @map("xp_reward")
+  status      QuestStatus @default(ACTIVE)
+  progress    Int         @default(0)
+  target      Int         @default(1)
+  completedAt DateTime?   @map("completed_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questDate, code])
+  @@index([userId, questDate])
+  @@map("daily_quests")
+}
+
+model XpTransaction {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  amount    Int
+  reason    String
+  dayKey    String   @map("day_key") // YYYY-MM-DD in user TZ
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dayKey])
+  @@index([userId, createdAt])
+  @@map("xp_transactions")
+}
+
+model WeeklyChallenge {
+  id          String      @id @default(cuid())
+  userId      String      @map("user_id")
+  weekStart   DateTime    @map("week_start") @db.Date
+  code        String
+  title       String
+  description String?
+  target      Int         @default(1)
+  progress    Int         @default(0)
+  status      QuestStatus @default(ACTIVE)
+  xpReward    Int         @default(100) @map("xp_reward")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart, code])
+  @@index([userId, weekStart])
+  @@map("weekly_challenges")
+}
+
+model WeeklyRecap {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  weekStart    DateTime @map("week_start") @db.Date
+  payload      Json
+  hideIdentity Boolean  @default(false) @map("hide_identity")
+  hiddenStats  Json?    @map("hidden_stats")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@map("weekly_recaps")
+}
+
+model ClassHub {
+  id             String   @id @default(cuid())
+  name           String
+  institution    String
+  course         String
+  semester       String
+  inviteCode     String   @unique @map("invite_code")
+  featureEnabled Boolean  @default(true) @map("feature_enabled")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  members       ClassHubMember[]
+  announcements ClassAnnouncement[]
+  resources     SharedResource[]
+  reports       ClassHubReport[]
+
+  @@unique([institution, course, semester])
+  @@map("class_hubs")
+}
+
+model ClassHubMember {
+  id        String   @id @default(cuid())
+  hubId     String   @map("hub_id")
+  userId    String   @map("user_id")
+  roleLabel String   @default("STUDENT") @map("role_label")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  hub  ClassHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([hubId, userId])
+  @@index([userId])
+  @@map("class_hub_members")
+}
+
+model ClassAnnouncement {
+  id        String   @id @default(cuid())
+  hubId     String   @map("hub_id")
+  authorId  String   @map("author_id")
+  title     String
+  body      String   @db.Text
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  hub    ClassHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  author User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([hubId, createdAt])
+  @@map("class_announcements")
+}
+
+model SharedResource {
+  id          String   @id @default(cuid())
+  hubId       String   @map("hub_id")
+  authorId    String   @map("author_id")
+  title       String
+  description String?  @db.Text
+  url         String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  hub    ClassHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  author User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([hubId, createdAt])
+  @@map("shared_resources")
+}
+
+model ClassHubReport {
+  id         String   @id @default(cuid())
+  hubId      String   @map("hub_id")
+  reporterId String   @map("reporter_id")
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  reason     String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  hub      ClassHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  reporter User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([hubId, createdAt])
+  @@map("class_hub_reports")
 }
 
 // ─── Admin / Security / Analytics ────────────────────────────────────────────
@@ -691,3 +1206,119 @@ model PlatformSetting {
 
   @@map("platform_settings")
 }
+
+// ─── Notifications foundation (Phase 4–5) ────────────────────────────────────
+
+enum NotificationChannel {
+  IN_APP
+  BROWSER
+  WEB_PUSH
+}
+
+enum NotificationCategory {
+  STREAK_AT_RISK
+  DAILY_QUESTS
+  ASSIGNMENT_DEADLINE
+  UPCOMING_EXAM
+  FOCUS_REMINDER
+  ACHIEVEMENT
+  WEEKLY_RECAP
+  LOW_MONEY
+  OVERSPENDING
+  SAVINGS_GOAL
+  UPCOMING_EXPENSE
+  SAFE_SPEND_UPDATE
+  PRODUCT
+}
+
+model NotificationPreference {
+  id                    String   @id @default(cuid())
+  userId                String   @unique @map("user_id")
+  pauseAll              Boolean  @default(false) @map("pause_all")
+  quietHoursStart       String?  @map("quiet_hours_start")
+  quietHoursEnd         String?  @map("quiet_hours_end")
+  preferredReminderTime String   @default("19:00") @map("preferred_reminder_time")
+  timezone              String   @default("Asia/Kolkata")
+  usePersonalityWording Boolean  @default(true) @map("use_personality_wording")
+  streakAtRisk          Boolean  @default(true) @map("streak_at_risk")
+  streakFinalReminder   Boolean  @default(false) @map("streak_final_reminder")
+  dailyQuests           Boolean  @default(true) @map("daily_quests")
+  assignmentDeadline    Boolean  @default(true) @map("assignment_deadline")
+  upcomingExam          Boolean  @default(true) @map("upcoming_exam")
+  focusReminder         Boolean  @default(true) @map("focus_reminder")
+  achievement           Boolean  @default(true)
+  weeklyRecap           Boolean  @default(true) @map("weekly_recap")
+  lowMoney              Boolean  @default(true) @map("low_money")
+  overspending          Boolean  @default(true)
+  savingsGoal           Boolean  @default(true) @map("savings_goal")
+  upcomingExpense       Boolean  @default(true) @map("upcoming_expense")
+  safeSpendUpdate       Boolean  @default(false) @map("safe_spend_update")
+  categoryWarnPercent   Int      @default(70) @map("category_warn_percent")
+  categoryHighPercent   Int      @default(90) @map("category_high_percent")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model UserNotification {
+  id           String               @id @default(cuid())
+  userId       String               @map("user_id")
+  category     NotificationCategory
+  title        String
+  body         String               @db.Text
+  href         String?
+  readAt       DateTime?            @map("read_at")
+  snoozedUntil DateTime?            @map("snoozed_until")
+  idempotencyKey String             @map("idempotency_key")
+  metadata     Json?
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("user_notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  endpoint  String
+  p256dh    String
+  auth      String
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model NotificationDelivery {
+  id             String              @id @default(cuid())
+  userId         String              @map("user_id")
+  notificationId String?             @map("notification_id")
+  channel        NotificationChannel
+  category       NotificationCategory
+  idempotencyKey String              @map("idempotency_key")
+  status         String              @default("queued")
+  errorSafe      String?             @map("error_safe")
+  sentAt         DateTime?           @map("sent_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification UserNotification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, channel, idempotencyKey])
+  @@index([userId, createdAt])
+  @@map("notification_deliveries")
+}
+

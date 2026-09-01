@@ -33,18 +33,18 @@ export function MoneyProblemsSection() {
           description="StudentLife AI is built for pocket money, hostel costs, travel, food, and saving for real student goals—not generic adult budgeting."
           className="mb-10"
         />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-2">
           {problems.map((item) => (
-            <article key={item.title} className="card-elevated p-5">
+            <article key={item.title} className="border-t border-border pt-5">
               <h3 className="text-base font-semibold text-foreground">
                 {item.title}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary">
                 {item.detail}
               </p>
-              <div className="mt-4 rounded-xl border border-border bg-background px-3.5 py-3 text-sm font-medium text-foreground">
+              <p className="mt-4 text-sm font-medium text-foreground">
                 {item.ui}
-              </div>
+              </p>
             </article>
           ))}
         </div>

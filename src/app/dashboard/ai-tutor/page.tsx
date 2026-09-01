@@ -6,8 +6,10 @@ export default async function AiTutorPage() {
   const user = await requireUser();
   return (
     <AppShell
-      title="Study Tutor"
-      subtitle="Ask study questions in simple words"
+      title="AI Tutor"
+      subtitle="Personalized study help with saved conversations"
+      titleKey="tutor.title"
+      subtitleKey="tutor.subtitle"
       userName={user.name ?? "Student"}
     >
       <AiTutorClient />

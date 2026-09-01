@@ -11,7 +11,7 @@ const variantClass: Record<Variant, string> = {
     "bg-surface text-foreground border border-border hover:bg-surface-secondary disabled:opacity-60",
   ghost:
     "bg-transparent text-secondary hover:bg-surface-secondary hover:text-foreground disabled:opacity-60",
-  ai: "bg-ai text-white hover:bg-ai/90 shadow-sm disabled:opacity-60",
+  ai: "bg-primary text-white hover:bg-primary-hover shadow-sm disabled:opacity-60",
   danger: "bg-error text-white hover:bg-error/90 disabled:opacity-60",
 };
 
@@ -44,7 +44,7 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const classes = `inline-flex items-center justify-center gap-2 font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed ${variantClass[variant]} ${sizeClass[size]} ${className}`;
+  const classes = `inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:active:scale-100 ${variantClass[variant]} ${sizeClass[size]} ${className}`;
 
   if ("href" in props && props.href) {
     const { href, ...rest } = props;

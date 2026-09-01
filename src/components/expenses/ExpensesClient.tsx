@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { StatCard } from "@/components/ui/StatCard";
 import { FormField } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +8,7 @@ import {
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_LABELS,
 } from "@/lib/validations/expense";
+import { mountFetch } from "@/lib/react/mount-fetch";
 
 type ExpenseRow = {
   id: string;
@@ -95,8 +96,46 @@ export function ExpensesClient() {
   }, [page, categoryFilter]);
 
   useEffect(() => {
-    void load(1, categoryFilter);
-  }, [categoryFilter]); // eslint-disable-line react-hooks/exhaustive-deps -- reload on filter only
+    const params = new URLSearchParams({
+      page: "1",
+      pageSize: "20",
+      category: categoryFilter,
+    });
+    return mountFetch(
+      `/api/expenses?${params}`,
+      ({ ok, json }) => {
+        const body = json as {
+          success?: boolean;
+          data?: {
+            expenses: ExpenseRow[];
+            summary: Summary;
+            total: number;
+            page: number;
+          };
+          error?: { message?: string };
+        } | null;
+        if (!ok || !body?.success) {
+          setError(
+            body?.error?.message ||
+              "Could not load expenses. Is the database running?"
+          );
+          setExpenses([]);
+          setLoading(false);
+          return;
+        }
+        setExpenses(body.data!.expenses);
+        setSummary(body.data!.summary);
+        setTotal(body.data!.total);
+        setPage(body.data!.page);
+        setError(null);
+        setLoading(false);
+      },
+      () => {
+        setError("Could not reach the server.");
+        setLoading(false);
+      }
+    );
+  }, [categoryFilter]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -166,7 +205,7 @@ export function ExpensesClient() {
 
       <form
         onSubmit={onSubmit}
-        className="card-surface space-y-4 p-5"
+        className="space-y-4 border-b border-border pb-6"
         aria-label="Add expense"
       >
         <div>
@@ -244,6 +283,7 @@ export function ExpensesClient() {
           value={categoryFilter}
           onChange={(e) => {
             setPage(1);
+            setLoading(true);
             setCategoryFilter(e.target.value);
           }}
           className="field-input min-h-11 w-auto"
@@ -259,24 +299,24 @@ export function ExpensesClient() {
       </div>
 
       {error ? (
-        <div className="card-surface border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="border-s-2 border-warning/50 px-4 py-3 text-sm text-secondary">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="card-surface animate-pulse p-6 text-sm text-muted">
+        <div className="py-6 text-sm text-muted">
           Loading expenses…
         </div>
       ) : expenses.length === 0 ? (
-        <div className="card-surface p-6">
+        <div className="py-6">
           <p className="font-medium text-foreground">No expenses yet</p>
           <p className="mt-1 text-sm text-muted">
             Add your first spend above — food, travel, education, and more.
           </p>
         </div>
       ) : (
-        <div className="card-surface overflow-x-auto">
+        <div className="overflow-x-auto border-t border-border">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-border text-xs uppercase text-muted">
               <tr>

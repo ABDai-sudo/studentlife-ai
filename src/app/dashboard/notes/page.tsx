@@ -5,7 +5,12 @@ import { NotesClient } from "@/components/academics/NotesClient";
 export default async function NotesPage() {
   const user = await requireUser();
   return (
-    <AppShell title="Notes" subtitle="Study notes by class" userName={user.name ?? "Student"}>
+    <AppShell
+      title="Notes"
+      subtitle="Study notes by subject"
+      titleKey="nav.notes"
+      userName={user.name ?? "Student"}
+    >
       <NotesClient />
     </AppShell>
   );

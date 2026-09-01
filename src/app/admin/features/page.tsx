@@ -46,7 +46,7 @@ export default async function AdminFeaturesPage() {
           Last 30 days · allowlisted events only
         </p>
       </div>
-      <div className="card-surface overflow-x-auto">
+      <div className="overflow-x-auto border-t border-border">
         <table className="min-w-full text-sm">
           <thead className="border-b border-border text-xs uppercase text-muted">
             <tr>

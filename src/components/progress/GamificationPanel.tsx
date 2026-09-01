@@ -171,21 +171,21 @@ export function GamificationClient({
         />
       </div>
 
-      <div className="card-surface p-5">
-        <p className="text-sm font-semibold">Aura</p>
+      <div className="border-t border-border pt-6">
+        <p className="text-sm font-semibold">Academic Aura</p>
         <div className="mt-3">
           <ProgressBar value={data.academicAura} />
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="card-surface p-5">
+      <div className="grid gap-8 border-t border-border pt-6 lg:grid-cols-2">
+        <section>
           <h2 className="text-sm font-semibold">Daily quests</h2>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-2 divide-y divide-border">
             {data.quests.map((q) => (
               <li
                 key={q.id}
-                className="flex items-start justify-between gap-3 rounded-lg border border-border p-3"
+                className="flex items-start justify-between gap-3 py-3"
               >
                 <div>
                   <p className="text-sm font-medium">{q.title}</p>
@@ -211,7 +211,7 @@ export function GamificationClient({
           </ul>
         </section>
 
-        <section className="card-surface space-y-3 p-5">
+        <section className="space-y-3 border-t border-border pt-6 lg:border-t-0 lg:pt-0">
           <h2 className="text-sm font-semibold">Focus Sprint</h2>
           <div className="flex flex-wrap gap-2">
             {[15, 25, 45, 60].map((m) => (
@@ -219,7 +219,7 @@ export function GamificationClient({
                 key={m}
                 type="button"
                 onClick={() => setMinutes(m)}
-                className={`rounded-full border px-3 py-1 text-xs ${
+                className={`rounded-md border px-3 py-1.5 text-xs ${
                   minutes === m
                     ? "border-primary bg-primary-soft text-primary"
                     : "border-border"
@@ -244,7 +244,7 @@ export function GamificationClient({
         </section>
       </div>
 
-      <section className="card-surface p-5">
+      <section className="border-t border-border pt-6">
         <h2 className="text-sm font-semibold">Weekly challenges</h2>
         <ul className="mt-3 space-y-2">
           {data.challenges.map((c) => (
@@ -263,7 +263,7 @@ export function GamificationClient({
         </ul>
       </section>
 
-      <section className="card-surface p-5">
+      <section className="border-t border-border pt-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold">Achievements</h2>
           <Button

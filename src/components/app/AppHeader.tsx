@@ -1,19 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Menu, X } from "lucide-react";
+import { Menu, Settings, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Logo } from "@/components/brand/Logo";
 import { Avatar } from "@/components/ui/Avatar";
 import { Sidebar } from "@/components/app/Sidebar";
 import { ThemeQuickToggle } from "@/components/theme/ThemeQuickToggle";
 import { useT } from "@/components/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries/en";
 import { mountFetch } from "@/lib/react/mount-fetch";
+import { displayAvatarStatus } from "@/lib/avatar/presets";
 import {
   IDENTITY_CHANGE_EVENT,
   type IdentityChangeDetail,
 } from "@/lib/avatar/identity-events";
+import { useHeaderIdentity } from "@/components/app/HeaderIdentity";
 
 type AppHeaderProps = {
   title: string;
@@ -37,7 +38,9 @@ export function AppHeader({
   avatarPresetId: avatarPresetIdProp = null,
   avatarStatus: avatarStatusProp = null,
 }: AppHeaderProps) {
-  const initialName = displayNameProp?.trim() || userName;
+  const identity = useHeaderIdentity();
+  const initialName =
+    displayNameProp?.trim() || identity?.displayName?.trim() || userName;
   const [open, setOpen] = useState(false);
   const [live, setLive] = useState<{
     avatarPresetId: string | null;
@@ -47,8 +50,10 @@ export function AppHeader({
   } | null>(null);
   const { t } = useT();
 
-  const avatarPresetId = live?.avatarPresetId ?? avatarPresetIdProp;
-  const avatarStatus = live?.avatarStatus ?? avatarStatusProp;
+  const avatarPresetId =
+    live?.avatarPresetId ?? avatarPresetIdProp ?? identity?.avatarPresetId ?? null;
+  const avatarStatus =
+    live?.avatarStatus ?? avatarStatusProp ?? identity?.avatarStatus ?? null;
   const displayName = live?.displayName ?? initialName;
   const level = live?.level ?? null;
 
@@ -113,7 +118,7 @@ export function AppHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 overflow-x-clip border-b border-border/80 bg-surface/90 px-4 backdrop-blur-md lg:px-6">
+      <header className="sticky top-0 z-30 flex h-16 w-full min-w-0 items-center gap-3 overflow-x-clip border-b border-border bg-surface px-4 lg:px-6">
         <button
           type="button"
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border transition-transform active:scale-95 lg:hidden"
@@ -124,16 +129,14 @@ export function AppHeader({
           {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </button>
 
-        <div className="lg:hidden">
-          <Logo compact />
-        </div>
-
-        <div className="hidden min-w-0 sm:block">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-sm font-semibold text-foreground">
             {resolvedTitle}
           </h1>
           {resolvedSubtitle ? (
-            <p className="truncate text-xs text-muted">{resolvedSubtitle}</p>
+            <p className="hidden truncate text-xs text-muted sm:block">
+              {resolvedSubtitle}
+            </p>
           ) : null}
         </div>
 
@@ -145,12 +148,12 @@ export function AppHeader({
             aria-label={t("nav.settings")}
             title={t("nav.settings")}
           >
-            <Bell className="h-4 w-4" />
+            <Settings className="h-4 w-4" />
           </Link>
 
           <Link
             href="/dashboard/profile"
-            className="inline-flex max-w-[9.75rem] min-w-0 items-center gap-2 rounded-xl border border-border/90 bg-surface/70 py-1 ps-1 pe-2 shadow-sm transition-colors hover:border-primary/25 hover:bg-surface-secondary sm:max-w-[14rem]"
+            className="inline-flex max-w-[9.75rem] min-w-0 items-center gap-2 rounded-lg border border-border bg-surface py-1 ps-1 pe-2 transition-colors hover:bg-surface-secondary sm:max-w-[14rem]"
             aria-label={t("header.profileMenu", { name: displayName })}
             title={t("header.profileMenu", { name: displayName })}
           >
@@ -161,12 +164,12 @@ export function AppHeader({
               </span>
               <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[0.65rem] leading-tight text-muted">
                 {level != null ? (
-                  <span className="shrink-0 rounded-full bg-primary-soft px-1.5 py-px font-semibold text-primary">
+                  <span className="shrink-0 rounded-md bg-primary-soft px-1.5 py-px font-semibold text-primary">
                     {t("header.levelShort", { level })}
                   </span>
                 ) : null}
                 {avatarStatus ? (
-                  <span className="truncate">{avatarStatus}</span>
+                  <span className="truncate">{displayAvatarStatus(avatarStatus)}</span>
                 ) : null}
               </span>
             </span>

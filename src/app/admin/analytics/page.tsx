@@ -83,11 +83,11 @@ export default async function AdminAnalyticsPage() {
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Events (14d)</p>
           <p className="mt-2 text-2xl font-semibold">{data.eventCount}</p>
         </div>
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Landing → signup</p>
           <p className="mt-2 text-2xl font-semibold">
             {data.conversion == null ? "—" : `${data.conversion}%`}
@@ -98,7 +98,7 @@ export default async function AdminAnalyticsPage() {
               : "Based on event counts"}
           </p>
         </div>
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Unique actors (14d)</p>
           <p className="mt-2 text-2xl font-semibold">{data.uniqueActors}</p>
         </div>

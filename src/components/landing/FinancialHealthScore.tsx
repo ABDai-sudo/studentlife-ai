@@ -12,7 +12,7 @@ export function FinancialHealthScore() {
           description="Based on budget adherence, savings rate, expense consistency, goal progress, emergency buffer, and overspending frequency. This is an internal budgeting score — not a credit score."
         />
 
-        <div className="card-elevated p-5 sm:p-6">
+        <div>
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-sm text-muted">Example score</p>
@@ -26,7 +26,7 @@ export function FinancialHealthScore() {
             <ProgressBar value={88} label="Budget adherence" />
             <ProgressBar value={16} label="Savings rate" tone="accent" />
             <ProgressBar value={74} label="Expense consistency" />
-            <ProgressBar value={42} label="Goal progress" tone="ai" />
+            <ProgressBar value={42} label="Goal progress" />
             <ProgressBar value={64} label="Emergency buffer" tone="success" />
           </div>
         </div>

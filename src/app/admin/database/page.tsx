@@ -38,18 +38,18 @@ export default async function AdminDatabasePage() {
         <StatusPill status={health.status} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Connected</p>
           <p className="mt-2 font-semibold">{health.ok ? "Yes" : "No"}</p>
         </div>
-        <div className="card-surface p-4">
+        <div className="border-t border-border pt-4">
           <p className="text-xs uppercase text-muted">Query latency</p>
           <p className="mt-2 font-semibold">
             {health.latencyMs == null ? "—" : `${health.latencyMs} ms`}
           </p>
         </div>
       </div>
-      <div className="card-surface p-4">
+      <div className="border-t border-border pt-4">
         <h2 className="text-sm font-semibold">Table counts</h2>
         {Object.keys(counts).length === 0 ? (
           <p className="mt-3 text-sm text-muted">Counts unavailable</p>
