@@ -23,6 +23,7 @@ export default async function SettingsPage() {
       savingsGoal: prefs.savingsGoal,
       weeklyRecap: prefs.weeklyRecap,
       lowMoney: prefs.lowMoney,
+      campusSocial: prefs.campusSocial ?? true,
     };
   } catch {
     initialNotifPrefs = null;

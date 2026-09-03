@@ -36,6 +36,16 @@ export async function proxy(request: NextRequest) {
   );
   const authenticated = await hasValidSession(request);
 
+  if (
+    (pathname === "/dashboard/campus-circle" ||
+      pathname.startsWith("/dashboard/campus-circle/")) &&
+    process.env.FEATURE_CAMPUS_CIRCLE !== "true"
+  ) {
+    const res = NextResponse.redirect(new URL("/dashboard", request.url));
+    res.headers.set("x-request-id", requestId);
+    return res;
+  }
+
   if (isProtected && !authenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);

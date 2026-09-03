@@ -51,7 +51,8 @@ export function isTransientDbError(error: unknown): boolean {
     "connection reset",
     "econnreset",
     "econnrefused",
-    "timed out",
+    "connection timed out",
+    "connect timeout",
   ];
 
   const lower = message.toLowerCase();
@@ -59,8 +60,11 @@ export function isTransientDbError(error: unknown): boolean {
 }
 
 /**
- * Run a DB operation with one reconnect retry for Neon idle/suspend errors.
- * Does not reset or migrate the database.
+ * Retry a DB *read* after Neon idle/suspend disconnects.
+ * Does not $disconnect the shared Prisma client (that aborts in-flight
+ * requests on the same Node process). Prisma reconnects on the next query.
+ * Do not wrap non-idempotent writes: a commit that then surfaces 57P01
+ * would be applied twice.
  */
 export async function withDbRetry<T>(
   operation: () => Promise<T>,
@@ -71,13 +75,7 @@ export async function withDbRetry<T>(
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       if (attempt > 0) {
-        try {
-          await prisma.$disconnect();
-        } catch {
-          // ignore disconnect failures on a dead connection
-        }
         await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
-        await prisma.$connect();
       }
       return await operation();
     } catch (error) {

@@ -113,6 +113,57 @@ export async function enqueueInAppNotification(input: {
   }
 }
 
+/**
+ * Campus Circle transactional notices reuse user_notifications.
+ * Independent of money-guardian / study-reminder feature flags.
+ */
+export async function enqueueCampusCircleNotification(input: {
+  userId: string;
+  title: string;
+  body: string;
+  href?: string;
+  idempotencyKey: string;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  if (!features.campusCircle) return null;
+
+  const prefs = await ensureNotificationPreferences(input.userId);
+  if (prefs.pauseAll) return null;
+  if (prefs.campusSocial === false) return null;
+
+  try {
+    return await prisma.userNotification.create({
+      data: {
+        userId: input.userId,
+        category: "CAMPUS_CIRCLE",
+        title: input.title,
+        body: input.body,
+        href: input.href ?? "/dashboard/campus-circle",
+        idempotencyKey: input.idempotencyKey,
+        metadata: input.metadata,
+      },
+    });
+  } catch {
+    return prisma.userNotification.findUnique({
+      where: {
+        userId_idempotencyKey: {
+          userId: input.userId,
+          idempotencyKey: input.idempotencyKey,
+        },
+      },
+    });
+  }
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  return withNotificationSchema(() =>
+    prisma.userNotification.updateMany({
+      where: { userId, readAt: null },
+      data: { readAt: new Date() },
+    })
+  );
+}
+
 /** Local hour (0–23) in the student's timezone. */
 function hourInTimezone(timezone: string, date = new Date()): number {
   try {

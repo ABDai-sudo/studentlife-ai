@@ -156,6 +156,7 @@ export function SettingsClient({
     savingsGoal: boolean;
     weeklyRecap: boolean;
     lowMoney: boolean;
+    campusSocial?: boolean;
   } | null;
 }) {
   const { setPersonality, personality } = useTheme();
@@ -508,7 +509,14 @@ export function SettingsClient({
           avatarPresetId: initialProfile?.avatarPresetId ?? null,
           avatarStatus: initialProfile?.avatarStatus ?? null,
         }}
-        initialPrefs={initialNotifPrefs}
+        initialPrefs={
+          initialNotifPrefs
+            ? {
+                ...initialNotifPrefs,
+                campusSocial: initialNotifPrefs.campusSocial !== false,
+              }
+            : null
+        }
         onMessage={(m) => setMsg(m)}
         onError={(e) => setError(e)}
       />

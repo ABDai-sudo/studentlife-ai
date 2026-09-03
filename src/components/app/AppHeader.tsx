@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Sidebar } from "@/components/app/Sidebar";
 import { ThemeQuickToggle } from "@/components/theme/ThemeQuickToggle";
+import { NotificationInbox } from "@/components/app/NotificationInbox";
 import { useT } from "@/components/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries/en";
 import { mountFetch } from "@/lib/react/mount-fetch";
@@ -142,6 +143,7 @@ export function AppHeader({
 
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <ThemeQuickToggle />
+          <NotificationInbox />
           <Link
             href="/settings"
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary"

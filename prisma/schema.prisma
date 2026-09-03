@@ -279,6 +279,25 @@ model User {
   pushSubscriptions   PushSubscription[]
   notificationDeliveries NotificationDelivery[]
   studyBuddyPlans     StudyBuddyPlan[]
+  campusSettings      CampusCircleSettings?
+  campusConnectionsRequested CampusConnection[] @relation("CampusConnectionRequester")
+  campusConnectionsReceived  CampusConnection[] @relation("CampusConnectionAddressee")
+  campusBlocksMade    CampusBlock[] @relation("CampusBlocker")
+  campusBlocksAgainst CampusBlock[] @relation("CampusBlocked")
+  campusReports          CampusReport[] @relation("CampusReportReporter")
+  campusReportsReviewed  CampusReport[] @relation("CampusReportReviewer")
+  studyInvitesSent    CampusStudyInvite[] @relation("StudyInviteFrom")
+  studyInvitesReceived CampusStudyInvite[] @relation("StudyInviteTo")
+  quizChallengesSent  CampusQuizChallenge[] @relation("QuizChallengeFrom")
+  quizChallengesReceived CampusQuizChallenge[] @relation("QuizChallengeTo")
+  recapSharesSent     CampusRecapShare[] @relation("RecapShareFrom")
+  recapSharesReceived CampusRecapShare[] @relation("RecapShareTo")
+  studyGroupsOwned    CampusStudyGroup[]
+  studyGroupMemberships CampusStudyGroupMember[]
+  studyGroupInvitesSent CampusStudyGroupInvite[] @relation("GroupInviteBy")
+  studyGroupInvitesReceived CampusStudyGroupInvite[] @relation("GroupInviteTo")
+  studyGroupActivities CampusStudyGroupActivity[]
+  campusReactions     CampusReaction[]
 
   @@index([role])
   @@index([status])
@@ -929,7 +948,8 @@ model WeeklyRecap {
   hiddenStats  Json?    @map("hidden_stats")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shares CampusRecapShare[]
 
   @@unique([userId, weekStart])
   @@map("weekly_recaps")
@@ -1016,6 +1036,265 @@ model ClassHubReport {
 
   @@index([hubId, createdAt])
   @@map("class_hub_reports")
+}
+
+// ─── Campus Circle (privacy-safe collaboration; behind FEATURE_CAMPUS_CIRCLE) ─
+
+enum CampusConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum CampusInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+enum CampusStudyStatus {
+  AVAILABLE
+  FOCUSING
+  IN_SESSION
+  BREAK
+  HIDDEN
+}
+
+enum CampusReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+}
+
+enum CampusReactionKind {
+  ENCOURAGE
+  THANKS
+  FOCUS
+}
+
+enum CampusGroupRole {
+  OWNER
+  MEMBER
+}
+
+enum CampusActivityKind {
+  CHECK_IN
+  PLAN
+  NOTE
+}
+
+model CampusCircleSettings {
+  id                       String             @id @default(cuid())
+  userId                   String             @unique @map("user_id")
+  studyStatus              CampusStudyStatus  @default(HIDDEN) @map("study_status")
+  shareStudyStatus         Boolean            @default(false) @map("share_study_status")
+  allowConnectionRequests  Boolean            @default(true) @map("allow_connection_requests")
+  allowStudyInvites        Boolean            @default(true) @map("allow_study_invites")
+  allowQuizChallenges      Boolean            @default(true) @map("allow_quiz_challenges")
+  allowGroupInvites        Boolean            @default(true) @map("allow_group_invites")
+  createdAt                DateTime           @default(now()) @map("created_at")
+  updatedAt                DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("campus_circle_settings")
+}
+
+model CampusConnection {
+  id           String                  @id @default(cuid())
+  requesterId  String                  @map("requester_id")
+  addresseeId  String                  @map("addressee_id")
+  status       CampusConnectionStatus  @default(PENDING)
+  createdAt    DateTime                @default(now()) @map("created_at")
+  updatedAt    DateTime                @updatedAt @map("updated_at")
+  respondedAt  DateTime?               @map("responded_at")
+
+  requester User @relation("CampusConnectionRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("CampusConnectionAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@index([requesterId, status])
+  @@map("campus_connections")
+}
+
+model CampusBlock {
+  id        String   @id @default(cuid())
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("CampusBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("CampusBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("campus_blocks")
+}
+
+model CampusReport {
+  id             String             @id @default(cuid())
+  reporterId     String             @map("reporter_id")
+  targetType     String             @map("target_type")
+  targetId       String             @map("target_id")
+  reason         String
+  details        String?            @db.Text
+  status         CampusReportStatus @default(OPEN)
+  reviewedAt     DateTime?          @map("reviewed_at")
+  reviewedById   String?            @map("reviewed_by_id")
+  resolutionNote String?            @map("resolution_note") @db.Text
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  reporter   User  @relation("CampusReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("CampusReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+  @@index([reviewedById])
+  @@map("campus_reports")
+}
+
+model RateLimitBucket {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime @map("reset_at")
+
+  @@index([resetAt])
+  @@map("rate_limit_buckets")
+}
+
+model CampusStudyInvite {
+  id          String              @id @default(cuid())
+  fromUserId  String              @map("from_user_id")
+  toUserId    String              @map("to_user_id")
+  status      CampusInviteStatus  @default(PENDING)
+  topic       String?
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  respondedAt DateTime?           @map("responded_at")
+
+  from User @relation("StudyInviteFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  to   User @relation("StudyInviteTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, status])
+  @@map("campus_study_invites")
+}
+
+model CampusQuizChallenge {
+  id          String              @id @default(cuid())
+  fromUserId  String              @map("from_user_id")
+  toUserId    String              @map("to_user_id")
+  status      CampusInviteStatus  @default(PENDING)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  respondedAt DateTime?           @map("responded_at")
+
+  from User @relation("QuizChallengeFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  to   User @relation("QuizChallengeTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, status])
+  @@map("campus_quiz_challenges")
+}
+
+model CampusRecapShare {
+  id         String   @id @default(cuid())
+  recapId    String   @map("recap_id")
+  fromUserId String   @map("from_user_id")
+  toUserId   String   @map("to_user_id")
+  payload    Json
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  recap WeeklyRecap @relation(fields: [recapId], references: [id], onDelete: Cascade)
+  from  User        @relation("RecapShareFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  to    User        @relation("RecapShareTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([recapId, toUserId])
+  @@index([toUserId, createdAt])
+  @@index([fromUserId, createdAt])
+  @@map("campus_recap_shares")
+}
+
+model CampusStudyGroup {
+  id         String   @id @default(cuid())
+  name       String
+  ownerId    String   @map("owner_id")
+  inviteCode String   @unique @map("invite_code")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  owner        User                      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members      CampusStudyGroupMember[]
+  invites      CampusStudyGroupInvite[]
+  activities   CampusStudyGroupActivity[]
+
+  @@index([ownerId])
+  @@map("campus_study_groups")
+}
+
+model CampusStudyGroupMember {
+  id       String          @id @default(cuid())
+  groupId  String          @map("group_id")
+  userId   String          @map("user_id")
+  role     CampusGroupRole @default(MEMBER)
+  joinedAt DateTime        @default(now()) @map("joined_at")
+
+  group CampusStudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@map("campus_study_group_members")
+}
+
+model CampusStudyGroupInvite {
+  id            String             @id @default(cuid())
+  groupId       String             @map("group_id")
+  invitedUserId String             @map("invited_user_id")
+  invitedById   String             @map("invited_by_id")
+  status        CampusInviteStatus @default(PENDING)
+  createdAt     DateTime           @default(now()) @map("created_at")
+  respondedAt   DateTime?          @map("responded_at")
+
+  group     CampusStudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  invited   User             @relation("GroupInviteTo", fields: [invitedUserId], references: [id], onDelete: Cascade)
+  invitedBy User             @relation("GroupInviteBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, invitedUserId])
+  @@index([invitedUserId, status])
+  @@map("campus_study_group_invites")
+}
+
+model CampusStudyGroupActivity {
+  id        String             @id @default(cuid())
+  groupId   String             @map("group_id")
+  authorId  String             @map("author_id")
+  kind      CampusActivityKind @default(CHECK_IN)
+  body      String             @db.Text
+  createdAt DateTime           @default(now()) @map("created_at")
+
+  group  CampusStudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt])
+  @@map("campus_study_group_activities")
+}
+
+model CampusReaction {
+  id         String              @id @default(cuid())
+  userId     String              @map("user_id")
+  targetType String              @map("target_type")
+  targetId   String              @map("target_id")
+  kind       CampusReactionKind
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId, kind])
+  @@index([targetType, targetId])
+  @@map("campus_reactions")
 }
 
 // ─── Admin / Security / Analytics ────────────────────────────────────────────
@@ -1229,6 +1508,7 @@ enum NotificationCategory {
   UPCOMING_EXPENSE
   SAFE_SPEND_UPDATE
   PRODUCT
+  CAMPUS_CIRCLE
 }
 
 model NotificationPreference {
@@ -1253,6 +1533,7 @@ model NotificationPreference {
   savingsGoal           Boolean  @default(true) @map("savings_goal")
   upcomingExpense       Boolean  @default(true) @map("upcoming_expense")
   safeSpendUpdate       Boolean  @default(false) @map("safe_spend_update")
+  campusSocial          Boolean  @default(true) @map("campus_social")
   categoryWarnPercent   Int      @default(70) @map("category_warn_percent")
   categoryHighPercent   Int      @default(90) @map("category_high_percent")
   createdAt             DateTime @default(now()) @map("created_at")

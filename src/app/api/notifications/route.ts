@@ -3,6 +3,8 @@ import { fail, ok, serverError, unauthorized } from "@/lib/api";
 import {
   getNotificationPreferences,
   listInAppNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
   updateNotificationPreferences,
 } from "@/services/notification.service";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
@@ -54,6 +56,7 @@ export async function PATCH(req: Request) {
       "savingsGoal",
       "upcomingExpense",
       "safeSpendUpdate",
+      "campusSocial",
     ] as const;
 
     const data: Prisma.NotificationPreferenceUncheckedUpdateInput = {};
@@ -117,5 +120,46 @@ export async function PATCH(req: Request) {
     return ok({ preferences });
   } catch {
     return serverError("Could not update notification preferences.");
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const ctx = await getRequestContext();
+    if (!isAllowedOrigin(ctx.origin)) {
+      return fail("Invalid origin", { code: "FORBIDDEN", status: 403 });
+    }
+    const user = await getCurrentUser();
+    if (!user) return unauthorized();
+    const body = (await req.json().catch(() => null)) as Record<
+      string,
+      unknown
+    > | null;
+    if (!body || typeof body.action !== "string") {
+      return fail("Invalid body.", { code: "VALIDATION_ERROR", status: 422 });
+    }
+    if (body.action === "mark_read") {
+      if (typeof body.id !== "string") {
+        return fail("Validation failed", {
+          code: "VALIDATION_ERROR",
+          status: 422,
+        });
+      }
+      const notification = await markNotificationRead(user.id, body.id);
+      if (!notification) {
+        return fail("Notification not found.", {
+          code: "NOT_FOUND",
+          status: 404,
+        });
+      }
+      return ok({ notification });
+    }
+    if (body.action === "mark_all_read") {
+      await markAllNotificationsRead(user.id);
+      return ok({ ok: true });
+    }
+    return fail("Unknown action.", { code: "VALIDATION_ERROR", status: 422 });
+  } catch {
+    return serverError("Could not update notification.");
   }
 }

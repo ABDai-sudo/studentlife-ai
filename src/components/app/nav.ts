@@ -19,6 +19,7 @@ import {
   Timer,
   TrendingUp,
   Trophy,
+  UserPlus,
   UserRound,
   Users,
   Wallet,
@@ -35,6 +36,8 @@ export type NavItem = {
   hintKey?: MessageKey;
   icon: LucideIcon;
   section?: "main" | "money" | "account";
+  /** Hide this item unless the named server feature flag is on. */
+  feature?: "campusCircle";
 };
 
 export const appNav: NavItem[] = [
@@ -142,6 +145,14 @@ export const appNav: NavItem[] = [
     hintKey: "nav.hint.optional",
     icon: Users,
     section: "main",
+  },
+  {
+    href: "/dashboard/campus-circle",
+    i18nKey: "nav.campusCircle",
+    hintKey: "nav.hint.campusCircle",
+    icon: UserPlus,
+    section: "main",
+    feature: "campusCircle",
   },
   {
     href: "/dashboard/money",

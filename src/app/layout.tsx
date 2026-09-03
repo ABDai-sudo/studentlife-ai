@@ -9,6 +9,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { LocaleHydrator } from "@/components/i18n/LocaleProvider";
 import { getThemeInitScript } from "@/lib/theme/storage";
+import { AppFlagsProvider } from "@/components/app/AppFlags";
+import { features } from "@/lib/features";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -73,7 +75,9 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <ThemeProvider initialTheme="SYSTEM" initialPersonality="PROFESSIONAL">
           <LocaleHydrator />
-          {children}
+          <AppFlagsProvider campusCircle={features.campusCircle}>
+            {children}
+          </AppFlagsProvider>
         </ThemeProvider>
       </body>
     </html>

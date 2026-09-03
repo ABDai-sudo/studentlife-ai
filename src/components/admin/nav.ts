@@ -7,6 +7,7 @@ export const adminNav = [
   { href: "/admin/health", label: "System Health" },
   { href: "/admin/errors", label: "Errors" },
   { href: "/admin/security", label: "Security Center" },
+  { href: "/admin/moderation", label: "Campus Reports" },
   { href: "/admin/audit", label: "Audit Logs" },
   { href: "/admin/database", label: "Database Status" },
   { href: "/admin/settings", label: "Settings" },

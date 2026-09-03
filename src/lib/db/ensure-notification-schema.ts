@@ -149,6 +149,13 @@ END $$;`,
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;`,
+  `DO $$ BEGIN
+  ALTER TYPE "NotificationCategory" ADD VALUE 'CAMPUS_CIRCLE';
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;`,
+  `ALTER TABLE "notification_preferences"
+    ADD COLUMN IF NOT EXISTS "campus_social" BOOLEAN NOT NULL DEFAULT true;`,
 ];
 
 export function ensureNotificationSchema(): Promise<void> {

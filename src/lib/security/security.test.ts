@@ -6,7 +6,7 @@ import {
   analyticsEventSchema,
   ALLOWED_ANALYTICS_EVENTS,
 } from "../../services/analytics.service";
-import { __resetRateLimitBuckets, rateLimit } from "./rate-limit";
+import { __resetRateLimitBuckets, decideRateLimit, rateLimit } from "./rate-limit";
 import { stripSensitiveQuery } from "./hash";
 import { AuthorizationError } from "../auth/errors";
 
@@ -67,6 +67,28 @@ describe("analytics validation", () => {
   });
 });
 
+describe("transient db errors", () => {
+  it("retries Neon administrator disconnects only", async () => {
+    const { isTransientDbError } = await import("../db");
+    assert.equal(
+      isTransientDbError({ code: "57P01", message: "terminating connection" }),
+      true
+    );
+    assert.equal(
+      isTransientDbError({ code: "P2002", message: "Unique constraint failed" }),
+      false
+    );
+    assert.equal(
+      isTransientDbError({ message: "Request timed out" }),
+      false
+    );
+    assert.equal(
+      isTransientDbError({ message: "connection timed out" }),
+      true
+    );
+  });
+});
+
 describe("rate limiting", () => {
   it("blocks after limit", () => {
     __resetRateLimitBuckets();
@@ -74,6 +96,17 @@ describe("rate limiting", () => {
     assert.equal(rateLimit(key, { limit: 2, windowSec: 60 }).allowed, true);
     assert.equal(rateLimit(key, { limit: 2, windowSec: 60 }).allowed, true);
     assert.equal(rateLimit(key, { limit: 2, windowSec: 60 }).allowed, false);
+  });
+
+  it("decideRateLimit does not increment after the cap", () => {
+    const first = decideRateLimit(null, 1_000, 2, 60);
+    assert.equal(first.allowed, true);
+    const second = decideRateLimit(first.next, 1_001, 2, 60);
+    assert.equal(second.allowed, true);
+    const third = decideRateLimit(second.next, 1_002, 2, 60);
+    assert.equal(third.allowed, false);
+    assert.equal(third.mutated, false);
+    assert.equal(third.next.count, 2);
   });
 });
 
@@ -134,5 +167,45 @@ describe("admin authz contract notes", () => {
     assert.ok(usersRoute.includes("userSafeSelect"));
     assert.equal(usersRoute.includes("passwordHash: true,"), false);
     assert.ok(usersRoute.includes('select: { passwordHash: true }'));
+
+    const campusReports = await fs.readFile(
+      path.join(root, "campus-reports", "route.ts"),
+      "utf8"
+    );
+    assert.ok(campusReports.includes("withOwnerApi"));
+    assert.equal(campusReports.includes("monthlyPocketMoney"), false);
+  });
+});
+
+describe("campus circle release contracts", () => {
+  it("keeps FEATURE_CAMPUS_CIRCLE off by default", async () => {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const features = await fs.readFile(
+      path.join(process.cwd(), "src/lib/features.ts"),
+      "utf8"
+    );
+    assert.ok(features.includes('campusCircle: flag("FEATURE_CAMPUS_CIRCLE", false)'));
+  });
+
+  it("uses persistent rate limiting on Campus Circle mutations", async () => {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const route = await fs.readFile(
+      path.join(process.cwd(), "src/app/api/campus-circle/route.ts"),
+      "utf8"
+    );
+    assert.ok(route.includes("persistentRateLimit"));
+    assert.equal(route.includes("rateLimit(`campus:"), false);
+  });
+
+  it("hides Campus Circle nav behind a feature flag", async () => {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const nav = await fs.readFile(
+      path.join(process.cwd(), "src/components/app/nav.ts"),
+      "utf8"
+    );
+    assert.ok(nav.includes('feature: "campusCircle"'));
   });
 });

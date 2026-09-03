@@ -8,7 +8,7 @@
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint",
-    "test": "tsx --test src/lib/security/security.test.ts",
+    "test": "tsx --test src/lib/security/security.test.ts src/lib/campus-circle/privacy.test.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

@@ -36,6 +36,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Next 16 blocks 127.0.0.1 from /_next/* (HMR) unless allowlisted.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

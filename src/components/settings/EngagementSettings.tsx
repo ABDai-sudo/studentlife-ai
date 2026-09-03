@@ -7,6 +7,7 @@ import { FormField } from "@/components/ui/FormField";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { mountFetch } from "@/lib/react/mount-fetch";
 import { broadcastIdentityChange } from "@/lib/avatar/identity-events";
+import { useAppFlags } from "@/components/app/AppFlags";
 
 type NotifPrefs = {
   pauseAll: boolean;
@@ -19,6 +20,7 @@ type NotifPrefs = {
   savingsGoal: boolean;
   weeklyRecap: boolean;
   lowMoney: boolean;
+  campusSocial: boolean;
 };
 
 type SocialState = {
@@ -107,9 +109,14 @@ export function EngagementSettings({
   onError: (msg: string) => void;
 }) {
   const { t } = useT();
+  const flags = useAppFlags();
   const [social, setSocial] = useState(initialSocial);
   const lastSavedDisplayName = useRef(initialSocial.displayName);
-  const [prefs, setPrefs] = useState<NotifPrefs | null>(initialPrefs);
+  const [prefs, setPrefs] = useState<NotifPrefs | null>(
+    initialPrefs
+      ? { ...initialPrefs, campusSocial: initialPrefs.campusSocial !== false }
+      : null
+  );
   const [saving, setSaving] = useState(false);
 
   const [prefsError, setPrefsError] = useState<string | null>(null);
@@ -140,6 +147,7 @@ export function EngagementSettings({
         savingsGoal: p.savingsGoal !== false,
         weeklyRecap: p.weeklyRecap !== false,
         lowMoney: p.lowMoney !== false,
+        campusSocial: p.campusSocial !== false,
       });
       setPrefsError(null);
     }, () => {
@@ -352,6 +360,15 @@ export function EngagementSettings({
               label={t("settings.notifExpense")}
               description={t("settings.notifExpenseDesc")}
             />
+            {flags.campusCircle ? (
+              <Toggle
+                checked={prefs.campusSocial}
+                disabled={saving}
+                onChange={(v) => patchNotifs({ campusSocial: v })}
+                label={t("settings.notifCampus")}
+                description={t("settings.notifCampusDesc")}
+              />
+            ) : null}
           </div>
         )}
       </Section>

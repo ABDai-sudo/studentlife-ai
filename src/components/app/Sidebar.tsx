@@ -6,6 +6,7 @@ import { Logo } from "@/components/brand/Logo";
 import { appNav } from "@/components/app/nav";
 import { useT } from "@/components/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries/en";
+import { useAppFlags } from "@/components/app/AppFlags";
 
 type SidebarProps = {
   onNavigate?: () => void;
@@ -23,6 +24,7 @@ const SECTION_KEYS: {
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useT();
+  const flags = useAppFlags();
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border bg-surface">
@@ -38,6 +40,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <div className="space-y-0.5">
               {appNav
                 .filter((item) => item.section === section.key)
+                .filter(
+                  (item) =>
+                    item.feature !== "campusCircle" || flags.campusCircle
+                )
                 .map((item) => {
                   const active =
                     item.href === "/dashboard"
