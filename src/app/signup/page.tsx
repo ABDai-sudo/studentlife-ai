@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,9 +39,7 @@ export default function SignupPage() {
       try {
         json = await res.json();
       } catch {
-        setError(
-          "Signup failed because the server returned an unexpected response. Please try again shortly."
-        );
+        setError(t("signup.error.unexpected"));
         return;
       }
 
@@ -47,8 +47,8 @@ export default function SignupPage() {
         const message =
           json?.error?.message ??
           (res.status >= 500
-            ? "We couldn’t create your account right now. The server may be unavailable—please try again later."
-            : "Could not create account");
+            ? t("login.error.server")
+            : t("signup.error.generic"));
         setError(message);
         return;
       }
@@ -56,35 +56,30 @@ export default function SignupPage() {
       router.push("/onboarding");
       router.refresh();
     } catch {
-      setError(
-        "Unable to reach the server. Check your connection and try again."
-      );
+      setError(t("login.error.network"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AuthShell
-      title="Create your free account"
-      subtitle="Start with AI Tutor, streaks, and student budget tools — no credit card needed."
-    >
-      <form onSubmit={onSubmit} className="auth-form space-y-5">
-        <FormField id="name" label="Name" hint="Example: Riya or Alex">
+    <AuthShell title={t("signup.title")} subtitle={t("signup.subtitle")}>
+      <form method="post" action="/signup" onSubmit={onSubmit} className="auth-form space-y-5">
+        <FormField id="name" label={t("signup.name")} hint={t("signup.nameHint")}>
           <input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="field-input auth-input"
-            placeholder="Your name"
+            placeholder={t("signup.namePlaceholder")}
             autoComplete="name"
           />
         </FormField>
 
         <FormField
           id="email"
-          label="Email"
-          hint="We’ll use this email when you log in."
+          label={t("login.email")}
+          hint={t("signup.emailHint")}
         >
           <input
             id="email"
@@ -93,15 +88,15 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="field-input auth-input"
-            placeholder="name@email.com"
+            placeholder={t("login.emailPlaceholder")}
             autoComplete="email"
           />
         </FormField>
 
         <FormField
           id="password"
-          label="Password"
-          hint="At least 8 characters with letters and a number."
+          label={t("login.password")}
+          hint={t("signup.passwordHint")}
         >
           <div className="relative">
             <input
@@ -111,14 +106,16 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="field-input auth-input pr-12"
-              placeholder="Create a password"
+              placeholder={t("signup.passwordPlaceholder")}
               autoComplete="new-password"
             />
             <button
               type="button"
-              className="auth-eye absolute top-1/2 right-2.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="auth-eye absolute top-1/2 right-2.5 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={
+                showPassword ? t("login.hidePassword") : t("login.showPassword")
+              }
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" strokeWidth={1.75} />
@@ -139,17 +136,17 @@ export default function SignupPage() {
         ) : null}
 
         <Button type="submit" size="lg" className="auth-submit w-full" disabled={loading}>
-          {loading ? "Creating account…" : "Create free account"}
+          {loading ? t("signup.submitting") : t("signup.submit")}
         </Button>
       </form>
 
       <p className="auth-footer mt-7 flex flex-wrap items-baseline justify-center gap-x-1.5 text-center text-[0.9375rem] leading-relaxed tracking-normal text-secondary">
-        <span>Already have an account?{"\u00A0"}</span>
+        <span>{t("signup.hasAccount")}{"\u00A0"}</span>
         <Link
           href="/login"
           className="font-semibold tracking-normal text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          Log in
+          {t("signup.logIn")}
         </Link>
       </p>
     </AuthShell>

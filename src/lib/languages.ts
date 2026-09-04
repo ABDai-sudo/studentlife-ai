@@ -2,6 +2,8 @@ import {
   EXPLANATION_LANGUAGE_NAMES,
   READY_UI_LANGUAGE_NAMES,
 } from "@/lib/i18n/languages-registry";
+import type { MessageKey } from "@/lib/i18n/dictionaries/en";
+import type { PersonalityMode } from "@/lib/personality";
 
 /**
  * Explanation languages for AI Tutor / coaches.
@@ -14,6 +16,14 @@ export const EXPLANATION_LANGUAGES = EXPLANATION_LANGUAGE_NAMES;
  * Planned languages appear in the searchable picker but are not selectable.
  */
 export const UI_LANGUAGES = READY_UI_LANGUAGE_NAMES;
+
+export const PERSONALITY_I18N_KEYS: Record<PersonalityMode, MessageKey> = {
+  PROFESSIONAL: "personality.professional",
+  FRIENDLY: "personality.friendly",
+  CAMPUS_BRO: "personality.campusBro",
+  CHRONICALLY_ONLINE: "personality.chronicallyOnline",
+  ACADEMIC_VILLAIN: "personality.academicVillain",
+};
 
 /** Full personality option labels (settings select). */
 export const PERSONALITY_LABELS: Record<string, string> = {

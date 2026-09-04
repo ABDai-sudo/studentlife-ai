@@ -3,6 +3,7 @@ import { prisma, withDbRetry } from "@/lib/db";
 import type { OnboardingInput } from "@/lib/validations/auth";
 import type { UpdateProfileInput } from "@/lib/validations/finance";
 import type { PersonalityMode, ThemeMode } from "@prisma/client";
+import { trackAnalyticsEvent } from "@/services/analytics.service";
 import {
   isValidAvatarPresetId,
   isValidAvatarStatus,
@@ -169,6 +170,7 @@ export async function completeOnboardingForUser(
       studyGoal: input.studyGoal || input.primaryGoal || null,
       preferredExplanationLang: input.preferredExplanationLang || "English",
       personalityMode: input.personalityMode ?? "PROFESSIONAL",
+      preferredUiLanguage: input.preferredUiLanguage || null,
       onboardingComplete: true,
     },
     update: {
@@ -185,10 +187,12 @@ export async function completeOnboardingForUser(
       studyGoal: input.studyGoal || input.primaryGoal || null,
       preferredExplanationLang: input.preferredExplanationLang || "English",
       personalityMode: input.personalityMode ?? "PROFESSIONAL",
+      preferredUiLanguage: input.preferredUiLanguage || null,
       onboardingComplete: true,
     },
   });
 
+  void trackAnalyticsEvent({ eventName: "profile_updated" }, userId);
   return withResolvedStatus(userId, toDto(profile));
 }
 

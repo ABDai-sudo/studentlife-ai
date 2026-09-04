@@ -2,12 +2,6 @@ import { displayAvatarStatus } from "@/lib/avatar/presets";
 import { statusLooksPrivate } from "@/lib/avatar/contextual-status";
 import type { BudgetState } from "@/lib/avatar/budget-state";
 
-const BUDGET_SHARE_LABEL: Record<BudgetState, string> = {
-  rich: "Budget: comfortable",
-  mid: "Budget: stable",
-  cooked: "Budget: tight",
-};
-
 export type AvatarShareInput = {
   displayName: string;
   status?: string | null;
@@ -24,6 +18,7 @@ const MONEY_NEEDLES = [
   "balance",
   "spent",
   "pocket",
+  "budget",
   "@",
 ];
 
@@ -34,10 +29,6 @@ export function buildAvatarShareText(input: AvatarShareInput): string {
   const status = displayAvatarStatus(input.status);
   if (status && !statusLooksPrivate(status)) {
     parts.push(status);
-  }
-
-  if (input.budget) {
-    parts.push(BUDGET_SHARE_LABEL[input.budget]);
   }
 
   if (

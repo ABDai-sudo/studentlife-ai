@@ -28,7 +28,7 @@ import {
   type PersonalityMode,
 } from "@/lib/personality";
 import { seriousCopy } from "@/lib/personality/copy";
-import { PERSONALITY_LABELS } from "@/lib/languages";
+import { PERSONALITY_I18N_KEYS } from "@/lib/languages";
 import {
   getExplanationLanguages,
   getUiLanguagePickerList,
@@ -464,7 +464,7 @@ export function SettingsClient({
             >
               {PERSONALITY_MODES.map((m) => (
                 <option key={m} value={m}>
-                  {PERSONALITY_LABELS[m] || m}
+                  {t(PERSONALITY_I18N_KEYS[m])}
                 </option>
               ))}
             </select>

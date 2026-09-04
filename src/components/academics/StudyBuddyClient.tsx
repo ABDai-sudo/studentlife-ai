@@ -84,9 +84,13 @@ async function postAction(body: Record<string, unknown>) {
   return { ok: res.ok, json };
 }
 
-export function StudyBuddyClient() {
+export function StudyBuddyClient({
+  initialData = null,
+}: {
+  initialData?: Overview | null;
+}) {
   const { t } = useT();
-  const [data, setData] = useState<Overview | null>(null);
+  const [data, setData] = useState<Overview | null>(initialData);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -101,6 +105,7 @@ export function StudyBuddyClient() {
   }, []);
 
   useEffect(() => {
+    if (initialData) return;
     return mountFetch(
       "/api/study-buddy",
       ({ ok, json }) => {
@@ -110,7 +115,7 @@ export function StudyBuddyClient() {
       },
       () => setLoadError(t("errors.network"))
     );
-  }, [applyOverview, t]);
+  }, [applyOverview, initialData, t]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

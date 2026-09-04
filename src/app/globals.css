@@ -280,6 +280,7 @@ main section[id] {
 
 .field-input {
   width: 100%;
+  min-height: 2.75rem;
   border-radius: 0.625rem;
   border: 1px solid var(--border);
   background: var(--surface);

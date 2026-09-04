@@ -148,7 +148,12 @@ export function CinematicLogin() {
           <h1 className="login-title">{t("login.welcome")}</h1>
           <p className="login-tagline">{t("login.tagline")}</p>
 
-          <form onSubmit={onSubmit} className="auth-form login-form space-y-5">
+          <form
+            method="post"
+            action="/login"
+            onSubmit={onSubmit}
+            className="auth-form login-form space-y-5"
+          >
             <FormField id="email" label={t("login.email")}>
               <input
                 id="email"

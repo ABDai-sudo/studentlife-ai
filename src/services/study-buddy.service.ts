@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import {
   listAssignments,
   listExams,
-  listNotes,
   listSubjects,
   listTimetable,
 } from "@/services/academics.service";
@@ -94,7 +93,16 @@ async function gatherFacts(userId: string) {
     listSubjects(userId),
     listAssignments(userId),
     listExams(userId),
-    listNotes(userId),
+    prisma.note.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        title: true,
+        subject: { select: { name: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+    }),
     listTimetable(userId),
     listStudySessions(userId),
     prisma.quizAttempt.findMany({
@@ -189,7 +197,7 @@ async function gatherFacts(userId: string) {
       examDate: isoDate(e.examDate),
       days: daysUntil(e.examDate, today),
     })),
-    notes: notes.slice(0, 8).map((n) => ({
+    notes: notes.map((n) => ({
       id: n.id,
       title: n.title,
       subject: n.subject?.name ?? null,

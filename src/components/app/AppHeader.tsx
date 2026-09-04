@@ -145,7 +145,7 @@ export function AppHeader({
       <header className="sticky top-0 z-30 flex h-16 w-full min-w-0 items-center gap-3 overflow-x-clip border-b border-border bg-surface px-4 lg:px-6">
         <button
           type="button"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border transition-transform active:scale-95 lg:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-transform active:scale-95 lg:hidden"
           aria-label={open ? t("actions.close") : t("settings.openNav")}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -165,11 +165,11 @@ export function AppHeader({
         </div>
 
         <div className="ml-auto flex min-w-0 items-center gap-2">
-          <ThemeQuickToggle />
+          <ThemeQuickToggle className="h-10 w-10 lg:h-9 lg:w-9" />
           <NotificationInbox />
           <Link
             href="/settings"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary lg:h-9 lg:w-9"
             aria-label={t("nav.settings")}
             title={t("nav.settings")}
           >

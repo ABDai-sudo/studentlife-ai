@@ -42,6 +42,7 @@ export const onboardingSchema = z.object({
   classOrSemester: z.string().trim().max(80).optional(),
   studyGoal: z.string().trim().max(200).optional(),
   preferredExplanationLang: z.string().trim().max(80).optional(),
+  preferredUiLanguage: z.string().trim().max(80).optional(),
   personalityMode: z
     .enum([
       "PROFESSIONAL",

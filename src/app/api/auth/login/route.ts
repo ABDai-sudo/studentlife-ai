@@ -67,19 +67,6 @@ export async function POST(request: Request) {
       route: "/api/auth/login",
       error: message.slice(0, 200),
     });
-    if (
-      message.includes("AUTH_SECRET") ||
-      message.includes("Environment variable not found") ||
-      message.toLowerCase().includes("datasource") ||
-      message.toLowerCase().includes("can't reach database") ||
-      message.toLowerCase().includes("p1001") ||
-      message.toLowerCase().includes("p1000") ||
-      message.toLowerCase().includes("prisma")
-    ) {
-      return serverError(
-        "Server database or AUTH_SECRET is not configured on Vercel. Check Environment Variables, then Redeploy."
-      );
-    }
     return serverError();
   }
 }

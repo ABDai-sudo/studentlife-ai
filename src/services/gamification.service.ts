@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { listAssignments, listNotes, listSubjects } from "@/services/academics.service";
+import { listAssignments, listSubjects } from "@/services/academics.service";
 
 export const LEVELS = [
   { level: 1, xp: 0, name: "Getting started" },
@@ -192,8 +192,13 @@ export async function recordMeaningfulActivity(
   });
 }
 
-export async function ensureDailyQuests(userId: string) {
-  const profile = await prisma.studentProfile.findUnique({ where: { userId } });
+export async function ensureDailyQuests(
+  userId: string,
+  profileRow?: { timezone: string; weakSubjects: string | null } | null
+) {
+  const profile =
+    profileRow ??
+    (await prisma.studentProfile.findUnique({ where: { userId } }));
   if (!profile) return [];
   const questDate = new Date(dayKeyInTz(profile.timezone));
 
@@ -202,10 +207,10 @@ export async function ensureDailyQuests(userId: string) {
   });
   if (existing.length >= 3) return existing;
 
-  const [assignments, subjects, notes] = await Promise.all([
+  const [assignments, subjects, noteCount] = await Promise.all([
     listAssignments(userId),
     listSubjects(userId),
-    listNotes(userId),
+    prisma.note.count({ where: { userId } }),
   ]);
 
   const pending = assignments.find(
@@ -230,13 +235,13 @@ export async function ensureDailyQuests(userId: string) {
       xpReward: 35,
     },
     {
-      code: notes.length
+      code: noteCount
         ? "notes_review"
         : "quiz_five",
-      title: notes.length
+      title: noteCount
         ? "Review one set of notes"
         : "Complete a 5-question practice set",
-      description: notes.length
+      description: noteCount
         ? "Open notes and mark a section reviewed"
         : "Use Question Generator or Quiz Rush",
       xpReward: 25,
@@ -467,7 +472,7 @@ export async function getProgressSummary(userId: string) {
   await ensureAvatarStatusAutoColumn();
   const profile = await prisma.studentProfile.findUnique({ where: { userId } });
   const [quests, challenges, streak, achievements] = await Promise.all([
-    ensureDailyQuests(userId),
+    ensureDailyQuests(userId, profile),
     ensureWeeklyChallenges(userId),
     prisma.streak.findUnique({
       where: { userId_type: { userId, type: "study" } },

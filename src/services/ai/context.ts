@@ -12,11 +12,17 @@ export function explanationLanguageRule(lang: string): string {
 }
 
 export async function buildStudentAiContext(userId: string): Promise<string> {
-  const [profile, subjects, assignments, exams] = await Promise.all([
+  const [profile, subjects, assignments, exams, noteTitles] = await Promise.all([
     prisma.studentProfile.findUnique({ where: { userId } }),
     listSubjects(userId),
     listAssignments(userId),
     listExams(userId),
+    prisma.note.findMany({
+      where: { userId },
+      select: { title: true },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+    }),
   ]);
 
   const pending = assignments
@@ -49,6 +55,7 @@ export async function buildStudentAiContext(userId: string): Promise<string> {
     `Daily study minutes target: ${profile?.dailyStudyMinutes ?? "not set"}`,
     `Weak subjects (student-reported): ${profile?.weakSubjects || "not set"}`,
     `Subjects: ${subjects.map((s) => s.name).join(", ") || "none yet"}`,
+    `Notes (titles only): ${noteTitles.map((n) => n.title).join("; ") || "none"}`,
     `Pending assignments: ${pending || "none"}`,
     `Upcoming exams: ${upcoming || "none"}`,
     explanationLanguageRule(explanationLang),

@@ -48,7 +48,6 @@ function fillN(template: string, n: number) {
 export function DashboardGamificationHeader({
   userName,
   initialData,
-  loadError,
   avatarContext,
 }: {
   userName: string;
@@ -68,7 +67,6 @@ export function DashboardGamificationHeader({
   // the client store so English personality copy does not hydrate-mismatch.
   const copy = getCopy(mounted ? personality : "PROFESSIONAL");
   const data = initialData;
-  const error = loadError ?? null;
   const loadState: "ready" | "error" = data ? "ready" : "error";
 
   const display = data?.displayName?.trim() || userName;
@@ -76,7 +74,7 @@ export function DashboardGamificationHeader({
   const todayComplete = data?.todayComplete ?? false;
 
   const message = (() => {
-    if (!data) return error;
+    if (!data) return t("errors.loadFailed");
     if (todayComplete) {
       return locale === "en"
         ? copy.streaks.secured
@@ -129,25 +127,13 @@ export function DashboardGamificationHeader({
               <Button
                 size="sm"
                 variant="secondary"
+                className="min-h-11"
                 onClick={() => window.location.reload()}
               >
                 {t("actions.retry")}
               </Button>
             </div>
-          ) : (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button href="/dashboard/games" size="sm">
-                {t("actions.openGames")}
-              </Button>
-              <Button
-                href="/dashboard/leaderboard"
-                size="sm"
-                variant="secondary"
-              >
-                {t("nav.leaderboard")}
-              </Button>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -163,7 +149,7 @@ export function DashboardGamificationHeader({
           <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
             {data ? streak : "—"}
             <span className="ms-1.5 text-base font-medium text-secondary">
-              {streak === 1 ? "day" : t("dashboard.dayUnit")}
+              {t("dashboard.dayUnit")}
             </span>
           </p>
           <p className="mt-1 text-sm text-secondary">
@@ -255,41 +241,33 @@ export function DashboardGamificationHeader({
           <p className="text-sm font-semibold text-foreground">
             {t("dashboard.quickActions")}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button href="/dashboard/games" size="sm" className="w-full">
-              {t("games.focusSprint")}
-            </Button>
-            <Button
-              href="/dashboard/games"
-              variant="secondary"
-              size="sm"
-              className="w-full"
-            >
-              {t("games.quizRush")}
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Button href="/dashboard/study-buddy" size="sm" className="min-h-11 w-full">
+              {t("nav.studyBuddy")}
             </Button>
             <Button
               href="/dashboard/ai-tutor"
               variant="secondary"
               size="sm"
-              className="w-full"
+              className="min-h-11 w-full"
             >
               {t("actions.askTutor")}
             </Button>
             <Button
-              href="/dashboard/study-buddy"
+              href="/dashboard/assignments"
               variant="secondary"
               size="sm"
-              className="w-full"
+              className="min-h-11 w-full"
             >
-              {t("nav.studyBuddy")}
+              {t("nav.assignments")}
             </Button>
             <Button
-              href="/dashboard/emergency"
+              href="/dashboard/games"
               variant="secondary"
               size="sm"
-              className="w-full"
+              className="min-h-11 w-full"
             >
-              {t("nav.emergency")}
+              {t("nav.games")}
             </Button>
           </div>
         </div>

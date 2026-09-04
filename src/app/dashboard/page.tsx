@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app/AppShell";
 import { getDashboardMoneySummary } from "@/services/expense.service";
 import { getProgressSummary } from "@/services/gamification.service";
 import { getAvatarCardContext } from "@/services/avatar-context.service";
+import { getDashboardFocus } from "@/services/dashboard-focus.service";
 import { resolveBudgetState } from "@/lib/avatar/budget-state";
 import { EXPENSE_CATEGORY_LABELS } from "@/lib/validations/expense";
 import {
@@ -10,7 +11,10 @@ import {
   type GamificationSummary,
 } from "@/components/dashboard/DashboardGamificationHeader";
 import { DashboardMoneyOverview } from "@/components/dashboard/DashboardMoneyOverview";
+import { DashboardFocusStrip } from "@/components/dashboard/DashboardFocusStrip";
 import { runEngagementTick } from "@/services/engagement-tick.service";
+import { trackAnalyticsEvent } from "@/services/analytics.service";
+import { withDbRetry } from "@/lib/db";
 import type { AvatarCardContextView } from "@/components/avatar/AvatarStatusCard";
 
 function categoryLabel(category: string) {
@@ -61,35 +65,23 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const firstName = user.name?.split(" ")[0] ?? "there";
 
-  let summary: Awaited<ReturnType<typeof getDashboardMoneySummary>> | null =
-    null;
-  try {
-    summary = await getDashboardMoneySummary(user.id);
-  } catch {
-    summary = null;
-  }
+  const [summary, progressRaw, avatarSignals, focus] = await Promise.all([
+    withDbRetry(() => getDashboardMoneySummary(user.id)).catch(() => null),
+    withDbRetry(() => getProgressSummary(user.id)).catch(() => null),
+    withDbRetry(() => getAvatarCardContext(user.id)).catch(() => null),
+    withDbRetry(() => getDashboardFocus(user.id)).catch(() => null),
+  ]);
 
   let progress: GamificationSummary | null = null;
   let progressError: string | null = null;
-  try {
-    const raw = await getProgressSummary(user.id);
-    progress = toClientSummary(raw);
+  if (progressRaw) {
+    progress = toClientSummary(progressRaw);
     void runEngagementTick(user.id).catch(() => undefined);
-  } catch {
-    progressError = "Could not load progress.";
+  } else {
+    progressError = "load";
   }
 
-  let avatarSignals = {
-    institutionName: null as string | null,
-    examSeasonActive: false,
-    hasModelPapers: false,
-    seed: user.id,
-  };
-  try {
-    avatarSignals = await getAvatarCardContext(user.id);
-  } catch {
-    avatarSignals = { ...avatarSignals, seed: user.id };
-  }
+  void trackAnalyticsEvent({ eventName: "dashboard_opened" }, user.id);
 
   const avatarContext: AvatarCardContextView = {
     budget: resolveBudgetState({
@@ -97,10 +89,10 @@ export default async function DashboardPage() {
       moneyLeft: summary?.moneyLeft ?? null,
       monthSpent: summary?.monthSpent,
     }),
-    examSeasonActive: avatarSignals.examSeasonActive,
-    institutionName: avatarSignals.institutionName,
-    hasModelPapers: avatarSignals.hasModelPapers,
-    seed: avatarSignals.seed,
+    examSeasonActive: avatarSignals?.examSeasonActive ?? false,
+    institutionName: avatarSignals?.institutionName ?? null,
+    hasModelPapers: avatarSignals?.hasModelPapers ?? false,
+    seed: avatarSignals?.seed ?? user.id,
   };
 
   const view = summary
@@ -128,6 +120,9 @@ export default async function DashboardPage() {
       }
     : null;
 
+  const nextQuest =
+    progress?.quests.find((q) => q.status !== "COMPLETED")?.title ?? null;
+
   return (
     <AppShell
       title="Dashboard"
@@ -140,13 +135,18 @@ export default async function DashboardPage() {
       avatarStatus={progress?.avatarStatus}
       avatarPresence={progress?.avatarPresence}
     >
+      <DashboardFocusStrip
+        nextDeadline={focus?.nextDeadline ?? null}
+        nextQuestTitle={nextQuest}
+        todayComplete={progress?.todayComplete ?? false}
+      />
       <DashboardGamificationHeader
         userName={user.name ?? firstName}
         initialData={progress}
         loadError={progressError}
         avatarContext={avatarContext}
       />
-      <DashboardMoneyOverview summary={view} />
+      <DashboardMoneyOverview summary={view} variant="snapshot" />
     </AppShell>
   );
 }

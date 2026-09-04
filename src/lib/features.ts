@@ -13,7 +13,7 @@ export const features = {
   campusCircle: flag("FEATURE_CAMPUS_CIRCLE", false),
   /** Global streak leaderboard — real opted-in users only */
   leaderboard: flag("FEATURE_LEADERBOARD", true),
-  studyBuddy: flag("FEATURE_STUDY_BUDDY", false),
+  studyBuddy: flag("FEATURE_STUDY_BUDDY", true),
   webPush: flag("FEATURE_WEB_PUSH", false),
   moneyGuardianAlerts: flag("FEATURE_MONEY_GUARDIAN", true),
   studyNotifications: flag("FEATURE_STUDY_NOTIFICATIONS", true),

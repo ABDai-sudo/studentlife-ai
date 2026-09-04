@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 const TOGGLE_CLASS =
-  "inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:h-9 lg:w-9";
 
 /**
  * Quick Light ↔ Dark toggle for authenticated chrome.
@@ -16,7 +17,8 @@ const TOGGLE_CLASS =
  * already be DARK from a previous page.
  */
 export function ThemeQuickToggle({ className = "" }: { className?: string }) {
-  const { resolvedTheme, setTheme, theme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const { t } = useT();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -41,8 +43,8 @@ export function ThemeQuickToggle({ className = "" }: { className?: string }) {
       <button
         type="button"
         className={`${TOGGLE_CLASS} ${className}`}
-        aria-label="Switch theme"
-        title="Switch theme"
+        aria-label={t("header.themeSwitch")}
+        title={t("header.themeSwitch")}
       >
         <Moon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
       </button>
@@ -50,14 +52,7 @@ export function ThemeQuickToggle({ className = "" }: { className?: string }) {
   }
 
   const isDark = resolvedTheme === "DARK";
-  const label =
-    theme === "SYSTEM"
-      ? isDark
-        ? "Switch to light theme (currently following device)"
-        : "Switch to dark theme (currently following device)"
-      : isDark
-        ? "Switch to light theme"
-        : "Switch to dark theme";
+  const label = isDark ? t("header.themeToLight") : t("header.themeToDark");
 
   return (
     <button

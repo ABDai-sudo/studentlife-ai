@@ -55,7 +55,7 @@ export function NotificationInbox() {
     <div className="relative">
       <button
         type="button"
-        className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary"
+        className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-secondary transition-colors hover:bg-surface-secondary lg:h-9 lg:w-9"
         aria-label={t("header.notifications")}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}

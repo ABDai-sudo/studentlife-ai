@@ -5,13 +5,24 @@ import { getProfileForUser } from "@/services/profile.service";
 import { getCampusCircleOverview } from "@/services/campus-circle.service";
 import { features } from "@/lib/features";
 import { withDbRetry } from "@/lib/db";
-import { redirect } from "next/navigation";
 
 export default async function CampusCirclePage() {
   const user = await requireUser();
+
   if (!features.campusCircle) {
-    redirect("/dashboard");
+    return (
+      <AppShell
+        title="Campus Circle"
+        subtitle="Study connections, invites, and private groups"
+        titleKey="circle.title"
+        subtitleKey="circle.subtitle"
+        userName={user.name ?? "Student"}
+      >
+        <CampusCircleClient enabled={false} />
+      </AppShell>
+    );
   }
+
   const [profile, overview] = await Promise.all([
     getProfileForUser(user.id),
     withDbRetry(() => getCampusCircleOverview(user.id)),

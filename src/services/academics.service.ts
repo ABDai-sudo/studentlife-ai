@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { parseDateOnly } from "@/lib/money";
+import { trackAnalyticsEvent } from "@/services/analytics.service";
 import type {
   CreateAssignmentInput,
   CreateAttendanceInput,
@@ -19,7 +20,7 @@ export async function listSubjects(userId: string) {
 }
 
 export async function createSubject(userId: string, input: CreateSubjectInput) {
-  return prisma.subject.create({
+  const subject = await prisma.subject.create({
     data: {
       userId,
       name: input.name.trim(),
@@ -28,6 +29,8 @@ export async function createSubject(userId: string, input: CreateSubjectInput) {
       credits: input.credits ?? null,
     },
   });
+  void trackAnalyticsEvent({ eventName: "subject_created" }, userId);
+  return subject;
 }
 
 export async function deleteSubject(userId: string, id: string) {
@@ -52,7 +55,7 @@ export async function createNote(userId: string, input: CreateNoteInput) {
     });
     if (!subject) throw new Error("SUBJECT_NOT_FOUND");
   }
-  return prisma.note.create({
+  const note = await prisma.note.create({
     data: {
       userId,
       title: input.title.trim(),
@@ -61,6 +64,8 @@ export async function createNote(userId: string, input: CreateNoteInput) {
     },
     include: { subject: { select: { id: true, name: true } } },
   });
+  void trackAnalyticsEvent({ eventName: "note_created" }, userId);
+  return note;
 }
 
 export async function deleteNote(userId: string, id: string) {
@@ -81,7 +86,7 @@ export async function createAssignment(
   userId: string,
   input: CreateAssignmentInput
 ) {
-  return prisma.assignment.create({
+  const assignment = await prisma.assignment.create({
     data: {
       userId,
       title: input.title.trim(),
@@ -92,6 +97,8 @@ export async function createAssignment(
       status: input.status,
     },
   });
+  void trackAnalyticsEvent({ eventName: "assignment_created" }, userId);
+  return assignment;
 }
 
 export async function updateAssignment(
@@ -101,7 +108,7 @@ export async function updateAssignment(
 ) {
   const existing = await prisma.assignment.findFirst({ where: { id, userId } });
   if (!existing) return null;
-  return prisma.assignment.update({
+  const updated = await prisma.assignment.update({
     where: { id },
     data: {
       ...(input.title ? { title: input.title.trim() } : {}),
@@ -117,6 +124,14 @@ export async function updateAssignment(
       ...(input.grade !== undefined ? { grade: input.grade } : {}),
     },
   });
+  const becameDone =
+    (input.status === "SUBMITTED" || input.status === "GRADED") &&
+    existing.status !== "SUBMITTED" &&
+    existing.status !== "GRADED";
+  if (becameDone) {
+    void trackAnalyticsEvent({ eventName: "assignment_completed" }, userId);
+  }
+  return updated;
 }
 
 export async function deleteAssignment(userId: string, id: string) {
@@ -134,7 +149,7 @@ export async function listExams(userId: string) {
 }
 
 export async function createExam(userId: string, input: CreateExamInput) {
-  return prisma.exam.create({
+  const exam = await prisma.exam.create({
     data: {
       userId,
       title: input.title.trim(),
@@ -145,6 +160,8 @@ export async function createExam(userId: string, input: CreateExamInput) {
       notes: input.notes || null,
     },
   });
+  void trackAnalyticsEvent({ eventName: "exam_created" }, userId);
+  return exam;
 }
 
 export async function deleteExam(userId: string, id: string) {
