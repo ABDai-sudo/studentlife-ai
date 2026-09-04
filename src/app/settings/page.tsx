@@ -43,7 +43,8 @@ export default async function SettingsPage() {
         userName={user.name ?? "Student"}
         displayName={profile?.displayName}
         avatarPresetId={profile?.avatarPresetId}
-        avatarStatus={profile?.avatarStatus}
+        avatarStatus={profile?.resolvedAvatarStatus ?? profile?.avatarStatus}
+        avatarPresence={profile?.avatarPresence}
       >
         <SettingsClient
           email={user.email}
@@ -65,6 +66,11 @@ export default async function SettingsPage() {
                   leaderboardShowAvatar: profile.leaderboardShowAvatar,
                   avatarPresetId: profile.avatarPresetId,
                   avatarStatus: profile.avatarStatus,
+                  avatarStatusAuto: profile.avatarStatusAuto,
+                  resolvedAvatarStatus: profile.resolvedAvatarStatus,
+                  avatarPresence: profile.avatarPresence,
+                  avatarStatusSource: profile.avatarStatusSource,
+                  avatarStatusLive: profile.avatarStatusLive,
                 }
               : null
           }

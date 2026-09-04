@@ -32,6 +32,11 @@ type Profile = {
   displayName: string | null;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  avatarStatusAuto?: boolean;
+  resolvedAvatarStatus?: string | null;
+  avatarPresence?: string | null;
+  avatarStatusSource?: string | null;
+  avatarStatusLive?: boolean;
   leaderboardOptIn: boolean;
   xpTotal: number;
   level: number;
@@ -101,6 +106,11 @@ export function ProfileClient({
     displayName: profile?.displayName ?? null,
     avatarPresetId: profile?.avatarPresetId ?? null,
     avatarStatus: profile?.avatarStatus ?? null,
+    avatarStatusAuto: profile?.avatarStatusAuto !== false,
+    resolvedAvatarStatus: profile?.resolvedAvatarStatus ?? null,
+    avatarPresence: (profile?.avatarPresence as IdentityStats["avatarPresence"]) ?? "idle",
+    avatarStatusSource: (profile?.avatarStatusSource as IdentityStats["avatarStatusSource"]) ?? "none",
+    avatarStatusLive: Boolean(profile?.avatarStatusLive),
     xpTotal: profile?.xpTotal ?? 0,
     level: profile?.level ?? 1,
     academicAura: profile?.academicAura ?? 50,
@@ -136,12 +146,22 @@ export function ProfileClient({
       const p = json.data.profile as {
         avatarPresetId?: string | null;
         avatarStatus?: string | null;
+        resolvedAvatarStatus?: string | null;
+        avatarPresence?: IdentityStats["avatarPresence"];
+        avatarStatusSource?: IdentityStats["avatarStatusSource"];
+        avatarStatusLive?: boolean;
+        avatarStatusAuto?: boolean;
         displayName?: string | null;
       } | undefined;
       if (p) {
         broadcastIdentityChange({
           avatarPresetId: p.avatarPresetId,
           avatarStatus: p.avatarStatus,
+          resolvedAvatarStatus: p.resolvedAvatarStatus,
+          avatarPresence: p.avatarPresence,
+          avatarStatusSource: p.avatarStatusSource,
+          avatarStatusLive: p.avatarStatusLive,
+          avatarStatusAuto: p.avatarStatusAuto,
           displayName: p.displayName,
         });
       }
@@ -210,6 +230,7 @@ export function ProfileClient({
         }}
         onPresetChange={(id) => patchSocial({ avatarPresetId: id })}
         onStatusChange={(status) => patchSocial({ avatarStatus: status })}
+        onAutoChange={(auto) => patchSocial({ avatarStatusAuto: auto })}
       />
 
       <div className="space-y-3 border-t border-border pt-6 text-sm">

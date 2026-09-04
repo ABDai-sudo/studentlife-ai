@@ -10,10 +10,12 @@ export default async function GamesPage() {
     displayName: string | null;
     avatarPresetId: string | null;
     avatarStatus: string | null;
+    avatarPresence: "idle" | "session" | "class" | "exam" | "deadline" | "focus" | "break" | null;
   } = {
     displayName: null,
     avatarPresetId: null,
     avatarStatus: null,
+    avatarPresence: "idle",
   };
   try {
     const summary = await getProgressSummary(user.id);
@@ -21,6 +23,7 @@ export default async function GamesPage() {
       displayName: summary.displayName,
       avatarPresetId: summary.avatarPresetId,
       avatarStatus: summary.avatarStatus,
+      avatarPresence: summary.avatarPresence,
     };
     initial = {
       xpTotal: summary.xpTotal,
@@ -52,6 +55,7 @@ export default async function GamesPage() {
       displayName={headerIdentity.displayName}
       avatarPresetId={headerIdentity.avatarPresetId}
       avatarStatus={headerIdentity.avatarStatus}
+      avatarPresence={headerIdentity.avatarPresence}
     >
       <GamesClient initialSummary={initial} />
     </AppShell>

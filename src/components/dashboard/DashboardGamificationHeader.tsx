@@ -2,13 +2,16 @@
 
 import { Flame, Target, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { getCopy } from "@/lib/personality";
-import { displayAvatarStatus } from "@/lib/avatar/presets";
+import {
+  AvatarStatusCard,
+  type AvatarCardContextView,
+} from "@/components/avatar/AvatarStatusCard";
+import type { AvatarPresence, AvatarStatusSource } from "@/lib/avatar/contextual-status";
 
 type Quest = {
   id: string;
@@ -27,6 +30,9 @@ export type GamificationSummary = {
   displayName: string | null;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  avatarPresence?: AvatarPresence | null;
+  avatarStatusSource?: AvatarStatusSource | null;
+  avatarStatusLive?: boolean;
   avatarFrameUi: "none" | "streak" | "achievement" | "crown";
   todayComplete: boolean;
   questsDone: number;
@@ -43,10 +49,12 @@ export function DashboardGamificationHeader({
   userName,
   initialData,
   loadError,
+  avatarContext,
 }: {
   userName: string;
   initialData: GamificationSummary | null;
   loadError?: string | null;
+  avatarContext: AvatarCardContextView;
 }) {
   const { personality } = useTheme();
   const { t, locale } = useT();
@@ -87,14 +95,15 @@ export function DashboardGamificationHeader({
       className="mb-8 space-y-6"
       aria-label={t("dashboard.studyProgress")}
     >
-      <div className="flex gap-4">
-        <Avatar
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+        <AvatarStatusCard
           name={display}
-          size="xl"
-          className="mt-0.5"
           presetId={data?.avatarPresetId}
           frame={data?.avatarFrameUi ?? "none"}
-          aura={data ? Math.round(data.academicAura) : undefined}
+          presence={data?.avatarPresence}
+          status={data?.avatarStatus}
+          streak={streak}
+          context={avatarContext}
         />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-muted">
@@ -103,11 +112,6 @@ export function DashboardGamificationHeader({
           <h2 className="mt-0.5 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {display}
           </h2>
-          {data?.avatarStatus ? (
-            <p className="mt-1 text-sm text-secondary">
-              {displayAvatarStatus(data.avatarStatus)}
-            </p>
-          ) : null}
           {data ? (
             <p className="mt-2 text-sm text-muted">
               {t("dashboard.days", { count: streak })}

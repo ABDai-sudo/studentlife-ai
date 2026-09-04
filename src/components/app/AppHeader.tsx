@@ -11,6 +11,8 @@ import { useT } from "@/components/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries/en";
 import { mountFetch } from "@/lib/react/mount-fetch";
 import { displayAvatarStatus } from "@/lib/avatar/presets";
+import { avatarStatusMessageKey } from "@/lib/avatar/status-label";
+import type { AvatarPresence } from "@/lib/avatar/contextual-status";
 import {
   IDENTITY_CHANGE_EVENT,
   type IdentityChangeDetail,
@@ -27,6 +29,7 @@ type AppHeaderProps = {
   displayName?: string | null;
   avatarPresetId?: string | null;
   avatarStatus?: string | null;
+  avatarPresence?: AvatarPresence | null;
 };
 
 export function AppHeader({
@@ -38,6 +41,7 @@ export function AppHeader({
   displayName: displayNameProp = null,
   avatarPresetId: avatarPresetIdProp = null,
   avatarStatus: avatarStatusProp = null,
+  avatarPresence: avatarPresenceProp = null,
 }: AppHeaderProps) {
   const identity = useHeaderIdentity();
   const initialName =
@@ -46,6 +50,7 @@ export function AppHeader({
   const [live, setLive] = useState<{
     avatarPresetId: string | null;
     avatarStatus: string | null;
+    avatarPresence: AvatarPresence | null;
     displayName: string;
     level: number | null;
   } | null>(null);
@@ -55,8 +60,17 @@ export function AppHeader({
     live?.avatarPresetId ?? avatarPresetIdProp ?? identity?.avatarPresetId ?? null;
   const avatarStatus =
     live?.avatarStatus ?? avatarStatusProp ?? identity?.avatarStatus ?? null;
+  const avatarPresence =
+    live?.avatarPresence ??
+    avatarPresenceProp ??
+    identity?.avatarPresence ??
+    "idle";
   const displayName = live?.displayName ?? initialName;
   const level = live?.level ?? null;
+  const statusKey = avatarStatusMessageKey(avatarStatus);
+  const statusText = statusKey
+    ? t(statusKey)
+    : displayAvatarStatus(avatarStatus);
 
   const resolvedTitle = titleKey ? t(titleKey) : title;
   const resolvedSubtitle = subtitleKey ? t(subtitleKey) : subtitle;
@@ -76,6 +90,8 @@ export function AppHeader({
           profile?: {
             avatarPresetId?: string | null;
             avatarStatus?: string | null;
+            resolvedAvatarStatus?: string | null;
+            avatarPresence?: AvatarPresence | null;
             displayName?: string | null;
             level?: number | null;
           } | null;
@@ -86,7 +102,8 @@ export function AppHeader({
       const p = body.data?.profile;
       setLive({
         avatarPresetId: p?.avatarPresetId ?? null,
-        avatarStatus: p?.avatarStatus ?? null,
+        avatarStatus: p?.resolvedAvatarStatus ?? p?.avatarStatus ?? null,
+        avatarPresence: p?.avatarPresence ?? "idle",
         displayName:
           p?.displayName?.trim() || body.data?.user?.name || userName,
         level: typeof p?.level === "number" ? p.level : null,
@@ -104,9 +121,15 @@ export function AppHeader({
             ? (detail.avatarPresetId ?? null)
             : (prev?.avatarPresetId ?? avatarPresetIdProp),
         avatarStatus:
-          "avatarStatus" in detail
-            ? (detail.avatarStatus ?? null)
-            : (prev?.avatarStatus ?? avatarStatusProp),
+          "resolvedAvatarStatus" in detail
+            ? (detail.resolvedAvatarStatus ?? null)
+            : "avatarStatus" in detail
+              ? (detail.avatarStatus ?? null)
+              : (prev?.avatarStatus ?? avatarStatusProp),
+        avatarPresence:
+          "avatarPresence" in detail
+            ? (detail.avatarPresence ?? "idle")
+            : (prev?.avatarPresence ?? avatarPresenceProp),
         displayName: detail.displayName?.trim()
           ? detail.displayName.trim()
           : (prev?.displayName ?? initialName),
@@ -115,7 +138,7 @@ export function AppHeader({
     }
     window.addEventListener(IDENTITY_CHANGE_EVENT, onIdentity);
     return () => window.removeEventListener(IDENTITY_CHANGE_EVENT, onIdentity);
-  }, [avatarPresetIdProp, avatarStatusProp, initialName]);
+  }, [avatarPresetIdProp, avatarStatusProp, avatarPresenceProp, initialName]);
 
   return (
     <>
@@ -159,7 +182,11 @@ export function AppHeader({
             aria-label={t("header.profileMenu", { name: displayName })}
             title={t("header.profileMenu", { name: displayName })}
           >
-            <Avatar name={displayName} presetId={avatarPresetId} />
+            <Avatar
+              name={displayName}
+              presetId={avatarPresetId}
+              presence={avatarPresence}
+            />
             <span className="min-w-0">
               <span className="block truncate text-xs font-semibold leading-tight text-foreground sm:text-sm">
                 {displayName}
@@ -171,7 +198,7 @@ export function AppHeader({
                   </span>
                 ) : null}
                 {avatarStatus ? (
-                  <span className="truncate">{displayAvatarStatus(avatarStatus)}</span>
+                  <span className="truncate">{statusText}</span>
                 ) : null}
               </span>
             </span>

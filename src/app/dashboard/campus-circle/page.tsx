@@ -26,7 +26,8 @@ export default async function CampusCirclePage() {
       userName={user.name ?? "Student"}
       displayName={profile?.displayName}
       avatarPresetId={profile?.avatarPresetId}
-      avatarStatus={profile?.avatarStatus}
+      avatarStatus={profile?.resolvedAvatarStatus ?? profile?.avatarStatus}
+      avatarPresence={profile?.avatarPresence}
     >
       <CampusCircleClient
         enabled={features.campusCircle}

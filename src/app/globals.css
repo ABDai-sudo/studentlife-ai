@@ -449,6 +449,133 @@ html.dark .avatar-face {
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 28%, transparent);
 }
 
+.avatar-presence {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  height: 0.55rem;
+  width: 0.55rem;
+  border-radius: 999px;
+  border: 2px solid var(--surface);
+  background: var(--muted);
+}
+
+.avatar-presence-session {
+  background: var(--success);
+}
+
+.avatar-presence-class,
+.avatar-presence-focus {
+  background: var(--primary);
+}
+
+.avatar-presence-exam,
+.avatar-presence-deadline {
+  background: var(--warning);
+}
+
+.avatar-presence-break {
+  background: color-mix(in oklab, var(--secondary) 70%, var(--surface));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .avatar-presence-session {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 45%, transparent);
+    animation: avatar-presence-pulse 2.4s ease-out infinite;
+  }
+}
+
+@keyframes avatar-presence-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.avatar-status-card {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 0.9rem 1rem 1rem;
+}
+
+@media (min-width: 1024px) {
+  .avatar-status-card {
+    max-width: 22rem;
+    flex-shrink: 0;
+  }
+}
+
+.avatar-status-card[data-budget="rich"] {
+  border-color: color-mix(in oklab, var(--success) 32%, var(--border));
+}
+
+.avatar-status-card[data-budget="cooked"] {
+  border-color: color-mix(in oklab, var(--warning) 38%, var(--border));
+}
+
+.avatar-speech {
+  margin: 0;
+  max-width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface-secondary);
+  padding: 0.65rem 0.8rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--secondary);
+}
+
+.avatar-speech p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.avatar-viewport {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.avatar-spline-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.avatar-viewport-spline-ready .avatar-spline-frame {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .avatar-viewport-live .avatar-face {
+    transform: perspective(140px) rotateY(0deg);
+    transition: transform 0.3s ease;
+  }
+
+  .avatar-viewport-live:hover .avatar-face,
+  .avatar-viewport-live:focus-within .avatar-face {
+    transform: perspective(140px) rotateY(-7deg);
+  }
+}
+
+.avatar-dev-preview {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
 .avatar-status-chip {
   display: inline-flex;
   align-items: center;

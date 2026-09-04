@@ -50,6 +50,7 @@ export const updateProfileSchema = z
     leaderboardOptIn: z.boolean().optional(),
     avatarPresetId: z.string().trim().max(40).optional().nullable().or(z.literal("")),
     avatarStatus: z.string().trim().max(40).optional().nullable().or(z.literal("")),
+    avatarStatusAuto: z.boolean().optional(),
     leaderboardShowAvatar: z.boolean().optional(),
   })
   .strict();

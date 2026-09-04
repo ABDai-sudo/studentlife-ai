@@ -335,6 +335,8 @@ model StudentProfile {
   avatarPresetId           String?         @map("avatar_preset_id")
   /// Optional social status chip (e.g. Locking In) — not a UI language.
   avatarStatus             String?         @map("avatar_status")
+  /// When true, live study/class context can overlay the pinned status chip.
+  avatarStatusAuto         Boolean         @default(true) @map("avatar_status_auto")
   /// When false, hide avatar image on public leaderboard (show initials).
   leaderboardShowAvatar    Boolean         @default(true) @map("leaderboard_show_avatar")
   xpTotal                  Int             @default(0) @map("xp_total")

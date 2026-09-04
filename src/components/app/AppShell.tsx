@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app/AppHeader";
 import { Sidebar } from "@/components/app/Sidebar";
 import type { MessageKey } from "@/lib/i18n/dictionaries/en";
+import type { AvatarPresence } from "@/lib/avatar/contextual-status";
 
 export function AppShell({
   title,
@@ -12,6 +13,7 @@ export function AppShell({
   displayName,
   avatarPresetId,
   avatarStatus,
+  avatarPresence,
   children,
 }: {
   title: string;
@@ -22,6 +24,7 @@ export function AppShell({
   displayName?: string | null;
   avatarPresetId?: string | null;
   avatarStatus?: string | null;
+  avatarPresence?: AvatarPresence | null;
   children: ReactNode;
 }) {
   return (
@@ -39,6 +42,7 @@ export function AppShell({
           displayName={displayName}
           avatarPresetId={avatarPresetId}
           avatarStatus={avatarStatus}
+          avatarPresence={avatarPresence}
         />
         <main className="min-w-0 w-full flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>

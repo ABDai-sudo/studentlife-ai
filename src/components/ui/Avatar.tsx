@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getAvatarPreset, displayAvatarStatus } from "@/lib/avatar/presets";
+import type { AvatarPresence } from "@/lib/avatar/contextual-status";
 
 type AvatarProps = {
   name: string;
@@ -15,6 +16,8 @@ type AvatarProps = {
   aura?: number;
   /** Small status chip — hidden on sm to keep header chrome clean */
   status?: string;
+  /** Live academic presence — visual only, never includes private details */
+  presence?: AvatarPresence | null;
   children?: ReactNode;
 };
 
@@ -55,31 +58,41 @@ export function Avatar({
   presetId,
   frame = "none",
   status,
+  presence = "idle",
 }: AvatarProps) {
   const initials = initialsFromName(name || "Student");
   const preset = getAvatarPreset(presetId);
   const showChip = Boolean(status) && size !== "sm";
   const statusLabel = displayAvatarStatus(status);
+  const showPresence = Boolean(presence) && presence !== "idle";
 
   return (
     <span className={`relative inline-flex shrink-0 flex-col items-center ${className}`}>
-      <span
-        className={`avatar-face inline-flex items-center justify-center overflow-hidden rounded-full font-semibold ${SIZE[size]} ${FRAME_RING[frame]} ${
-          preset ? "" : "bg-primary-soft text-primary"
-        }`}
-        style={{
-          ...(preset ? { background: preset.bg, color: preset.markColor } : {}),
-        }}
-        aria-hidden
-      >
-        {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageSrc} alt="" className="h-full w-full object-cover" />
-        ) : preset ? (
-          <span className="select-none text-[1.05em] leading-none">{preset.mark}</span>
-        ) : (
-          initials
-        )}
+      <span className="relative inline-flex">
+        <span
+          className={`avatar-face inline-flex items-center justify-center overflow-hidden rounded-full font-semibold ${SIZE[size]} ${FRAME_RING[frame]} ${
+            preset ? "" : "bg-primary-soft text-primary"
+          }`}
+          style={{
+            ...(preset ? { background: preset.bg, color: preset.markColor } : {}),
+          }}
+          aria-hidden
+        >
+          {imageSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageSrc} alt="" className="h-full w-full object-cover" />
+          ) : preset ? (
+            <span className="select-none text-[1.05em] leading-none">{preset.mark}</span>
+          ) : (
+            initials
+          )}
+        </span>
+        {showPresence ? (
+          <span
+            className={`avatar-presence avatar-presence-${presence}`}
+            data-presence={presence}
+          />
+        ) : null}
       </span>
       {showChip ? (
         <span className="absolute -bottom-1 max-w-[6.5rem] truncate rounded-md border border-border bg-surface px-1.5 py-0.5 text-[0.6rem] font-medium text-secondary">

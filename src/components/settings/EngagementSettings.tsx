@@ -8,6 +8,10 @@ import { useT } from "@/components/i18n/LocaleProvider";
 import { mountFetch } from "@/lib/react/mount-fetch";
 import { broadcastIdentityChange } from "@/lib/avatar/identity-events";
 import { useAppFlags } from "@/components/app/AppFlags";
+import type {
+  AvatarPresence,
+  AvatarStatusSource,
+} from "@/lib/avatar/contextual-status";
 
 type NotifPrefs = {
   pauseAll: boolean;
@@ -29,6 +33,11 @@ type SocialState = {
   leaderboardShowAvatar: boolean;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  avatarStatusAuto: boolean;
+  resolvedAvatarStatus: string | null;
+  avatarPresence: AvatarPresence | null;
+  avatarStatusSource: AvatarStatusSource | null;
+  avatarStatusLive: boolean;
 };
 
 function Toggle({
@@ -202,18 +211,28 @@ export function EngagementSettings({
       }
       const p = json.data?.profile;
       if (p) {
-        const nextSocial = {
+        const nextSocial: SocialState = {
           displayName: p.displayName ?? "",
           leaderboardOptIn: Boolean(p.leaderboardOptIn),
           leaderboardShowAvatar: p.leaderboardShowAvatar !== false,
           avatarPresetId: p.avatarPresetId ?? null,
           avatarStatus: p.avatarStatus ?? null,
+          avatarStatusAuto: p.avatarStatusAuto !== false,
+          resolvedAvatarStatus: p.resolvedAvatarStatus ?? null,
+          avatarPresence: (p.avatarPresence as AvatarPresence | null) ?? "idle",
+          avatarStatusSource: (p.avatarStatusSource as AvatarStatusSource | null) ?? "none",
+          avatarStatusLive: Boolean(p.avatarStatusLive),
         };
         setSocial(nextSocial);
         lastSavedDisplayName.current = nextSocial.displayName;
         broadcastIdentityChange({
           avatarPresetId: nextSocial.avatarPresetId,
           avatarStatus: nextSocial.avatarStatus,
+          resolvedAvatarStatus: nextSocial.resolvedAvatarStatus,
+          avatarPresence: nextSocial.avatarPresence,
+          avatarStatusSource: nextSocial.avatarStatusSource,
+          avatarStatusLive: nextSocial.avatarStatusLive,
+          avatarStatusAuto: nextSocial.avatarStatusAuto,
           displayName: nextSocial.displayName,
         });
       }
@@ -236,11 +255,17 @@ export function EngagementSettings({
         <AvatarPicker
           presetId={social.avatarPresetId}
           status={social.avatarStatus}
+          resolvedStatus={social.resolvedAvatarStatus}
+          presence={social.avatarPresence}
+          statusSource={social.avatarStatusSource}
+          statusLive={social.avatarStatusLive}
+          autoEnabled={social.avatarStatusAuto}
           displayName={social.displayName || "Student"}
           disabled={saving}
           saveState={saving ? "saving" : "idle"}
           onPresetChange={(id) => patchProfile({ avatarPresetId: id })}
           onStatusChange={(status) => patchProfile({ avatarStatus: status })}
+          onAutoChange={(auto) => patchProfile({ avatarStatusAuto: auto })}
         />
       </Section>
 

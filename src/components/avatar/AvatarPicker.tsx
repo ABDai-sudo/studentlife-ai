@@ -3,40 +3,59 @@
 import {
   AVATAR_PRESETS,
   AVATAR_STATUSES,
-  displayAvatarStatus,
   getAvatarPreset,
 } from "@/lib/avatar/presets";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { Avatar } from "@/components/ui/Avatar";
+import type { AvatarPresence, AvatarStatusSource } from "@/lib/avatar/contextual-status";
+import {
+  avatarStatusMessageKey,
+  avatarStatusSourceKey,
+} from "@/lib/avatar/status-label";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 type AvatarPickerProps = {
   presetId: string | null;
   status: string | null;
+  resolvedStatus?: string | null;
+  presence?: AvatarPresence | null;
+  statusSource?: AvatarStatusSource | null;
+  statusLive?: boolean;
+  autoEnabled?: boolean;
   displayName: string;
   disabled?: boolean;
   saveState?: SaveState;
   saveError?: string | null;
   onPresetChange: (id: string | null) => void;
   onStatusChange: (status: string | null) => void;
+  onAutoChange?: (auto: boolean) => void;
 };
 
 export function AvatarPicker({
   presetId,
   status,
+  resolvedStatus,
+  presence = "idle",
+  statusSource = "none",
+  statusLive = false,
+  autoEnabled = true,
   displayName,
   disabled,
   saveState = "idle",
   saveError = null,
   onPresetChange,
   onStatusChange,
+  onAutoChange,
 }: AvatarPickerProps) {
   const { t } = useT();
   const preset = getAvatarPreset(presetId);
   const selectedLabel = preset ? preset.label : t("avatar.initialsOption");
   const busy = Boolean(disabled) || saveState === "saving";
-  const statusLabel = displayAvatarStatus(status);
+  const shownStatus = resolvedStatus || status;
+  const statusKey = avatarStatusMessageKey(shownStatus);
+  const sourceKey = avatarStatusSourceKey(statusSource);
+  const statusLabel = statusKey ? t(statusKey) : t("avatar.statusNone");
 
   return (
     <div className="space-y-5">
@@ -45,7 +64,8 @@ export function AvatarPicker({
           name={displayName}
           size="2xl"
           presetId={presetId}
-          status={status || undefined}
+          status={shownStatus || undefined}
+          presence={presence}
         />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
@@ -55,7 +75,8 @@ export function AvatarPicker({
             {selectedLabel}
           </p>
           <p className="mt-0.5 truncate text-sm text-secondary">
-            {statusLabel || t("avatar.statusNone")}
+            {statusLabel}
+            {statusLive ? ` · ${t("avatar.liveNow")}` : sourceKey ? ` · ${t(sourceKey)}` : ""}
           </p>
           <p
             className="mt-2 text-xs font-medium"
@@ -124,6 +145,35 @@ export function AvatarPicker({
       </div>
 
       <div>
+        {onAutoChange ? (
+          <label className="mb-4 flex cursor-pointer items-start justify-between gap-4">
+            <span>
+              <span className="block text-sm font-medium text-foreground">
+                {t("avatar.auto")}
+              </span>
+              <span className="mt-0.5 block text-xs text-muted">
+                {t("avatar.autoHint")}
+              </span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoEnabled}
+              disabled={busy}
+              onClick={() => onAutoChange(!autoEnabled)}
+              className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+                autoEnabled ? "bg-primary" : "bg-border"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 start-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  autoEnabled ? "translate-x-5 rtl:-translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </label>
+        ) : null}
+
         <p id="avatar-status-label" className="mb-2 text-sm font-medium text-foreground">
           {t("avatar.status")}
         </p>
@@ -144,7 +194,8 @@ export function AvatarPicker({
             {t("avatar.statusNone")}
           </button>
           {AVATAR_STATUSES.map((s) => {
-            const selected = statusLabel === s;
+            const selected = status === s || avatarStatusMessageKey(status) === avatarStatusMessageKey(s);
+            const key = avatarStatusMessageKey(s);
             return (
               <button
                 key={s}
@@ -155,7 +206,7 @@ export function AvatarPicker({
                 onClick={() => onStatusChange(s)}
                 className={`avatar-status-chip ${selected ? "avatar-status-chip-selected" : ""}`}
               >
-                {s}
+                {key ? t(key) : s}
               </button>
             );
           })}

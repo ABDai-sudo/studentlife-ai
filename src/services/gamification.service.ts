@@ -461,6 +461,10 @@ export async function tryUnlock(
 }
 
 export async function getProgressSummary(userId: string) {
+  const { resolveStudentStatusForUser, ensureAvatarStatusAutoColumn } = await import(
+    "@/services/student-status.service"
+  );
+  await ensureAvatarStatusAutoColumn();
   const profile = await prisma.studentProfile.findUnique({ where: { userId } });
   const [quests, challenges, streak, achievements] = await Promise.all([
     ensureDailyQuests(userId),
@@ -502,6 +506,11 @@ export async function getProgressSummary(userId: string) {
     academicAura: profile?.academicAura ?? 50,
     achievementCodes,
   });
+  const resolved = await resolveStudentStatusForUser(userId, {
+    avatarStatus: profile?.avatarStatus ?? null,
+    avatarStatusAuto: profile?.avatarStatusAuto,
+    timezone: profile?.timezone,
+  });
 
   return {
     xpTotal,
@@ -512,7 +521,12 @@ export async function getProgressSummary(userId: string) {
     academicAura: profile?.academicAura ?? 50,
     displayName: profile?.displayName ?? null,
     avatarPresetId: profile?.avatarPresetId ?? null,
-    avatarStatus: profile?.avatarStatus ?? null,
+    avatarStatus: resolved.status,
+    avatarStatusPinned: profile?.avatarStatus ?? null,
+    avatarStatusAuto: profile?.avatarStatusAuto !== false,
+    avatarPresence: resolved.presence,
+    avatarStatusSource: resolved.source,
+    avatarStatusLive: resolved.live,
     leaderboardOptIn: profile?.leaderboardOptIn ?? false,
     cosmeticFrame,
     avatarFrameUi: frameToUiRing(cosmeticFrame),

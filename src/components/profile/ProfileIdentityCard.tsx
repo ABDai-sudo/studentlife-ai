@@ -13,12 +13,22 @@ import {
   getAvatarPreset,
   type AvatarFrameId,
 } from "@/lib/avatar/presets";
+import { avatarStatusMessageKey } from "@/lib/avatar/status-label";
+import type {
+  AvatarPresence,
+  AvatarStatusSource,
+} from "@/lib/avatar/contextual-status";
 import { xpProgressFromTotal } from "@/lib/gamification/xp-progress";
 
 export type IdentityStats = {
   displayName: string | null;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  resolvedAvatarStatus?: string | null;
+  avatarPresence?: AvatarPresence | null;
+  avatarStatusSource?: AvatarStatusSource | null;
+  avatarStatusLive?: boolean;
+  avatarStatusAuto?: boolean;
   xpTotal: number;
   level: number;
   academicAura: number;
@@ -36,6 +46,7 @@ export function ProfileIdentityCard({
   saveError = null,
   onPresetChange,
   onStatusChange,
+  onAutoChange,
   onDisplayNameBlur,
   displayNameDraft,
   onDisplayNameChange,
@@ -47,6 +58,7 @@ export function ProfileIdentityCard({
   saveError?: string | null;
   onPresetChange: (id: string | null) => void;
   onStatusChange: (status: string | null) => void;
+  onAutoChange?: (auto: boolean) => void;
   displayNameDraft: string;
   onDisplayNameChange: (v: string) => void;
   onDisplayNameBlur: () => void;
@@ -57,6 +69,8 @@ export function ProfileIdentityCard({
   const preset = getAvatarPreset(identity.avatarPresetId);
   const xp = xpProgressFromTotal(identity.xpTotal);
   const studyNote = identity.studyGoal?.trim() || "";
+  const shownStatus = identity.resolvedAvatarStatus || identity.avatarStatus;
+  const shownStatusKey = avatarStatusMessageKey(shownStatus);
 
   const badges: string[] = [];
   if (identity.streakCurrent >= 7) badges.push("7-day streak");
@@ -75,6 +89,7 @@ export function ProfileIdentityCard({
             presetId={identity.avatarPresetId}
             frame={frame}
             aura={identity.academicAura}
+            presence={identity.avatarPresence}
           />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted">
@@ -85,8 +100,8 @@ export function ProfileIdentityCard({
             </h2>
             <p className="mt-1.5 text-sm text-secondary">
               {preset ? preset.label : t("avatar.initialsOption")}
-              {identity.avatarStatus
-                ? ` · ${displayAvatarStatus(identity.avatarStatus)}`
+              {shownStatus
+                ? ` · ${shownStatusKey ? t(shownStatusKey) : displayAvatarStatus(shownStatus)}`
                 : ""}
             </p>
             {studyNote ? (
@@ -180,12 +195,18 @@ export function ProfileIdentityCard({
         <AvatarPicker
           presetId={identity.avatarPresetId}
           status={identity.avatarStatus}
+          resolvedStatus={identity.resolvedAvatarStatus}
+          presence={identity.avatarPresence}
+          statusSource={identity.avatarStatusSource}
+          statusLive={identity.avatarStatusLive}
+          autoEnabled={identity.avatarStatusAuto !== false}
           displayName={name}
           disabled={saving}
           saveState={saveState}
           saveError={saveError}
           onPresetChange={onPresetChange}
           onStatusChange={onStatusChange}
+          onAutoChange={onAutoChange}
         />
 
         <Button href="/dashboard/leaderboard" size="sm" variant="secondary">

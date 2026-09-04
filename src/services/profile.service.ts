@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import { prisma, withDbRetry } from "@/lib/db";
 import type { OnboardingInput } from "@/lib/validations/auth";
 import type { UpdateProfileInput } from "@/lib/validations/finance";
 import type { PersonalityMode, ThemeMode } from "@prisma/client";
@@ -7,6 +7,11 @@ import {
   isValidAvatarPresetId,
   isValidAvatarStatus,
 } from "@/lib/avatar/presets";
+import type {
+  AvatarPresence,
+  AvatarStatusSource,
+} from "@/lib/avatar/contextual-status";
+import { resolveStudentStatusForUser, ensureAvatarStatusAutoColumn } from "@/services/student-status.service";
 
 export type ProfileDto = {
   university: string | null;
@@ -34,6 +39,11 @@ export type ProfileDto = {
   leaderboardOptIn: boolean;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  avatarStatusAuto: boolean;
+  resolvedAvatarStatus: string | null;
+  avatarPresence: AvatarPresence;
+  avatarStatusSource: AvatarStatusSource;
+  avatarStatusLive: boolean;
   leaderboardShowAvatar: boolean;
   xpTotal: number;
   level: number;
@@ -67,12 +77,19 @@ function toDto(row: {
   leaderboardOptIn: boolean;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  avatarStatusAuto?: boolean | null;
   leaderboardShowAvatar: boolean;
   xpTotal: number;
   level: number;
   academicAura: number;
   streakFreezeCount: number;
-}): ProfileDto {
+}): Omit<
+  ProfileDto,
+  | "resolvedAvatarStatus"
+  | "avatarPresence"
+  | "avatarStatusSource"
+  | "avatarStatusLive"
+> {
   return {
     university: row.university,
     course: row.course,
@@ -100,6 +117,7 @@ function toDto(row: {
     leaderboardOptIn: row.leaderboardOptIn,
     avatarPresetId: row.avatarPresetId,
     avatarStatus: row.avatarStatus,
+    avatarStatusAuto: row.avatarStatusAuto !== false,
     leaderboardShowAvatar: row.leaderboardShowAvatar,
     xpTotal: row.xpTotal,
     level: row.level,
@@ -108,9 +126,26 @@ function toDto(row: {
   };
 }
 
+async function withResolvedStatus(
+  userId: string,
+  dto: ReturnType<typeof toDto>
+): Promise<ProfileDto> {
+  const resolved = await resolveStudentStatusForUser(userId, dto);
+  return {
+    ...dto,
+    resolvedAvatarStatus: resolved.status,
+    avatarPresence: resolved.presence,
+    avatarStatusSource: resolved.source,
+    avatarStatusLive: resolved.live,
+  };
+}
+
 export async function getProfileForUser(userId: string): Promise<ProfileDto | null> {
-  const profile = await prisma.studentProfile.findUnique({ where: { userId } });
-  return profile ? toDto(profile) : null;
+  await ensureAvatarStatusAutoColumn();
+  const profile = await withDbRetry(() =>
+    prisma.studentProfile.findUnique({ where: { userId } })
+  );
+  return profile ? withResolvedStatus(userId, toDto(profile)) : null;
 }
 
 export async function completeOnboardingForUser(
@@ -154,13 +189,14 @@ export async function completeOnboardingForUser(
     },
   });
 
-  return toDto(profile);
+  return withResolvedStatus(userId, toDto(profile));
 }
 
 export async function updateProfileForUser(
   userId: string,
   input: UpdateProfileInput
 ): Promise<ProfileDto> {
+  await ensureAvatarStatusAutoColumn();
   const data: Prisma.StudentProfileUpdateInput = {};
 
   if (input.monthlyPocketMoney != null) {
@@ -213,6 +249,9 @@ export async function updateProfileForUser(
     }
     data.avatarStatus = status;
   }
+  if (input.avatarStatusAuto !== undefined) {
+    data.avatarStatusAuto = input.avatarStatusAuto;
+  }
   if (input.leaderboardShowAvatar !== undefined) {
     data.leaderboardShowAvatar = input.leaderboardShowAvatar;
   }
@@ -248,11 +287,12 @@ export async function updateProfileForUser(
       leaderboardOptIn: input.leaderboardOptIn ?? false,
       avatarPresetId: input.avatarPresetId || null,
       avatarStatus: input.avatarStatus || null,
+      avatarStatusAuto: input.avatarStatusAuto ?? true,
       leaderboardShowAvatar: input.leaderboardShowAvatar ?? true,
       onboardingComplete: input.monthlyPocketMoney != null,
     },
     update: data,
   });
 
-  return toDto(profile);
+  return withResolvedStatus(userId, toDto(profile));
 }

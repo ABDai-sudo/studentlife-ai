@@ -80,6 +80,7 @@ export function isValidAvatarPresetId(id: string | null | undefined): boolean {
 
 export function isValidAvatarStatus(status: string | null | undefined): boolean {
   if (!status) return true;
+  if (status === "In class") return false;
   if ((AVATAR_STATUSES as readonly string[]).includes(status)) return true;
   return Object.prototype.hasOwnProperty.call(LEGACY_STATUS_ALIASES, status);
 }

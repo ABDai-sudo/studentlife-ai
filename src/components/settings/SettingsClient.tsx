@@ -48,6 +48,10 @@ import { PersonalityVibeCard } from "@/components/i18n/PersonalityVibeCard";
 import { EngagementSettings } from "@/components/settings/EngagementSettings";
 import { t as translate } from "@/lib/i18n/translator";
 import { languageNameToLocale } from "@/lib/i18n/config";
+import type {
+  AvatarPresence,
+  AvatarStatusSource,
+} from "@/lib/avatar/contextual-status";
 
 type InitialProfile = {
   currency: string;
@@ -62,6 +66,11 @@ type InitialProfile = {
   leaderboardShowAvatar: boolean;
   avatarPresetId: string | null;
   avatarStatus: string | null;
+  avatarStatusAuto?: boolean;
+  resolvedAvatarStatus?: string | null;
+  avatarPresence?: AvatarPresence | null;
+  avatarStatusSource?: AvatarStatusSource | null;
+  avatarStatusLive?: boolean;
 };
 
 const TIMEZONES = [
@@ -508,6 +517,11 @@ export function SettingsClient({
           leaderboardShowAvatar: initialProfile?.leaderboardShowAvatar ?? true,
           avatarPresetId: initialProfile?.avatarPresetId ?? null,
           avatarStatus: initialProfile?.avatarStatus ?? null,
+          avatarStatusAuto: initialProfile?.avatarStatusAuto !== false,
+          resolvedAvatarStatus: initialProfile?.resolvedAvatarStatus ?? null,
+          avatarPresence: (initialProfile?.avatarPresence ?? "idle") as AvatarPresence,
+          avatarStatusSource: (initialProfile?.avatarStatusSource ?? "none") as AvatarStatusSource,
+          avatarStatusLive: Boolean(initialProfile?.avatarStatusLive),
         }}
         initialPrefs={
           initialNotifPrefs

@@ -1,8 +1,18 @@
+import type {
+  AvatarPresence,
+  AvatarStatusSource,
+} from "@/lib/avatar/contextual-status";
+
 export const IDENTITY_CHANGE_EVENT = "sl-identity-change";
 
 export type IdentityChangeDetail = {
   avatarPresetId?: string | null;
   avatarStatus?: string | null;
+  resolvedAvatarStatus?: string | null;
+  avatarPresence?: AvatarPresence | null;
+  avatarStatusSource?: AvatarStatusSource | null;
+  avatarStatusLive?: boolean;
+  avatarStatusAuto?: boolean;
   displayName?: string | null;
 };
 

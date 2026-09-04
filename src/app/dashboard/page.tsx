@@ -2,6 +2,8 @@ import { requireUser } from "@/lib/auth";
 import { AppShell } from "@/components/app/AppShell";
 import { getDashboardMoneySummary } from "@/services/expense.service";
 import { getProgressSummary } from "@/services/gamification.service";
+import { getAvatarCardContext } from "@/services/avatar-context.service";
+import { resolveBudgetState } from "@/lib/avatar/budget-state";
 import { EXPENSE_CATEGORY_LABELS } from "@/lib/validations/expense";
 import {
   DashboardGamificationHeader,
@@ -9,6 +11,7 @@ import {
 } from "@/components/dashboard/DashboardGamificationHeader";
 import { DashboardMoneyOverview } from "@/components/dashboard/DashboardMoneyOverview";
 import { runEngagementTick } from "@/services/engagement-tick.service";
+import type { AvatarCardContextView } from "@/components/avatar/AvatarStatusCard";
 
 function categoryLabel(category: string) {
   return (
@@ -31,6 +34,9 @@ function toClientSummary(
     displayName: summary.displayName,
     avatarPresetId: summary.avatarPresetId,
     avatarStatus: summary.avatarStatus,
+    avatarPresence: summary.avatarPresence,
+    avatarStatusSource: summary.avatarStatusSource,
+    avatarStatusLive: summary.avatarStatusLive,
     avatarFrameUi: summary.avatarFrameUi,
     todayComplete: summary.todayComplete,
     questsDone: summary.questsDone,
@@ -73,6 +79,30 @@ export default async function DashboardPage() {
     progressError = "Could not load progress.";
   }
 
+  let avatarSignals = {
+    institutionName: null as string | null,
+    examSeasonActive: false,
+    hasModelPapers: false,
+    seed: user.id,
+  };
+  try {
+    avatarSignals = await getAvatarCardContext(user.id);
+  } catch {
+    avatarSignals = { ...avatarSignals, seed: user.id };
+  }
+
+  const avatarContext: AvatarCardContextView = {
+    budget: resolveBudgetState({
+      pocketMoney: summary?.pocketMoney ?? null,
+      moneyLeft: summary?.moneyLeft ?? null,
+      monthSpent: summary?.monthSpent,
+    }),
+    examSeasonActive: avatarSignals.examSeasonActive,
+    institutionName: avatarSignals.institutionName,
+    hasModelPapers: avatarSignals.hasModelPapers,
+    seed: avatarSignals.seed,
+  };
+
   const view = summary
     ? {
         currency: summary.currency,
@@ -108,11 +138,13 @@ export default async function DashboardPage() {
       displayName={progress?.displayName}
       avatarPresetId={progress?.avatarPresetId}
       avatarStatus={progress?.avatarStatus}
+      avatarPresence={progress?.avatarPresence}
     >
       <DashboardGamificationHeader
         userName={user.name ?? firstName}
         initialData={progress}
         loadError={progressError}
+        avatarContext={avatarContext}
       />
       <DashboardMoneyOverview summary={view} />
     </AppShell>
