@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import { RememberLoginContext } from "@/components/auth/RememberLoginContext";
 import type {
   AvatarPresence,
   AvatarStatusSource,
@@ -26,6 +27,7 @@ export function HeaderIdentityProvider({
 }) {
   return (
     <HeaderIdentityContext.Provider value={value}>
+      <RememberLoginContext identity={value} />
       {children}
     </HeaderIdentityContext.Provider>
   );

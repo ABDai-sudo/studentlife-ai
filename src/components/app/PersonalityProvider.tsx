@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { PersonalityMode, ThemeMode } from "@/lib/personality";
 import { PreferencesHydrator } from "@/components/theme/ThemeProvider";
 import { LocaleHydrator } from "@/components/i18n/LocaleProvider";
+import { RememberLoginContext } from "@/components/auth/RememberLoginContext";
 import { setServerPreferredUiLanguage } from "@/lib/i18n/locale-store";
 
 type PersonalityProviderProps = {
@@ -30,6 +31,7 @@ export function PersonalityProvider({
     <>
       <PreferencesHydrator personality={personality} theme={theme} />
       <LocaleHydrator preferredUiLanguage={preferredUiLanguage} />
+      <RememberLoginContext personality={personality} />
       {children}
     </>
   );

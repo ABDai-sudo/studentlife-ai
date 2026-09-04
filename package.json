@@ -8,7 +8,7 @@
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint",
-    "test": "tsx --test src/lib/security/security.test.ts src/lib/campus-circle/privacy.test.ts src/lib/avatar/contextual-status.test.ts src/lib/avatar/budget-state.test.ts src/lib/avatar/speech.test.ts src/lib/avatar/share-payload.test.ts src/lib/avatar/scene-url.test.ts",
+    "test": "tsx --test src/lib/security/security.test.ts src/lib/campus-circle/privacy.test.ts src/lib/avatar/contextual-status.test.ts src/lib/avatar/budget-state.test.ts src/lib/avatar/speech.test.ts src/lib/avatar/share-payload.test.ts src/lib/avatar/scene-url.test.ts src/lib/avatar/login-preview.test.ts src/lib/avatar/login-greeting.test.ts src/lib/auth/login-errors.test.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

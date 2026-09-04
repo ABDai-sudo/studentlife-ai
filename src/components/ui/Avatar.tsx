@@ -4,7 +4,7 @@ import type { AvatarPresence } from "@/lib/avatar/contextual-status";
 
 type AvatarProps = {
   name: string;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "hero";
   className?: string;
   /** Legacy image URL (optional) */
   imageSrc?: string | null;
@@ -37,6 +37,7 @@ const SIZE: Record<NonNullable<AvatarProps["size"]>, string> = {
   lg: "h-12 w-12 text-sm",
   xl: "h-16 w-16 text-base",
   "2xl": "h-[4.5rem] w-[4.5rem] text-lg sm:h-20 sm:w-20",
+  hero: "h-[4.75rem] w-[4.75rem] text-2xl lg:h-[10.5rem] lg:w-[10.5rem] lg:text-5xl",
 };
 
 const FRAME_RING: Record<NonNullable<AvatarProps["frame"]>, string> = {
