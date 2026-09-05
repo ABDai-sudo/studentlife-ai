@@ -40,12 +40,20 @@ function riskFor(score: number, moneyLeft: number | null, pocket: number | null)
 
 export async function computeFinancialScoreForUser(
   userId: string,
-  persist = true
+  persist = true,
+  preloaded?: {
+    summary?: Awaited<ReturnType<typeof getDashboardMoneySummary>>;
+    budgets?: Awaited<ReturnType<typeof listBudgetsForUser>>;
+  }
 ): Promise<FinancialScoreDto> {
   const { startOfMonth, endOfMonth, daysLeft } = monthBounds();
   const [summary, budgets, goals] = await Promise.all([
-    getDashboardMoneySummary(userId),
-    listBudgetsForUser(userId),
+    preloaded?.summary
+      ? Promise.resolve(preloaded.summary)
+      : getDashboardMoneySummary(userId),
+    preloaded?.budgets
+      ? Promise.resolve(preloaded.budgets)
+      : listBudgetsForUser(userId),
     listGoalsForUser(userId),
   ]);
 

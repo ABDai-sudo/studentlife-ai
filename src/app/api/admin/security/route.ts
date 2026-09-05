@@ -1,5 +1,6 @@
 import { ok } from "@/lib/api";
 import { withOwnerApi } from "@/lib/admin/api";
+import { sessionCookieSecure } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
@@ -62,7 +63,7 @@ export async function GET() {
         configuration: {
           mfaEnforcement:
             "Incomplete — models ready, enforcement not active",
-          secureCookies: process.env.NODE_ENV === "production",
+          secureCookies: sessionCookieSecure(),
           rateLimiting:
             "Application-level in-memory (configure Redis for multi-instance)",
           lastSecurityReview: null,

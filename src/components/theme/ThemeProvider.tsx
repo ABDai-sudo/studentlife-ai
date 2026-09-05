@@ -151,12 +151,19 @@ export function PreferencesHydrator({
   return null;
 }
 
+/** Matches ThemeProvider's SSR snapshot when the tree is evaluated without a provider. */
+const THEME_SSR_FALLBACK: ThemeContextValue = {
+  theme: "SYSTEM",
+  setTheme: () => undefined,
+  personality: "PROFESSIONAL",
+  setPersonality: () => undefined,
+  resolvedTheme: "LIGHT",
+};
+
 export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
-  return ctx;
+  // Next may evaluate header chrome during compile/streaming before the root
+  // provider is attached. Falling back avoids turning that into a 500.
+  return useContext(ThemeContext) ?? THEME_SSR_FALLBACK;
 }
 
 /** Optional hook that returns null outside the provider (e.g. rare edge routes). */

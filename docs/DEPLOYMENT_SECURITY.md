@@ -6,11 +6,12 @@ Serve the app exclusively over HTTPS. Enable HSTS (already set in `next.config.t
 
 ## Cookies
 
-Production cookies are `Secure` + `HttpOnly` + `SameSite=Lax`. Set:
+Production cookies are `Secure` + `HttpOnly` + `SameSite=Lax`. The Secure flag is also set when `APP_BASE_URL` is HTTPS. Set:
 
 - `AUTH_SECRET` (long random)
 - `AUTH_SESSION_MAX_AGE`
 - `APP_BASE_URL` (canonical origin for CSRF/origin checks)
+- `NEXT_PUBLIC_APP_URL` (same origin as `APP_BASE_URL` in production)
 
 ## Secrets
 

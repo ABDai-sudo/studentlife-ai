@@ -9,17 +9,21 @@ import { listBudgetsForUser } from "@/services/budget.service";
 import { computeFinancialScoreForUser } from "@/services/score.service";
 import { getProfileForUser } from "@/services/profile.service";
 import { getMoneyAssistantCopy } from "@/lib/personality";
+import { withDbRetry } from "@/lib/db";
 import { MoneyStatLabels } from "@/components/money/MoneyStatLabels";
 import { MoneyQuickActions } from "@/components/money/MoneyQuickActions";
-import { MoneyCategoryHeading, MoneyLoadError, MoneySpentLabel } from "@/components/money/MoneyCategoryHeading";
+import {
+  MoneyBudgetStatus,
+  MoneyCategoryHeading,
+  MoneyLoadError,
+  MoneyNoBudgets,
+  MoneySpentLabel,
+} from "@/components/money/MoneyCategoryHeading";
 
 export default async function MoneyDashboardPage() {
   const user = await requireUser();
-  const profile = await getProfileForUser(user.id);
-  const assistant = getMoneyAssistantCopy(
-    profile?.personalityMode ?? "PROFESSIONAL"
-  );
 
+  let profile: Awaited<ReturnType<typeof getProfileForUser>> = null;
   let summary: Awaited<ReturnType<typeof getDashboardMoneySummary>> | null =
     null;
   let budgets: Awaited<ReturnType<typeof listBudgetsForUser>> = [];
@@ -27,14 +31,24 @@ export default async function MoneyDashboardPage() {
     null;
 
   try {
-    [summary, budgets, score] = await Promise.all([
-      getDashboardMoneySummary(user.id),
-      listBudgetsForUser(user.id),
-      computeFinancialScoreForUser(user.id, false),
+    [profile, summary, budgets] = await Promise.all([
+      withDbRetry(() => getProfileForUser(user.id)),
+      withDbRetry(() => getDashboardMoneySummary(user.id)),
+      withDbRetry(() => listBudgetsForUser(user.id)),
     ]);
+    score = await withDbRetry(() =>
+      computeFinancialScoreForUser(user.id, false, {
+        summary: summary ?? undefined,
+        budgets,
+      })
+    );
   } catch {
     summary = null;
   }
+
+  const assistant = getMoneyAssistantCopy(
+    profile?.personalityMode ?? "PROFESSIONAL"
+  );
 
   const currency = summary?.currency ?? "INR";
 
@@ -58,10 +72,10 @@ export default async function MoneyDashboardPage() {
                 ? "—"
                 : formatMoney(summary.moneyLeft, currency)
             }
-            moneyLeftHint={
+            moneyLeftHintKey={
               summary.pocketMoney == null
-                ? "Set pocket money in Profile"
-                : "Pocket money − month spend"
+                ? "money.setPocketHint"
+                : "money.pocketMinusSpend"
             }
             daysLeft={String(summary.daysLeft)}
             safeDaily={
@@ -78,16 +92,11 @@ export default async function MoneyDashboardPage() {
               <div className="mb-3 flex items-center justify-between">
                 <MoneyCategoryHeading />
                 <Badge tone="neutral">
-                  {budgets.length > 0 ? "Live" : "Not set"}
+                  <MoneyBudgetStatus live={budgets.length > 0} />
                 </Badge>
               </div>
               {budgets.length === 0 ? (
-                <p className="text-sm text-secondary">
-                  No category budgets yet.{" "}
-                  <a href="/dashboard/budget" className="text-primary underline">
-                    Add limits
-                  </a>
-                </p>
+                <MoneyNoBudgets />
               ) : (
                 <div className="space-y-2.5">
                   {budgets.map((b) => (

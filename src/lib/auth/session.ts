@@ -24,6 +24,13 @@ function getMaxAge(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 60 * 60 * 24 * 7;
 }
 
+/** Secure flag: production, or any HTTPS canonical app URL. */
+export function sessionCookieSecure(): boolean {
+  if (process.env.NODE_ENV === "production") return true;
+  const base = process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "";
+  return /^https:\/\//i.test(base);
+}
+
 export async function createSessionToken(
   payload: SessionPayload
 ): Promise<string> {
@@ -54,7 +61,7 @@ export async function setSessionCookie(token: string): Promise<void> {
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: sessionCookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: getMaxAge(),

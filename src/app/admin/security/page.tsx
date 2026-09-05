@@ -1,4 +1,5 @@
 import { requireOwnerPage } from "@/lib/auth";
+import { sessionCookieSecure } from "@/lib/auth/session";
 import { EmptyState } from "@/components/admin/ui";
 import { prisma } from "@/lib/db";
 import { daysAgoDate } from "@/lib/admin/time";
@@ -55,7 +56,7 @@ export default async function AdminSecurityPage() {
   }
 
   const { failedLogins, ownerLogins, unauthorized, suspended, recent } = data;
-  const secureCookies = process.env.NODE_ENV === "production";
+  const secureCookies = sessionCookieSecure();
 
   return (
     <div className="space-y-6">

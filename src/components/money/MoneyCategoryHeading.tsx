@@ -26,3 +26,20 @@ export function MoneyLoadError() {
     </div>
   );
 }
+
+export function MoneyBudgetStatus({ live }: { live: boolean }) {
+  const { t } = useT();
+  return <>{live ? t("money.live") : t("money.notSet")}</>;
+}
+
+export function MoneyNoBudgets() {
+  const { t } = useT();
+  return (
+    <p className="text-sm text-secondary">
+      {t("money.noBudgetsYet")}{" "}
+      <a href="/dashboard/budget" className="text-primary underline">
+        {t("money.addLimits")}
+      </a>
+    </p>
+  );
+}

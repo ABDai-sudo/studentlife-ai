@@ -2,17 +2,18 @@
 
 import { StatCard } from "@/components/ui/StatCard";
 import { useT } from "@/components/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n/dictionaries/en";
 
 export function MoneyStatLabels({
   moneyLeft,
-  moneyLeftHint,
+  moneyLeftHintKey,
   daysLeft,
   safeDaily,
   healthScore,
   healthHint,
 }: {
   moneyLeft: string;
-  moneyLeftHint?: string;
+  moneyLeftHintKey?: MessageKey;
   daysLeft: string;
   safeDaily: string;
   healthScore: string;
@@ -24,7 +25,7 @@ export function MoneyStatLabels({
       <StatCard
         label={t("money.remaining")}
         value={moneyLeft}
-        hint={moneyLeftHint}
+        hint={moneyLeftHintKey ? t(moneyLeftHintKey) : undefined}
       />
       <StatCard label={t("money.daysLeft")} value={daysLeft} />
       <StatCard label={t("money.safeDailySpend")} value={safeDaily} />
