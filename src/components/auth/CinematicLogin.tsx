@@ -241,11 +241,12 @@ export function CinematicLogin() {
         <LoginCampusScene />
         <div
           className={`login-hero${success ? " is-ack" : ""}`}
+          data-login-presentation={preview.presentation}
         >
-          <div className="login-hero-avatar">
+          <div className="login-hero-avatar" key={preview.artworkSrc}>
             <LoginHeroAvatar
               name={preview.displayName}
-              presetId={preview.presetId}
+              src={preview.artworkSrc}
             />
           </div>
           <p className="login-speech" aria-live="polite">

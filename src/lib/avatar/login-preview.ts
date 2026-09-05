@@ -15,10 +15,29 @@ export const LOGIN_PRESENTATIONS = [
 
 export type LoginPresentationId = (typeof LOGIN_PRESENTATIONS)[number];
 
+/**
+ * Local cinematic stills for the login stage only.
+ * Release files in /public/login. Commissioned replacements should keep
+ * these exact filenames:
+ *   public/login/student-male.png
+ *   public/login/student-female.png
+ *   public/login/student-neutral.png
+ *   public/login/student-custom.png
+ *   public/login/campus-dusk.png
+ */
+export const LOGIN_ARTWORK = {
+  male: "/login/student-male.png",
+  female: "/login/student-female.png",
+  neutral: "/login/student-neutral.png",
+  custom: "/login/student-custom.png",
+  campus: "/login/campus-dusk.png",
+} as const;
+
 export type LoginPreviewIdentity = {
   presentation: LoginPresentationId;
   presetId: string | null;
   displayName: string;
+  artworkSrc: string;
 };
 
 export type LoginRememberedContext = {
@@ -50,7 +69,7 @@ function notifyLoginContext() {
   }
 }
 
-/** Geometric presets — mixed palettes, not pink/blue gender coding. */
+/** Curated looks: mixed identity tokens, not pink/blue gender-coded art. */
 export const CURATED_LOGIN_PREVIEWS: Record<
   Exclude<LoginPresentationId, "custom">,
   LoginPreviewIdentity
@@ -59,16 +78,19 @@ export const CURATED_LOGIN_PREVIEWS: Record<
     presentation: "male",
     presetId: "midnight",
     displayName: "Arjun",
+    artworkSrc: LOGIN_ARTWORK.male,
   },
   female: {
     presentation: "female",
     presetId: "jade",
     displayName: "Meera",
+    artworkSrc: LOGIN_ARTWORK.female,
   },
   neutral: {
     presentation: "neutral",
     presetId: "slate",
     displayName: "Jordan",
+    artworkSrc: LOGIN_ARTWORK.neutral,
   },
 };
 
@@ -76,6 +98,7 @@ const FALLBACK_CUSTOM: LoginPreviewIdentity = {
   presentation: "custom",
   presetId: "cobalt",
   displayName: "Student",
+  artworkSrc: LOGIN_ARTWORK.custom,
 };
 
 export function isLoginPresentationId(
@@ -119,6 +142,7 @@ export function resolveLoginPreview(
     presentation: "custom",
     presetId,
     displayName,
+    artworkSrc: LOGIN_ARTWORK.custom,
   };
 }
 

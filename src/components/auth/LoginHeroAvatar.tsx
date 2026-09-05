@@ -1,18 +1,27 @@
 "use client";
 
-import { Avatar } from "@/components/ui/Avatar";
-
 /**
- * Login uses the existing Avatar presets immediately.
- * Optional 3D stays off this page so the form never waits on Spline
- * and the entry identity stays mature rather than a test sphere.
+ * Login stage uses local cinematic stills — never geometric preset circles.
  */
 export function LoginHeroAvatar({
   name,
-  presetId,
+  src,
 }: {
   name: string;
-  presetId: string | null;
+  src: string;
 }) {
-  return <Avatar name={name} presetId={presetId} size="hero" />;
+  return (
+    <figure className="login-hero-figure">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        className="login-hero-photo"
+        width={768}
+        height={1024}
+        decoding="async"
+      />
+      <figcaption className="sr-only">{name}</figcaption>
+    </figure>
+  );
 }
