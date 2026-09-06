@@ -8,6 +8,7 @@ import { LoginCampusScene } from "@/components/auth/LoginCampusScene";
 import { LoginHeroAvatar } from "@/components/auth/LoginHeroAvatar";
 import { LoginPreferenceBar } from "@/components/auth/LoginPreferenceBar";
 import { LoginPreviewSwitcher } from "@/components/auth/LoginPreviewSwitcher";
+import { useLoginStory } from "@/components/auth/useLoginStory";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { useT } from "@/components/i18n/LocaleProvider";
@@ -21,10 +22,16 @@ import {
   getServerLoginContextSnapshot,
   type LoginPresentationId,
 } from "@/lib/avatar/login-preview";
+import {
+  LOGIN_STORY_POSES,
+  loginStoryFormReady,
+  loginStoryPoseForStage,
+  loginStoryShowsAvatar,
+  loginStoryShowsSpeech,
+  loginStoryTiming,
+  resolveLoginStorySrc,
+} from "@/lib/avatar/login-story";
 import { mapLoginFailure, safePostLoginPath } from "@/lib/auth/login-errors";
-
-/** Visible success acknowledgement only. Never hold navigation past this. */
-const LOGIN_SUCCESS_ACK_MS = 280;
 
 function useLoginKeyboardClass() {
   useEffect(() => {
@@ -52,6 +59,15 @@ export function CinematicLogin() {
   const { t } = useT();
   const { personality } = useTheme();
   useLoginKeyboardClass();
+  const {
+    stage,
+    compact,
+    reduced,
+    onSubmitStart,
+    onAuthSuccess,
+    onAuthFail,
+    restartEnter,
+  } = useLoginStory();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,30 +76,62 @@ export function CinematicLogin() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const submittingRef = useRef(false);
+  const pendingPathRef = useRef<string | null>(null);
   const remembered = useSyncExternalStore(
     subscribeLoginContext,
     readLoginContext,
     getServerLoginContextSnapshot
   );
+  const [storyIdentity, setStoryIdentity] = useState<LoginPresentationId | null>(null);
   const presentation: LoginPresentationId = remembered.presentation ?? "neutral";
+  const stagedPresentation = storyIdentity ?? presentation;
 
   const preview = useMemo(
-    () => resolveLoginPreview(presentation, remembered),
-    [presentation, remembered]
+    () => resolveLoginPreview(stagedPresentation, remembered),
+    [stagedPresentation, remembered]
   );
+
+  const pose = loginStoryPoseForStage(stage);
+  const artworkSrc = pose
+    ? resolveLoginStorySrc(stagedPresentation, pose)
+    : resolveLoginStorySrc(stagedPresentation, "enter");
+  const showAvatar = loginStoryShowsAvatar(stage) || reduced;
+  const showSpeech = loginStoryShowsSpeech(stage) || reduced;
+  const formReady = loginStoryFormReady(stage) || reduced;
 
   const broMode =
     personality === "CAMPUS_BRO" || Boolean(remembered.broModeHint);
   const examWeek = Boolean(remembered.examWeekHint);
 
   const speechKey = getLoginGreetingKey({
-    phase: success ? "success" : "idle",
+    phase: success || stage === "success" || stage === "exiting" ? "success" : "idle",
     broMode,
     examWeek,
   });
 
+  useEffect(() => {
+    LOGIN_STORY_POSES.forEach((nextPose) => {
+      const href = resolveLoginStorySrc(stagedPresentation, nextPose);
+      if (href.endsWith(".webm")) return;
+      const img = new Image();
+      img.src = href;
+    });
+  }, [stagedPresentation]);
+
+  useEffect(() => {
+    if (stage !== "exiting") return;
+    const nextPath = pendingPathRef.current;
+    if (!nextPath) return;
+    const timer = window.setTimeout(() => {
+      router.push(nextPath);
+      router.refresh();
+    }, loginStoryTiming(compact).exitingMs);
+    return () => window.clearTimeout(timer);
+  }, [stage, compact, router]);
+
   function selectPresentation(next: LoginPresentationId) {
     rememberLoginContext({ presentation: next });
+    restartEnter();
   }
 
   async function onSubmit(e: FormEvent) {
@@ -92,6 +140,8 @@ export function CinematicLogin() {
     submittingRef.current = true;
     setError(null);
     setLoading(true);
+    setStoryIdentity(presentation);
+    onSubmitStart();
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -112,6 +162,8 @@ export function CinematicLogin() {
         setError(t("login.error.server"));
         submittingRef.current = false;
         setLoading(false);
+        setStoryIdentity(null);
+        onAuthFail();
         return;
       }
 
@@ -127,6 +179,8 @@ export function CinematicLogin() {
         );
         submittingRef.current = false;
         setLoading(false);
+        setStoryIdentity(null);
+        onAuthFail();
         return;
       }
 
@@ -140,25 +194,38 @@ export function CinematicLogin() {
         new URLSearchParams(window.location.search).get("next"),
         Boolean(json.data?.user?.onboardingComplete)
       );
+      pendingPathRef.current = nextPath;
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
       ).matches;
-      window.setTimeout(
-        () => {
-          router.push(nextPath);
+      onAuthSuccess();
+      if (reducedMotion) {
+        router.push(nextPath);
+        router.refresh();
+      } else {
+        const timing = loginStoryTiming(compact);
+        window.setTimeout(() => {
+          const path = pendingPathRef.current;
+          if (!path) return;
+          router.push(path);
           router.refresh();
-        },
-        reducedMotion ? 0 : LOGIN_SUCCESS_ACK_MS
-      );
+        }, timing.successMs + timing.exitingMs);
+      }
     } catch {
       setError(t("login.error.network"));
       submittingRef.current = false;
       setLoading(false);
+      setStoryIdentity(null);
+      onAuthFail();
     }
   }
 
   return (
-    <div className="login-cinematic auth-shell" data-login-success={success ? "true" : "false"}>
+    <div
+      className={`login-cinematic auth-shell${formReady ? " is-form-ready" : ""}${success ? " is-ack" : ""}`}
+      data-login-success={success ? "true" : "false"}
+      data-login-stage={stage}
+    >
       <section className="login-form-pane">
         <div className="login-card">
           <p className="login-product">StudentLife AI</p>
@@ -259,20 +326,29 @@ export function CinematicLogin() {
         <div
           className={`login-hero${success ? " is-ack" : ""}`}
           data-login-presentation={preview.presentation}
+          data-login-pose={pose ?? "none"}
         >
-          <div className="login-hero-avatar">
+          <div
+            className="login-hero-avatar"
+            data-login-avatar={showAvatar ? "visible" : "hidden"}
+          >
             <div className="login-hero-breathe">
               <LoginHeroAvatar
                 name={preview.displayName}
-                src={preview.artworkSrc}
+                src={artworkSrc}
+                hidden={!showAvatar}
               />
             </div>
           </div>
-          <p className="login-speech" aria-live="polite">
-            {t(speechKey)}
+          <p
+            className="login-speech"
+            aria-live="polite"
+            data-login-speech={showSpeech ? "visible" : "hidden"}
+          >
+            {showSpeech ? t(speechKey) : ""}
           </p>
           <LoginPreviewSwitcher
-            value={presentation}
+            value={stagedPresentation}
             onChange={selectPresentation}
           />
         </div>
