@@ -64,6 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${jakarta.variable} ${notoDevanagari.variable} ${notoGujarati.variable} ${notoArabic.variable} h-full antialiased`}
       suppressHydrationWarning
     >

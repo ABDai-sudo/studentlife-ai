@@ -4,8 +4,27 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+/** Neon cold starts and busy pools need more than Prisma's 10s default. */
+export function resolveDatabaseUrl(raw = process.env.DATABASE_URL): string | undefined {
+  if (!raw) return undefined;
+  try {
+    const url = new URL(raw);
+    if (!url.searchParams.has("pool_timeout")) {
+      url.searchParams.set("pool_timeout", "20");
+    }
+    if (!url.searchParams.has("connect_timeout")) {
+      url.searchParams.set("connect_timeout", "30");
+    }
+    return url.href;
+  } catch {
+    return raw;
+  }
+}
+
 function createPrismaClient() {
+  const url = resolveDatabaseUrl();
   return new PrismaClient({
+    ...(url ? { datasources: { db: { url } } } : {}),
     log:
       process.env.NODE_ENV === "development"
         ? ["error", "warn"]

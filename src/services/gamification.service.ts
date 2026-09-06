@@ -50,23 +50,6 @@ export function levelFromXp(xp: number) {
   return current;
 }
 
-function isUniqueConflict(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: unknown }).code === "P2002"
-  );
-}
-
-async function upsertIgnoreConflict(operation: () => Promise<unknown>) {
-  try {
-    await operation();
-  } catch (error) {
-    if (!isUniqueConflict(error)) throw error;
-  }
-}
-
 export async function awardXp(
   userId: string,
   amount: number,
@@ -248,27 +231,19 @@ export async function ensureDailyQuests(
     },
   ];
 
-  for (const seed of seeds) {
-    await upsertIgnoreConflict(() =>
-      prisma.dailyQuest.upsert({
-        where: {
-          userId_questDate_code: {
-            userId,
-            questDate,
-            code: seed.code,
-          },
-        },
-        create: {
-          userId,
-          questDate,
-          ...seed,
-          target: 1,
-          progress: 0,
-        },
-        update: {},
-      })
-    );
-  }
+  await prisma.dailyQuest.createMany({
+    data: seeds.map((seed) => ({
+      userId,
+      questDate,
+      code: seed.code,
+      title: seed.title,
+      description: seed.description,
+      xpReward: seed.xpReward,
+      target: 1,
+      progress: 0,
+    })),
+    skipDuplicates: true,
+  });
 
   return prisma.dailyQuest.findMany({
     where: { userId, questDate },
@@ -339,28 +314,17 @@ export async function ensureWeeklyChallenges(userId: string) {
     },
   ];
 
-  for (const seed of seeds) {
-    await upsertIgnoreConflict(() =>
-      prisma.weeklyChallenge.upsert({
-        where: {
-          userId_weekStart_code: {
-            userId,
-            weekStart,
-            code: seed.code,
-          },
-        },
-        create: {
-          userId,
-          weekStart,
-          title: seed.title,
-          code: seed.code,
-          target: seed.target,
-          xpReward: seed.xpReward,
-        },
-        update: {},
-      })
-    );
-  }
+  await prisma.weeklyChallenge.createMany({
+    data: seeds.map((seed) => ({
+      userId,
+      weekStart,
+      title: seed.title,
+      code: seed.code,
+      target: seed.target,
+      xpReward: seed.xpReward,
+    })),
+    skipDuplicates: true,
+  });
 
   return prisma.weeklyChallenge.findMany({
     where: { userId, weekStart },

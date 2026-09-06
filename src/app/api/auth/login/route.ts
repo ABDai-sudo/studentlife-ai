@@ -5,6 +5,7 @@ import { rateLimit } from "@/lib/security/rate-limit";
 import { getRequestContext } from "@/lib/security/request";
 import { recordSecurityEvent } from "@/services/audit.service";
 import { safeLog } from "@/lib/security/safe-log";
+import { withDbRetry } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -44,10 +45,12 @@ export async function POST(request: Request) {
       });
     }
 
-    const user = await loginUser(parsed.data, {
-      ipHash: ctx.ipHash,
-      userAgentCat: ctx.userAgentCat,
-    });
+    const user = await withDbRetry(() =>
+      loginUser(parsed.data, {
+        ipHash: ctx.ipHash,
+        userAgentCat: ctx.userAgentCat,
+      })
+    );
 
     return ok({
       user: {

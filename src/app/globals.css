@@ -464,6 +464,7 @@ html.dark .login-visual {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 .login-campus-photo {
@@ -500,19 +501,31 @@ html.dark .login-visual {
   z-index: 1;
 }
 
-.login-hero-avatar {
+.login-hero-avatar,
+.login-hero-breathe {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
+.login-hero-avatar {
+  will-change: transform, opacity;
+}
+
+.login-hero-breathe {
+  transform-origin: 50% 82%;
+}
+
 .login-hero-figure {
+  position: relative;
   margin: 0;
   height: 100%;
   width: 100%;
 }
 
 .login-hero-photo {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -534,6 +547,7 @@ html.dark .login-visual {
   line-height: 1.4;
   color: #f8fafc;
   backdrop-filter: blur(10px);
+  opacity: 0;
 }
 
 .login-preview-switch {
@@ -657,64 +671,177 @@ html.dark .login-visual {
 
 @media (prefers-reduced-motion: no-preference) {
   .login-hero-avatar {
-    animation: login-settle 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: login-hero-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .login-hero.is-ack .login-hero-photo {
-    animation: login-ack 0.45s ease;
+  .login-hero-breathe {
+    animation: login-breathe 6.2s ease-in-out 0.9s infinite;
   }
 
   .login-campus-scene {
-    animation: login-scene-settle 1.25s ease both;
+    animation: login-campus-parallax 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .login-speech {
+    animation: login-speech-enter 0.32s ease 1.28s both;
+  }
+
+  .login-hero.is-ack .login-speech {
+    animation: login-speech-ack 0.22s ease both;
+  }
+
+  .login-hero.is-ack .login-hero-photo:not(.is-exit) {
+    animation: login-ack 0.28s ease;
+  }
+
+  .login-hero-photo.is-enter {
+    animation: login-crossfade-in 0.4s ease both;
+  }
+
+  .login-hero-photo.is-exit {
+    animation: login-crossfade-out 0.4s ease both;
+  }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .login-hero-avatar {
+    animation-name: login-hero-enter-desktop;
   }
 }
 
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
   .login-hero-avatar,
   .login-campus-scene {
-    animation-duration: 0.7s;
+    animation-duration: 0.64s;
+  }
+
+  .login-hero-breathe {
+    animation-delay: 0.64s;
+  }
+
+  .login-speech {
+    animation-delay: 0.92s;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .login-hero-avatar,
+  .login-hero-breathe,
   .login-campus-scene,
-  .login-hero.is-ack .login-hero-photo {
+  .login-speech,
+  .login-hero.is-ack .login-hero-photo,
+  .login-hero-photo.is-enter,
+  .login-hero-photo.is-exit {
     animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }
 
-@keyframes login-settle {
-  from {
+@keyframes login-hero-enter {
+  0% {
     opacity: 0;
-    transform: translate3d(0, 14px, 0) scale(0.985);
+    transform: translate3d(-6%, 8%, 0) scale(0.96);
   }
-  to {
+  78% {
+    opacity: 1;
+    transform: translate3d(0.3%, -0.4%, 0) scale(1.008);
+  }
+  100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
-@keyframes login-scene-settle {
+@keyframes login-hero-enter-desktop {
+  0% {
+    opacity: 0;
+    transform: translate3d(-8.5%, 10%, 0) scale(0.96);
+  }
+  76% {
+    opacity: 1;
+    transform: translate3d(0.4%, -0.55%, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes login-campus-parallax {
+  0% {
+    opacity: 0.62;
+    transform: translate3d(4.5%, -3.2%, 0) scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1.02);
+  }
+}
+
+@keyframes login-breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -5px, 0) scale(1.006);
+  }
+}
+
+@keyframes login-speech-enter {
   from {
-    opacity: 0.65;
-    transform: scale(1.025);
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-speech-ack {
+  from {
+    opacity: 0.35;
+    transform: translate3d(0, 4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes login-ack {
   0% {
     filter: brightness(1);
+    transform: scale(1);
   }
-  40% {
-    filter: brightness(1.08);
+  45% {
+    filter: brightness(1.07);
+    transform: scale(1.012);
   }
   100% {
     filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes login-crossfade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes login-crossfade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 

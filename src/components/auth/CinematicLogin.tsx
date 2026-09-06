@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { LoginCampusScene } from "@/components/auth/LoginCampusScene";
 import { LoginHeroAvatar } from "@/components/auth/LoginHeroAvatar";
@@ -22,6 +22,9 @@ import {
   type LoginPresentationId,
 } from "@/lib/avatar/login-preview";
 import { mapLoginFailure, safePostLoginPath } from "@/lib/auth/login-errors";
+
+/** Visible success acknowledgement only. Never hold navigation past this. */
+const LOGIN_SUCCESS_ACK_MS = 280;
 
 function useLoginKeyboardClass() {
   useEffect(() => {
@@ -56,6 +59,7 @@ export function CinematicLogin() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const submittingRef = useRef(false);
   const remembered = useSyncExternalStore(
     subscribeLoginContext,
     readLoginContext,
@@ -84,7 +88,8 @@ export function CinematicLogin() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (loading) return;
+    if (loading || submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setLoading(true);
 
@@ -105,6 +110,8 @@ export function CinematicLogin() {
         json = await res.json();
       } catch {
         setError(t("login.error.server"));
+        submittingRef.current = false;
+        setLoading(false);
         return;
       }
 
@@ -118,6 +125,8 @@ export function CinematicLogin() {
             })
           )
         );
+        submittingRef.current = false;
+        setLoading(false);
         return;
       }
 
@@ -131,11 +140,19 @@ export function CinematicLogin() {
         new URLSearchParams(window.location.search).get("next"),
         Boolean(json.data?.user?.onboardingComplete)
       );
-      router.push(nextPath);
-      router.refresh();
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      window.setTimeout(
+        () => {
+          router.push(nextPath);
+          router.refresh();
+        },
+        reducedMotion ? 0 : LOGIN_SUCCESS_ACK_MS
+      );
     } catch {
       setError(t("login.error.network"));
-    } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   }
@@ -243,11 +260,13 @@ export function CinematicLogin() {
           className={`login-hero${success ? " is-ack" : ""}`}
           data-login-presentation={preview.presentation}
         >
-          <div className="login-hero-avatar" key={preview.artworkSrc}>
-            <LoginHeroAvatar
-              name={preview.displayName}
-              src={preview.artworkSrc}
-            />
+          <div className="login-hero-avatar">
+            <div className="login-hero-breathe">
+              <LoginHeroAvatar
+                name={preview.displayName}
+                src={preview.artworkSrc}
+              />
+            </div>
           </div>
           <p className="login-speech" aria-live="polite">
             {t(speechKey)}

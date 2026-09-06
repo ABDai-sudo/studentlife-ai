@@ -87,6 +87,21 @@ describe("transient db errors", () => {
       true
     );
   });
+
+  it("adds Neon pool timeouts without dropping existing params", async () => {
+    const { resolveDatabaseUrl } = await import("../db");
+    const resolved = resolveDatabaseUrl(
+      "postgresql://u:p@ep-example/neondb?sslmode=require"
+    );
+    assert.ok(resolved?.includes("pool_timeout=20"));
+    assert.ok(resolved?.includes("connect_timeout=30"));
+    assert.ok(resolved?.includes("sslmode=require"));
+    const already = resolveDatabaseUrl(
+      "postgresql://u:p@ep-example/neondb?pool_timeout=12"
+    );
+    assert.ok(already?.includes("pool_timeout=12"));
+    assert.equal(already?.includes("pool_timeout=20"), false);
+  });
 });
 
 describe("rate limiting", () => {
