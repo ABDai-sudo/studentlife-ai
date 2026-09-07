@@ -31,6 +31,7 @@ function preloadImages(srcs: string[]): Promise<void> {
 
 export function useLoginStory(frameSrcs: string[]): {
   stage: LoginStoryStage;
+  walkStep: number;
   compact: boolean;
   reduced: boolean;
   preloaded: boolean;
@@ -39,69 +40,63 @@ export function useLoginStory(frameSrcs: string[]): {
   onAuthSuccess: () => void;
   onAuthFail: () => void;
   restartEnter: () => void;
-  pauseIdleReplay: () => void;
 } {
   const [compact, setCompact] = useState(() => readMedia(COMPACT_QUERY));
   const [reduced, setReduced] = useState(() => readMedia(REDUCE_QUERY));
-  const [readyKey, setReadyKey] = useState(() =>
-    readMedia(REDUCE_QUERY) ? frameSrcs.join("|") : ""
-  );
-  const [stage, setStage] = useState<LoginStoryStage>(() =>
-    readMedia(REDUCE_QUERY) ? "settled" : "intro"
-  );
+  const [readyKey, setReadyKey] = useState("");
+  const [stage, setStage] = useState<LoginStoryStage>("intro");
+  const [walkStep, setWalkStep] = useState(0);
   const [storyRun, setStoryRun] = useState(0);
   const [idlePaused, setIdlePaused] = useState(false);
   const framesKey = frameSrcs.join("|");
-  const preloaded = reduced || readyKey === framesKey;
+  const preloaded = readyKey === framesKey;
   const loadGen = useRef(0);
 
   useEffect(() => {
     const compactMq = window.matchMedia(COMPACT_QUERY);
     const reduceMq = window.matchMedia(REDUCE_QUERY);
     const onCompact = () => setCompact(compactMq.matches);
-    const onReduce = () => {
-      const isReduced = reduceMq.matches;
-      setReduced(isReduced);
-      if (isReduced) {
-        setReadyKey(framesKey);
-        setStage("settled");
-      }
-    };
+    const onReduce = () => setReduced(reduceMq.matches);
     compactMq.addEventListener("change", onCompact);
     reduceMq.addEventListener("change", onReduce);
     return () => {
       compactMq.removeEventListener("change", onCompact);
       reduceMq.removeEventListener("change", onReduce);
     };
-  }, [framesKey]);
+  }, []);
 
   useEffect(() => {
-    if (reduced) {
-      return;
-    }
     const gen = ++loadGen.current;
     void preloadImages(framesKey.split("|").filter(Boolean)).then(() => {
       if (loadGen.current === gen) setReadyKey(framesKey);
     });
-  }, [framesKey, reduced]);
+  }, [framesKey]);
+
+  // Flipbook: alternate walk_a / walk_b while walking so motion is obvious.
+  useEffect(() => {
+    if (!preloaded || stage !== "walking") return;
+    const timing = loginStoryTiming(compact);
+    const timer = window.setInterval(() => {
+      setWalkStep((n) => n + 1);
+    }, timing.walkStepMs);
+    return () => window.clearInterval(timer);
+  }, [stage, compact, preloaded, storyRun]);
 
   useEffect(() => {
-    if (reduced || !preloaded) return;
+    if (!preloaded) return;
     const timing = loginStoryTiming(compact);
     const delay =
       stage === "intro"
         ? timing.introMs
-        : stage === "walkA"
-          ? timing.walkHoldMs
-          : stage === "walkB"
-            ? timing.walkCrossfadeMs
-            : stage === "standing"
-              ? timing.standingMs
-              : stage === "success"
-                ? timing.successMs
-                : stage === "settled" && !idlePaused
-                  ? timing.idleReplayMs
-                  : 0;
+        : stage === "walking"
+          ? timing.walkingMs
+          : stage === "standing"
+            ? timing.standingMs
+            : stage === "success"
+              ? timing.successMs
+              : stage === "settled" && !idlePaused
+                ? timing.idleReplayMs
+                : 0;
     if (!delay) return;
     const timer = window.setTimeout(() => {
       if (stage === "settled" && !idlePaused) {
@@ -112,7 +107,7 @@ export function useLoginStory(frameSrcs: string[]): {
       setStage((current) => nextLoginStoryStage(current, "tick"));
     }, delay);
     return () => window.clearTimeout(timer);
-  }, [stage, compact, reduced, preloaded, idlePaused]);
+  }, [stage, compact, preloaded, idlePaused]);
 
   function onSubmitStart() {
     setIdlePaused(true);
@@ -134,11 +129,8 @@ export function useLoginStory(frameSrcs: string[]): {
   }
 
   function restartEnter() {
-    if (reduced) {
-      setStage("settled");
-      return;
-    }
     setIdlePaused(false);
+    setWalkStep(0);
     setStoryRun((n) => n + 1);
     setStage((current) => {
       if (current === "success" || current === "exiting" || current === "authenticating") {
@@ -148,12 +140,9 @@ export function useLoginStory(frameSrcs: string[]): {
     });
   }
 
-  function pauseIdleReplay() {
-    setIdlePaused(true);
-  }
-
   return {
     stage,
+    walkStep,
     compact,
     reduced,
     preloaded,
@@ -162,6 +151,5 @@ export function useLoginStory(frameSrcs: string[]): {
     onAuthSuccess,
     onAuthFail,
     restartEnter,
-    pauseIdleReplay,
   };
 }

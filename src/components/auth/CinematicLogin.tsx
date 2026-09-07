@@ -85,15 +85,14 @@ export function CinematicLogin() {
   );
   const {
     stage,
+    walkStep,
     compact,
-    reduced,
     preloaded,
     storyRun,
     onSubmitStart,
     onAuthSuccess,
     onAuthFail,
     restartEnter,
-    pauseIdleReplay,
   } = useLoginStory(frameSrcs);
 
   const preview = useMemo(
@@ -101,18 +100,17 @@ export function CinematicLogin() {
     [stagedPresentation, remembered]
   );
 
-  const pose = loginStoryPoseForStage(stage);
+  const pose = loginStoryPoseForStage(stage, walkStep);
   const timing = loginStoryTiming(compact);
   const artworkSrc = pose
     ? resolveLoginStorySrc(stagedPresentation, pose)
     : resolveLoginStorySrc(stagedPresentation, "walk_a");
-  const showAvatar = loginStoryShowsAvatar(stage) || reduced;
-  const showSpeech = loginStoryShowsSpeech(stage) || reduced;
-  const formReady = loginStoryFormReady(stage) || reduced;
+  const showAvatar = loginStoryShowsAvatar(stage);
+  const showSpeech = loginStoryShowsSpeech(stage);
+  const formReady = loginStoryFormReady(stage);
   const cutout = isLoginStoryCutout(artworkSrc);
   const motion = loginStoryMotion(stage);
-  const poseCrossfadeMs =
-    stage === "walkB" ? timing.walkCrossfadeMs : timing.poseCrossfadeMs;
+  const poseCrossfadeMs = stage === "walking" ? 0 : timing.poseCrossfadeMs;
 
   const broMode =
     personality === "CAMPUS_BRO" || Boolean(remembered.broModeHint);
@@ -246,7 +244,6 @@ export function CinematicLogin() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onFocus={pauseIdleReplay}
                 className="field-input auth-input"
                 placeholder={t("login.emailPlaceholder")}
                 autoComplete="email"
@@ -264,7 +261,6 @@ export function CinematicLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onFocus={pauseIdleReplay}
                   className="field-input auth-input pr-12"
                   placeholder={t("login.passwordPlaceholder")}
                   autoComplete="current-password"

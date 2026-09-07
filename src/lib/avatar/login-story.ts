@@ -2,8 +2,7 @@ import type { LoginPresentationId } from "@/lib/avatar/login-preview";
 
 export const LOGIN_STORY_STAGES = [
   "intro",
-  "walkA",
-  "walkB",
+  "walking",
   "standing",
   "settled",
   "authenticating",
@@ -33,26 +32,27 @@ export const LOGIN_STORY_MALE_FRAMES: Record<LoginStoryPose, string> = {
   exit: "/login/story/06_exit_back_view.png",
 };
 
+/** Full cinematic timings — walk must feel like a real entrance, not a blink. */
 export const LOGIN_STORY_TIMING = {
   desktop: {
-    introMs: 450,
-    walkHoldMs: 700,
-    walkCrossfadeMs: 1100,
-    standingMs: 700,
+    introMs: 400,
+    walkingMs: 2600,
+    walkStepMs: 160,
+    standingMs: 750,
     successMs: 700,
     exitingMs: 620,
-    poseCrossfadeMs: 450,
-    idleReplayMs: 4200,
+    poseCrossfadeMs: 120,
+    idleReplayMs: 3200,
   },
   mobile: {
     introMs: 280,
-    walkHoldMs: 420,
-    walkCrossfadeMs: 780,
-    standingMs: 480,
+    walkingMs: 2000,
+    walkStepMs: 150,
+    standingMs: 560,
     successMs: 700,
     exitingMs: 460,
-    poseCrossfadeMs: 320,
-    idleReplayMs: 3600,
+    poseCrossfadeMs: 90,
+    idleReplayMs: 2800,
   },
 } as const;
 
@@ -62,16 +62,19 @@ export function loginStoryTiming(compact: boolean): LoginStoryTiming {
   return compact ? LOGIN_STORY_TIMING.mobile : LOGIN_STORY_TIMING.desktop;
 }
 
+export function loginStoryWalkPose(step: number): LoginStoryPose {
+  return step % 2 === 0 ? "walk_a" : "walk_b";
+}
+
 export function loginStoryPoseForStage(
-  stage: LoginStoryStage
+  stage: LoginStoryStage,
+  walkStep = 0
 ): LoginStoryPose | null {
   switch (stage) {
     case "intro":
       return null;
-    case "walkA":
-      return "walk_a";
-    case "walkB":
-      return "walk_b";
+    case "walking":
+      return loginStoryWalkPose(walkStep);
     case "standing":
       return "standing";
     case "settled":
@@ -85,7 +88,7 @@ export function loginStoryPoseForStage(
 }
 
 export function loginStoryMotion(stage: LoginStoryStage): string {
-  if (stage === "walkA" || stage === "walkB") return "walking";
+  if (stage === "walking") return "walking";
   return stage;
 }
 
@@ -140,7 +143,7 @@ export function nextLoginStoryStage(
 ): LoginStoryStage {
   if (event === "reduce") return "settled";
   if (event === "replay") {
-    return stage === "settled" ? "walkA" : stage;
+    return stage === "settled" ? "walking" : stage;
   }
   if (event === "fail") {
     return stage === "authenticating" || stage === "success" || stage === "exiting"
@@ -152,9 +155,8 @@ export function nextLoginStoryStage(
   }
   if (event === "success") return "success";
   if (event !== "tick") return stage;
-  if (stage === "intro") return "walkA";
-  if (stage === "walkA") return "walkB";
-  if (stage === "walkB") return "standing";
+  if (stage === "intro") return "walking";
+  if (stage === "walking") return "standing";
   if (stage === "standing") return "settled";
   if (stage === "success") return "exiting";
   return stage;

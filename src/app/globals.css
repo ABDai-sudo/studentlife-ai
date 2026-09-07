@@ -419,8 +419,7 @@ html.dark .field-input {
 
 .login-cinematic:not(.is-form-ready) .login-card,
 .login-cinematic[data-login-stage="intro"] .login-card,
-.login-cinematic[data-login-stage="walkA"] .login-card,
-.login-cinematic[data-login-stage="walkB"] .login-card,
+.login-cinematic[data-login-stage="walking"] .login-card,
 .login-cinematic[data-login-stage="standing"] .login-card {
   opacity: 0.94;
   pointer-events: auto;
@@ -720,30 +719,32 @@ video.login-hero-photo {
 
 @media (prefers-reduced-motion: no-preference) {
   .login-cinematic[data-login-motion="walking"] .login-hero-avatar[data-login-avatar="visible"] {
-    animation: login-story-walk-in 0.9s cubic-bezier(0.22, 0.68, 0.28, 1) both;
+    animation:
+      login-story-walk-in 2.6s cubic-bezier(0.22, 0.68, 0.28, 1) both,
+      login-walk-bob 0.32s ease-in-out infinite;
   }
 
   .login-cinematic[data-login-motion="walking"] .login-campus-scene {
-    animation: login-story-campus-parallax 0.9s cubic-bezier(0.22, 0.68, 0.28, 1) both;
+    animation: login-story-campus-parallax 2.6s cubic-bezier(0.22, 0.68, 0.28, 1) both;
   }
 
-  .login-cinematic[data-login-stage="walkB"] .login-hero-photo.is-enter,
-  .login-cinematic[data-login-stage="walkB"] .login-hero-photo.is-exit {
-    animation-duration: 0.9s;
+  .login-cinematic[data-login-motion="walking"] .login-hero-photo.is-enter,
+  .login-cinematic[data-login-motion="walking"] .login-hero-photo.is-exit {
+    animation-duration: 0.12s;
   }
 
   .login-cinematic[data-login-motion="standing"] .login-hero-avatar[data-login-avatar="visible"] {
-    animation: login-story-settle 0.5s ease both;
+    animation: login-story-settle 0.6s ease both;
   }
 
   .login-cinematic[data-login-stage="settled"] .login-hero-breathe,
   .login-cinematic[data-login-stage="authenticating"] .login-hero-breathe {
-    animation: login-breathe 2.8s ease-in-out infinite;
+    animation: login-breathe 2.4s ease-in-out infinite;
   }
 
   .login-cinematic[data-login-stage="settled"] .login-hero-avatar[data-login-avatar="visible"],
   .login-cinematic[data-login-stage="authenticating"] .login-hero-avatar[data-login-avatar="visible"] {
-    animation: login-idle-sway 4.4s ease-in-out infinite;
+    animation: login-idle-sway 3.6s ease-in-out infinite;
   }
 
   .login-cinematic[data-login-stage="settled"] .login-speech,
@@ -765,29 +766,31 @@ video.login-hero-photo {
   }
 
   .login-hero-photo.is-enter {
-    animation: login-crossfade-in 0.38s ease both;
+    animation: login-crossfade-in 0.12s ease both;
   }
 
   .login-hero-photo.is-exit {
-    animation: login-crossfade-out 0.38s ease both;
+    animation: login-crossfade-out 0.12s ease both;
   }
 }
 
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   .login-cinematic[data-login-motion="walking"] .login-hero-avatar[data-login-avatar="visible"] {
-    animation-name: login-story-walk-in-desktop;
+    animation-name: login-story-walk-in-desktop, login-walk-bob;
+    animation-duration: 2.6s, 0.32s;
+    animation-timing-function: cubic-bezier(0.22, 0.68, 0.28, 1), ease-in-out;
+    animation-fill-mode: both, none;
+    animation-iteration-count: 1, infinite;
   }
 }
 
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  .login-cinematic[data-login-motion="walking"] .login-hero-avatar[data-login-avatar="visible"],
-  .login-cinematic[data-login-motion="walking"] .login-campus-scene {
-    animation-duration: 0.62s;
+  .login-cinematic[data-login-motion="walking"] .login-hero-avatar[data-login-avatar="visible"] {
+    animation-duration: 2s, 0.3s;
   }
 
-  .login-cinematic[data-login-stage="walkB"] .login-hero-photo.is-enter,
-  .login-cinematic[data-login-stage="walkB"] .login-hero-photo.is-exit {
-    animation-duration: 0.62s;
+  .login-cinematic[data-login-motion="walking"] .login-campus-scene {
+    animation-duration: 2s;
   }
 
   .login-cinematic[data-login-motion="exiting"] .login-hero-avatar {
@@ -832,7 +835,7 @@ video.login-hero-photo {
 @keyframes login-story-walk-in {
   0% {
     opacity: 1;
-    transform: translate3d(-34%, 12%, 0) scale(0.96);
+    transform: translate3d(-48%, 18%, 0) scale(0.9);
   }
   100% {
     opacity: 1;
@@ -843,7 +846,7 @@ video.login-hero-photo {
 @keyframes login-story-walk-in-desktop {
   0% {
     opacity: 1;
-    transform: translate3d(-38%, 10%, 0) scale(0.95);
+    transform: translate3d(-52%, 14%, 0) scale(0.88);
   }
   100% {
     opacity: 1;
@@ -851,9 +854,19 @@ video.login-hero-photo {
   }
 }
 
+@keyframes login-walk-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -10px;
+  }
+}
+
 @keyframes login-story-settle {
   0% {
-    transform: translate3d(-4%, 3%, 0) scale(1.01);
+    transform: translate3d(-8%, 6%, 0) scale(1.02);
   }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
@@ -901,7 +914,7 @@ video.login-hero-photo {
     transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translate3d(0, -14px, 0) scale(1.025);
+    transform: translate3d(0, -22px, 0) scale(1.04);
   }
 }
 
@@ -911,7 +924,7 @@ video.login-hero-photo {
     transform: translate3d(0, 0, 0) rotate(0deg);
   }
   50% {
-    transform: translate3d(1.4%, -0.6%, 0) rotate(0.4deg);
+    transform: translate3d(2.2%, -1%, 0) rotate(0.8deg);
   }
 }
 

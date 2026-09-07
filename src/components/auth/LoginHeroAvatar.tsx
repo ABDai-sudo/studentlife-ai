@@ -12,7 +12,7 @@ export function LoginHeroAvatar({
   src,
   hidden = false,
   cutout = false,
-  crossfadeMs = 380,
+  crossfadeMs = 120,
 }: {
   name: string;
   src: string;
@@ -24,10 +24,14 @@ export function LoginHeroAvatar({
   const [outgoing, setOutgoing] = useState<string | null>(null);
 
   if (!hidden && src !== shown) {
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setOutgoing(reduced ? null : shown);
+    // Instant swap for fast flipbook steps — crossfade only when long enough to see.
+    const useCrossfade =
+      crossfadeMs >= 100 &&
+      !(
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    setOutgoing(useCrossfade ? shown : null);
     setShown(src);
   }
 

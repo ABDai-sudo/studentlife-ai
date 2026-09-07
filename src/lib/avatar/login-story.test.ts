@@ -10,6 +10,7 @@ import {
   loginStoryShowsAvatar,
   loginStoryShowsSpeech,
   loginStoryTiming,
+  loginStoryWalkPose,
   nextLoginStoryStage,
   resolveLoginStorySrc,
 } from "./login-story";
@@ -24,9 +25,10 @@ describe("login story sequence", () => {
     assert.equal(loginStoryShowsSpeech("standing"), false);
   });
 
-  it("uses the numbered male 6-pose pack, not one sliding still", () => {
-    assert.equal(loginStoryPoseForStage("walkA"), "walk_a");
-    assert.equal(loginStoryPoseForStage("walkB"), "walk_b");
+  it("uses the numbered male 6-pose pack with a walk flipbook", () => {
+    assert.equal(loginStoryPoseForStage("walking", 0), "walk_a");
+    assert.equal(loginStoryPoseForStage("walking", 1), "walk_b");
+    assert.equal(loginStoryWalkPose(2), "walk_a");
     assert.equal(loginStoryPoseForStage("standing"), "standing");
     assert.equal(loginStoryPoseForStage("settled"), "laptop");
     assert.equal(loginStoryPoseForStage("success"), "success");
@@ -39,8 +41,7 @@ describe("login story sequence", () => {
     assert.equal(resolveLoginStorySrc("male", "exit"), "/login/story/06_exit_back_view.png");
     const male = loginStoryFrameSrcs("male");
     assert.equal(new Set(male).size, 6);
-    assert.equal(loginStoryMotion("walkA"), "walking");
-    assert.equal(loginStoryMotion("walkB"), "walking");
+    assert.equal(loginStoryMotion("walking"), "walking");
   });
 
   it("keeps female and neutral selectors on their own artwork", () => {
@@ -58,10 +59,9 @@ describe("login story sequence", () => {
     );
   });
 
-  it("advances intro through walk poses to laptop, then success to exiting", () => {
-    assert.equal(nextLoginStoryStage("intro", "tick"), "walkA");
-    assert.equal(nextLoginStoryStage("walkA", "tick"), "walkB");
-    assert.equal(nextLoginStoryStage("walkB", "tick"), "standing");
+  it("advances intro through walk to laptop, then success to exiting", () => {
+    assert.equal(nextLoginStoryStage("intro", "tick"), "walking");
+    assert.equal(nextLoginStoryStage("walking", "tick"), "standing");
     assert.equal(nextLoginStoryStage("standing", "tick"), "settled");
     assert.equal(nextLoginStoryStage("settled", "submit"), "authenticating");
     assert.equal(nextLoginStoryStage("authenticating", "success"), "success");
@@ -70,17 +70,17 @@ describe("login story sequence", () => {
     assert.equal(nextLoginStoryStage("intro", "reduce"), "settled");
   });
 
-  it("keeps success near 700ms and shortens the walk on mobile", () => {
-    assert.equal(LOGIN_STORY_TIMING.desktop.introMs, 450);
-    assert.equal(LOGIN_STORY_TIMING.desktop.walkCrossfadeMs, 1100);
-    assert.ok(LOGIN_STORY_TIMING.desktop.walkHoldMs >= 600);
+  it("keeps a long visible walk and shortens it on mobile", () => {
+    assert.equal(LOGIN_STORY_TIMING.desktop.introMs, 400);
+    assert.ok(LOGIN_STORY_TIMING.desktop.walkingMs >= 2400);
+    assert.ok(LOGIN_STORY_TIMING.desktop.walkStepMs <= 200);
     assert.equal(LOGIN_STORY_TIMING.desktop.successMs, 700);
-    assert.ok(LOGIN_STORY_TIMING.desktop.idleReplayMs > 3000);
-    assert.ok(loginStoryTiming(true).walkCrossfadeMs < loginStoryTiming(false).walkCrossfadeMs);
+    assert.ok(LOGIN_STORY_TIMING.desktop.idleReplayMs > 2500);
+    assert.ok(loginStoryTiming(true).walkingMs < loginStoryTiming(false).walkingMs);
   });
 
   it("replays the walk sequence from the settled idle state", () => {
-    assert.equal(nextLoginStoryStage("settled", "replay"), "walkA");
+    assert.equal(nextLoginStoryStage("settled", "replay"), "walking");
     assert.equal(nextLoginStoryStage("authenticating", "replay"), "authenticating");
   });
 });
