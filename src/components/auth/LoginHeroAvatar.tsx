@@ -1,23 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { isLoginStoryCutout } from "@/lib/avatar/login-story";
 
 /**
- * Login stage uses local cinematic stills or WebM clips — never geometric presets.
- * Presentation and pose switches crossfade in place so the stage does not jump.
+ * Login stage uses local cinematic stills — never geometric presets.
+ * Pose switches crossfade in place on a shared bottom-center anchor.
  */
 export function LoginHeroAvatar({
   name,
   src,
   hidden = false,
+  cutout = false,
+  crossfadeMs = 380,
 }: {
   name: string;
   src: string;
   hidden?: boolean;
+  cutout?: boolean;
+  crossfadeMs?: number;
 }) {
   const [shown, setShown] = useState(src);
   const [outgoing, setOutgoing] = useState<string | null>(null);
-  const isVideo = src.endsWith(".webm") || shown.endsWith(".webm");
 
   if (!hidden && src !== shown) {
     const reduced =
@@ -29,56 +33,37 @@ export function LoginHeroAvatar({
 
   useEffect(() => {
     if (!outgoing) return;
-    const timer = window.setTimeout(() => setOutgoing(null), 420);
+    const timer = window.setTimeout(() => setOutgoing(null), crossfadeMs);
     return () => window.clearTimeout(timer);
-  }, [outgoing]);
+  }, [outgoing, crossfadeMs]);
+
+  function photoClassFor(photoSrc: string) {
+    const isCutout = cutout || isLoginStoryCutout(photoSrc);
+    return `login-hero-photo${isCutout ? " is-cutout" : " is-plate"}`;
+  }
 
   return (
     <figure className={`login-hero-figure${hidden ? " is-hidden" : ""}`}>
       {outgoing ? (
-        outgoing.endsWith(".webm") ? (
-          <video
-            className="login-hero-photo is-exit"
-            src={outgoing}
-            muted
-            playsInline
-            autoPlay
-            loop
-            aria-hidden
-          />
-        ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={outgoing}
-            alt=""
-            className="login-hero-photo is-exit"
-            width={768}
-            height={1024}
-            decoding="async"
-          />
-        )
-      ) : null}
-      {isVideo && shown.endsWith(".webm") ? (
-        <video
-          className={`login-hero-photo${outgoing ? " is-enter" : ""}`}
-          src={shown}
-          muted
-          playsInline
-          autoPlay
-          loop
-          aria-hidden
-        />
-      ) : (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
-          src={shown}
+          src={outgoing}
           alt=""
-          className={`login-hero-photo${outgoing ? " is-enter" : ""}`}
-          width={768}
-          height={1024}
+          className={`${photoClassFor(outgoing)} is-exit`}
+          width={1122}
+          height={1402}
           decoding="async"
         />
-      )}
+      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={shown}
+        alt=""
+        className={`${photoClassFor(shown)}${outgoing ? " is-enter" : ""}`}
+        width={1122}
+        height={1402}
+        decoding="async"
+      />
       <figcaption className="sr-only">{name}</figcaption>
     </figure>
   );

@@ -11,7 +11,8 @@ export function LoginCampusScene() {
         className="login-campus-photo"
         width={768}
         height={1024}
-        decoding="async"
+        decoding="sync"
+        fetchPriority="high"
       />
     </div>
   );

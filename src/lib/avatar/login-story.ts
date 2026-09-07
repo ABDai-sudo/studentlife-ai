@@ -2,7 +2,9 @@ import type { LoginPresentationId } from "@/lib/avatar/login-preview";
 
 export const LOGIN_STORY_STAGES = [
   "intro",
-  "entering",
+  "walkA",
+  "walkB",
+  "standing",
   "settled",
   "authenticating",
   "success",
@@ -12,7 +14,9 @@ export const LOGIN_STORY_STAGES = [
 export type LoginStoryStage = (typeof LOGIN_STORY_STAGES)[number];
 
 export const LOGIN_STORY_POSES = [
-  "enter",
+  "walk_a",
+  "walk_b",
+  "standing",
   "laptop",
   "success",
   "exit",
@@ -20,25 +24,33 @@ export const LOGIN_STORY_POSES = [
 
 export type LoginStoryPose = (typeof LOGIN_STORY_POSES)[number];
 
-/** Optional transparent WebM clips. Empty until real video assets exist. */
-export const LOGIN_STORY_WEBM: Partial<
-  Record<LoginPresentationId, Partial<Record<LoginStoryPose, string>>>
-> = {};
+export const LOGIN_STORY_MALE_FRAMES: Record<LoginStoryPose, string> = {
+  walk_a: "/login/story/01_walk_in_a.png",
+  walk_b: "/login/story/02_walk_in_b.png",
+  standing: "/login/story/03_settle_standing.png",
+  laptop: "/login/story/04_laptop_pose.png",
+  success: "/login/story/05_success_thumbs_up.png",
+  exit: "/login/story/06_exit_back_view.png",
+};
 
 export const LOGIN_STORY_TIMING = {
   desktop: {
-    introMs: 500,
-    enteringMs: 1800,
-    formRevealMs: 420,
-    successMs: 780,
-    exitingMs: 320,
+    introMs: 300,
+    walkHoldMs: 480,
+    walkCrossfadeMs: 900,
+    standingMs: 520,
+    successMs: 700,
+    exitingMs: 620,
+    poseCrossfadeMs: 420,
   },
   mobile: {
-    introMs: 280,
-    enteringMs: 1100,
-    formRevealMs: 280,
+    introMs: 180,
+    walkHoldMs: 280,
+    walkCrossfadeMs: 640,
+    standingMs: 360,
     successMs: 700,
-    exitingMs: 280,
+    exitingMs: 460,
+    poseCrossfadeMs: 300,
   },
 } as const;
 
@@ -54,8 +66,12 @@ export function loginStoryPoseForStage(
   switch (stage) {
     case "intro":
       return null;
-    case "entering":
-      return "enter";
+    case "walkA":
+      return "walk_a";
+    case "walkB":
+      return "walk_b";
+    case "standing":
+      return "standing";
     case "settled":
     case "authenticating":
       return "laptop";
@@ -64,6 +80,11 @@ export function loginStoryPoseForStage(
     case "exiting":
       return "exit";
   }
+}
+
+export function loginStoryMotion(stage: LoginStoryStage): string {
+  if (stage === "walkA" || stage === "walkB") return "walking";
+  return stage;
 }
 
 export function loginStoryShowsAvatar(stage: LoginStoryStage): boolean {
@@ -92,9 +113,23 @@ export function resolveLoginStorySrc(
   presentation: LoginPresentationId,
   pose: LoginStoryPose
 ): string {
-  const video = LOGIN_STORY_WEBM[presentation]?.[pose];
-  if (video) return video;
-  return `/login/story/${presentation}-${pose}.png`;
+  if (presentation === "male") return LOGIN_STORY_MALE_FRAMES[pose];
+  if (pose === "walk_a" || pose === "walk_b" || pose === "standing") {
+    return `/login/story/${presentation}-enter.png`;
+  }
+  if (pose === "laptop") return `/login/story/${presentation}-laptop.png`;
+  if (pose === "success") return `/login/story/${presentation}-success.png`;
+  return `/login/story/${presentation}-exit.png`;
+}
+
+export function loginStoryFrameSrcs(
+  presentation: LoginPresentationId
+): string[] {
+  return LOGIN_STORY_POSES.map((pose) => resolveLoginStorySrc(presentation, pose));
+}
+
+export function isLoginStoryCutout(src: string): boolean {
+  return /\/login\/story\/0[1-6]_/.test(src);
 }
 
 export function nextLoginStoryStage(
@@ -112,8 +147,10 @@ export function nextLoginStoryStage(
   }
   if (event === "success") return "success";
   if (event !== "tick") return stage;
-  if (stage === "intro") return "entering";
-  if (stage === "entering") return "settled";
+  if (stage === "intro") return "walkA";
+  if (stage === "walkA") return "walkB";
+  if (stage === "walkB") return "standing";
+  if (stage === "standing") return "settled";
   if (stage === "success") return "exiting";
   return stage;
 }

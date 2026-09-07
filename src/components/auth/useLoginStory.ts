@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   loginStoryTiming,
   nextLoginStoryStage,
@@ -15,10 +15,25 @@ function readMedia(query: string): boolean {
   return window.matchMedia(query).matches;
 }
 
-export function useLoginStory(): {
+function preloadImages(srcs: string[]): Promise<void> {
+  return Promise.all(
+    srcs.map(
+      (src) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = src;
+        })
+    )
+  ).then(() => undefined);
+}
+
+export function useLoginStory(frameSrcs: string[]): {
   stage: LoginStoryStage;
   compact: boolean;
   reduced: boolean;
+  preloaded: boolean;
   onSubmitStart: () => void;
   onAuthSuccess: () => void;
   onAuthFail: () => void;
@@ -26,9 +41,15 @@ export function useLoginStory(): {
 } {
   const [compact, setCompact] = useState(() => readMedia(COMPACT_QUERY));
   const [reduced, setReduced] = useState(() => readMedia(REDUCE_QUERY));
+  const [readyKey, setReadyKey] = useState(() =>
+    readMedia(REDUCE_QUERY) ? frameSrcs.join("|") : ""
+  );
   const [stage, setStage] = useState<LoginStoryStage>(() =>
     readMedia(REDUCE_QUERY) ? "settled" : "intro"
   );
+  const framesKey = frameSrcs.join("|");
+  const preloaded = reduced || readyKey === framesKey;
+  const loadGen = useRef(0);
 
   useEffect(() => {
     const compactMq = window.matchMedia(COMPACT_QUERY);
@@ -37,7 +58,10 @@ export function useLoginStory(): {
     const onReduce = () => {
       const isReduced = reduceMq.matches;
       setReduced(isReduced);
-      if (isReduced) setStage("settled");
+      if (isReduced) {
+        setReadyKey(framesKey);
+        setStage("settled");
+      }
     };
     compactMq.addEventListener("change", onCompact);
     reduceMq.addEventListener("change", onReduce);
@@ -45,25 +69,39 @@ export function useLoginStory(): {
       compactMq.removeEventListener("change", onCompact);
       reduceMq.removeEventListener("change", onReduce);
     };
-  }, []);
+  }, [framesKey]);
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced) {
+      return;
+    }
+    const gen = ++loadGen.current;
+    void preloadImages(framesKey.split("|").filter(Boolean)).then(() => {
+      if (loadGen.current === gen) setReadyKey(framesKey);
+    });
+  }, [framesKey, reduced]);
+
+  useEffect(() => {
+    if (reduced || !preloaded) return;
     const timing = loginStoryTiming(compact);
     const delay =
       stage === "intro"
         ? timing.introMs
-        : stage === "entering"
-          ? timing.enteringMs
-          : stage === "success"
-            ? timing.successMs
-            : 0;
+        : stage === "walkA"
+          ? timing.walkHoldMs
+          : stage === "walkB"
+            ? timing.walkCrossfadeMs
+            : stage === "standing"
+              ? timing.standingMs
+              : stage === "success"
+                ? timing.successMs
+                : 0;
     if (!delay) return;
     const timer = window.setTimeout(() => {
       setStage((current) => nextLoginStoryStage(current, "tick"));
     }, delay);
     return () => window.clearTimeout(timer);
-  }, [stage, compact, reduced]);
+  }, [stage, compact, reduced, preloaded]);
 
   function onSubmitStart() {
     setStage((current) => nextLoginStoryStage(current, "submit"));
@@ -90,7 +128,7 @@ export function useLoginStory(): {
       if (current === "success" || current === "exiting" || current === "authenticating") {
         return current;
       }
-      return "entering";
+      return "intro";
     });
   }
 
@@ -98,6 +136,7 @@ export function useLoginStory(): {
     stage,
     compact,
     reduced,
+    preloaded,
     onSubmitStart,
     onAuthSuccess,
     onAuthFail,

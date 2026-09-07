@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  LOGIN_STORY_MALE_FRAMES,
   LOGIN_STORY_TIMING,
   loginStoryFormReady,
+  loginStoryFrameSrcs,
+  loginStoryMotion,
   loginStoryPoseForStage,
   loginStoryShowsAvatar,
   loginStoryShowsSpeech,
@@ -18,18 +21,29 @@ describe("login story sequence", () => {
     assert.equal(loginStoryFormReady("intro"), false);
     assert.equal(loginStoryPoseForStage("intro"), null);
     assert.equal(loginStoryFormReady("settled"), true);
+    assert.equal(loginStoryShowsSpeech("standing"), false);
   });
 
-  it("walks in, then sits with a laptop, then acknowledges without a geometric fallback", () => {
-    assert.equal(loginStoryPoseForStage("entering"), "enter");
+  it("uses the numbered male 6-pose pack, not one sliding still", () => {
+    assert.equal(loginStoryPoseForStage("walkA"), "walk_a");
+    assert.equal(loginStoryPoseForStage("walkB"), "walk_b");
+    assert.equal(loginStoryPoseForStage("standing"), "standing");
     assert.equal(loginStoryPoseForStage("settled"), "laptop");
-    assert.equal(loginStoryPoseForStage("authenticating"), "laptop");
     assert.equal(loginStoryPoseForStage("success"), "success");
     assert.equal(loginStoryPoseForStage("exiting"), "exit");
-    assert.equal(
-      resolveLoginStorySrc("male", "enter"),
-      "/login/story/male-enter.png"
-    );
+    assert.equal(resolveLoginStorySrc("male", "walk_a"), LOGIN_STORY_MALE_FRAMES.walk_a);
+    assert.equal(resolveLoginStorySrc("male", "walk_b"), "/login/story/02_walk_in_b.png");
+    assert.equal(resolveLoginStorySrc("male", "standing"), "/login/story/03_settle_standing.png");
+    assert.equal(resolveLoginStorySrc("male", "laptop"), "/login/story/04_laptop_pose.png");
+    assert.equal(resolveLoginStorySrc("male", "success"), "/login/story/05_success_thumbs_up.png");
+    assert.equal(resolveLoginStorySrc("male", "exit"), "/login/story/06_exit_back_view.png");
+    const male = loginStoryFrameSrcs("male");
+    assert.equal(new Set(male).size, 6);
+    assert.equal(loginStoryMotion("walkA"), "walking");
+    assert.equal(loginStoryMotion("walkB"), "walking");
+  });
+
+  it("keeps female and neutral selectors on their own artwork", () => {
     assert.equal(
       resolveLoginStorySrc("female", "laptop"),
       "/login/story/female-laptop.png"
@@ -39,14 +53,16 @@ describe("login story sequence", () => {
       "/login/story/neutral-success.png"
     );
     assert.notEqual(
-      resolveLoginStorySrc("male", "enter"),
-      resolveLoginStorySrc("male", "laptop")
+      resolveLoginStorySrc("female", "walk_a"),
+      resolveLoginStorySrc("male", "walk_a")
     );
   });
 
-  it("advances intro to entering to settled, then success to exiting", () => {
-    assert.equal(nextLoginStoryStage("intro", "tick"), "entering");
-    assert.equal(nextLoginStoryStage("entering", "tick"), "settled");
+  it("advances intro through walk poses to laptop, then success to exiting", () => {
+    assert.equal(nextLoginStoryStage("intro", "tick"), "walkA");
+    assert.equal(nextLoginStoryStage("walkA", "tick"), "walkB");
+    assert.equal(nextLoginStoryStage("walkB", "tick"), "standing");
+    assert.equal(nextLoginStoryStage("standing", "tick"), "settled");
     assert.equal(nextLoginStoryStage("settled", "submit"), "authenticating");
     assert.equal(nextLoginStoryStage("authenticating", "success"), "success");
     assert.equal(nextLoginStoryStage("success", "tick"), "exiting");
@@ -54,12 +70,11 @@ describe("login story sequence", () => {
     assert.equal(nextLoginStoryStage("intro", "reduce"), "settled");
   });
 
-  it("keeps success acknowledgement under one second and shortens mobile", () => {
-    assert.ok(LOGIN_STORY_TIMING.desktop.successMs <= 1000);
-    assert.ok(LOGIN_STORY_TIMING.mobile.successMs <= 1000);
-    assert.ok(loginStoryTiming(true).enteringMs < loginStoryTiming(false).enteringMs);
-    assert.ok(
-      LOGIN_STORY_TIMING.desktop.successMs + LOGIN_STORY_TIMING.desktop.exitingMs <= 1200
-    );
+  it("keeps success near 700ms and shortens the walk on mobile", () => {
+    assert.equal(LOGIN_STORY_TIMING.desktop.introMs, 300);
+    assert.equal(LOGIN_STORY_TIMING.desktop.walkCrossfadeMs, 900);
+    assert.ok(LOGIN_STORY_TIMING.desktop.walkHoldMs >= 400);
+    assert.equal(LOGIN_STORY_TIMING.desktop.successMs, 700);
+    assert.ok(loginStoryTiming(true).walkCrossfadeMs < loginStoryTiming(false).walkCrossfadeMs);
   });
 });

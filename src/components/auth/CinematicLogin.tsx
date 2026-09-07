@@ -15,6 +15,7 @@ import { useT } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { getLoginGreetingKey } from "@/lib/avatar/login-greeting";
 import {
+  LOGIN_ARTWORK,
   rememberLoginContext,
   resolveLoginPreview,
   readLoginContext,
@@ -23,8 +24,10 @@ import {
   type LoginPresentationId,
 } from "@/lib/avatar/login-preview";
 import {
-  LOGIN_STORY_POSES,
+  isLoginStoryCutout,
   loginStoryFormReady,
+  loginStoryFrameSrcs,
+  loginStoryMotion,
   loginStoryPoseForStage,
   loginStoryShowsAvatar,
   loginStoryShowsSpeech,
@@ -59,15 +62,6 @@ export function CinematicLogin() {
   const { t } = useT();
   const { personality } = useTheme();
   useLoginKeyboardClass();
-  const {
-    stage,
-    compact,
-    reduced,
-    onSubmitStart,
-    onAuthSuccess,
-    onAuthFail,
-    restartEnter,
-  } = useLoginStory();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -83,8 +77,22 @@ export function CinematicLogin() {
     getServerLoginContextSnapshot
   );
   const [storyIdentity, setStoryIdentity] = useState<LoginPresentationId | null>(null);
-  const presentation: LoginPresentationId = remembered.presentation ?? "neutral";
+  const presentation: LoginPresentationId = remembered.presentation ?? "male";
   const stagedPresentation = storyIdentity ?? presentation;
+  const frameSrcs = useMemo(
+    () => [LOGIN_ARTWORK.campus, ...loginStoryFrameSrcs(stagedPresentation)],
+    [stagedPresentation]
+  );
+  const {
+    stage,
+    compact,
+    reduced,
+    preloaded,
+    onSubmitStart,
+    onAuthSuccess,
+    onAuthFail,
+    restartEnter,
+  } = useLoginStory(frameSrcs);
 
   const preview = useMemo(
     () => resolveLoginPreview(stagedPresentation, remembered),
@@ -92,31 +100,27 @@ export function CinematicLogin() {
   );
 
   const pose = loginStoryPoseForStage(stage);
+  const timing = loginStoryTiming(compact);
   const artworkSrc = pose
     ? resolveLoginStorySrc(stagedPresentation, pose)
-    : resolveLoginStorySrc(stagedPresentation, "enter");
+    : resolveLoginStorySrc(stagedPresentation, "walk_a");
   const showAvatar = loginStoryShowsAvatar(stage) || reduced;
   const showSpeech = loginStoryShowsSpeech(stage) || reduced;
   const formReady = loginStoryFormReady(stage) || reduced;
+  const cutout = isLoginStoryCutout(artworkSrc);
+  const motion = loginStoryMotion(stage);
+  const poseCrossfadeMs =
+    stage === "walkB" ? timing.walkCrossfadeMs : timing.poseCrossfadeMs;
 
   const broMode =
     personality === "CAMPUS_BRO" || Boolean(remembered.broModeHint);
   const examWeek = Boolean(remembered.examWeekHint);
 
   const speechKey = getLoginGreetingKey({
-    phase: success || stage === "success" || stage === "exiting" ? "success" : "idle",
+    phase: stage === "success" || stage === "exiting" ? "success" : "idle",
     broMode,
     examWeek,
   });
-
-  useEffect(() => {
-    LOGIN_STORY_POSES.forEach((nextPose) => {
-      const href = resolveLoginStorySrc(stagedPresentation, nextPose);
-      if (href.endsWith(".webm")) return;
-      const img = new Image();
-      img.src = href;
-    });
-  }, [stagedPresentation]);
 
   useEffect(() => {
     if (stage !== "exiting") return;
@@ -125,9 +129,9 @@ export function CinematicLogin() {
     const timer = window.setTimeout(() => {
       router.push(nextPath);
       router.refresh();
-    }, loginStoryTiming(compact).exitingMs);
+    }, timing.exitingMs);
     return () => window.clearTimeout(timer);
-  }, [stage, compact, router]);
+  }, [stage, timing.exitingMs, router]);
 
   function selectPresentation(next: LoginPresentationId) {
     rememberLoginContext({ presentation: next });
@@ -202,14 +206,6 @@ export function CinematicLogin() {
       if (reducedMotion) {
         router.push(nextPath);
         router.refresh();
-      } else {
-        const timing = loginStoryTiming(compact);
-        window.setTimeout(() => {
-          const path = pendingPathRef.current;
-          if (!path) return;
-          router.push(path);
-          router.refresh();
-        }, timing.successMs + timing.exitingMs);
       }
     } catch {
       setError(t("login.error.network"));
@@ -225,6 +221,8 @@ export function CinematicLogin() {
       className={`login-cinematic auth-shell${formReady ? " is-form-ready" : ""}${success ? " is-ack" : ""}`}
       data-login-success={success ? "true" : "false"}
       data-login-stage={stage}
+      data-login-motion={motion}
+      data-login-preloaded={preloaded ? "true" : "false"}
     >
       <section className="login-form-pane">
         <div className="login-card">
@@ -337,6 +335,8 @@ export function CinematicLogin() {
                 name={preview.displayName}
                 src={artworkSrc}
                 hidden={!showAvatar}
+                cutout={cutout}
+                crossfadeMs={poseCrossfadeMs}
               />
             </div>
           </div>
