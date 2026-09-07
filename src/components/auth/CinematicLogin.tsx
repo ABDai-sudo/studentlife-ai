@@ -8,14 +8,12 @@ import { LoginCampusScene } from "@/components/auth/LoginCampusScene";
 import { LoginHeroAvatar } from "@/components/auth/LoginHeroAvatar";
 import { LoginPreferenceBar } from "@/components/auth/LoginPreferenceBar";
 import { LoginPreviewSwitcher } from "@/components/auth/LoginPreviewSwitcher";
-import { useLoginStory } from "@/components/auth/useLoginStory";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { getLoginGreetingKey } from "@/lib/avatar/login-greeting";
 import {
-  LOGIN_ARTWORK,
   rememberLoginContext,
   resolveLoginPreview,
   readLoginContext,
@@ -25,14 +23,7 @@ import {
 } from "@/lib/avatar/login-preview";
 import {
   isLoginStoryCutout,
-  loginStoryFormReady,
-  loginStoryFrameSrcs,
-  loginStoryMotion,
-  loginStoryPoseForStage,
-  loginStoryShowsAvatar,
-  loginStoryShowsSpeech,
-  loginStoryTiming,
-  resolveLoginStorySrc,
+  resolveLoginHeroSrc,
 } from "@/lib/avatar/login-story";
 import { mapLoginFailure, safePostLoginPath } from "@/lib/auth/login-errors";
 
@@ -68,74 +59,31 @@ export function CinematicLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const submittingRef = useRef(false);
-  const pendingPathRef = useRef<string | null>(null);
   const remembered = useSyncExternalStore(
     subscribeLoginContext,
     readLoginContext,
     getServerLoginContextSnapshot
   );
-  const [storyIdentity, setStoryIdentity] = useState<LoginPresentationId | null>(null);
   const presentation: LoginPresentationId = remembered.presentation ?? "male";
-  const stagedPresentation = storyIdentity ?? presentation;
-  const frameSrcs = useMemo(
-    () => [LOGIN_ARTWORK.campus, ...loginStoryFrameSrcs(stagedPresentation)],
-    [stagedPresentation]
-  );
-  const {
-    stage,
-    walkStep,
-    compact,
-    preloaded,
-    storyRun,
-    onSubmitStart,
-    onAuthSuccess,
-    onAuthFail,
-    restartEnter,
-  } = useLoginStory(frameSrcs);
-
   const preview = useMemo(
-    () => resolveLoginPreview(stagedPresentation, remembered),
-    [stagedPresentation, remembered]
+    () => resolveLoginPreview(presentation, remembered),
+    [presentation, remembered]
   );
-
-  const pose = loginStoryPoseForStage(stage, walkStep);
-  const timing = loginStoryTiming(compact);
-  const artworkSrc = pose
-    ? resolveLoginStorySrc(stagedPresentation, pose)
-    : resolveLoginStorySrc(stagedPresentation, "walk_a");
-  const showAvatar = loginStoryShowsAvatar(stage);
-  const showSpeech = loginStoryShowsSpeech(stage);
-  const formReady = loginStoryFormReady(stage);
+  const artworkSrc = resolveLoginHeroSrc(presentation);
   const cutout = isLoginStoryCutout(artworkSrc);
-  const motion = loginStoryMotion(stage);
-  const poseCrossfadeMs = stage === "walking" ? 0 : timing.poseCrossfadeMs;
 
   const broMode =
     personality === "CAMPUS_BRO" || Boolean(remembered.broModeHint);
   const examWeek = Boolean(remembered.examWeekHint);
-
   const speechKey = getLoginGreetingKey({
-    phase: stage === "success" || stage === "exiting" ? "success" : "idle",
+    phase: "idle",
     broMode,
     examWeek,
   });
 
-  useEffect(() => {
-    if (stage !== "exiting") return;
-    const nextPath = pendingPathRef.current;
-    if (!nextPath) return;
-    const timer = window.setTimeout(() => {
-      router.push(nextPath);
-      router.refresh();
-    }, timing.exitingMs);
-    return () => window.clearTimeout(timer);
-  }, [stage, timing.exitingMs, router]);
-
   function selectPresentation(next: LoginPresentationId) {
     rememberLoginContext({ presentation: next });
-    restartEnter();
   }
 
   async function onSubmit(e: FormEvent) {
@@ -144,8 +92,6 @@ export function CinematicLogin() {
     submittingRef.current = true;
     setError(null);
     setLoading(true);
-    setStoryIdentity(presentation);
-    onSubmitStart();
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -166,8 +112,6 @@ export function CinematicLogin() {
         setError(t("login.error.server"));
         submittingRef.current = false;
         setLoading(false);
-        setStoryIdentity(null);
-        onAuthFail();
         return;
       }
 
@@ -183,12 +127,9 @@ export function CinematicLogin() {
         );
         submittingRef.current = false;
         setLoading(false);
-        setStoryIdentity(null);
-        onAuthFail();
         return;
       }
 
-      setSuccess(true);
       rememberLoginContext({
         savedDisplayName: json.data?.user?.name ?? null,
         presentation: "custom",
@@ -198,32 +139,17 @@ export function CinematicLogin() {
         new URLSearchParams(window.location.search).get("next"),
         Boolean(json.data?.user?.onboardingComplete)
       );
-      pendingPathRef.current = nextPath;
-      const reducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
-      onAuthSuccess();
-      if (reducedMotion) {
-        router.push(nextPath);
-        router.refresh();
-      }
+      router.push(nextPath);
+      router.refresh();
     } catch {
       setError(t("login.error.network"));
       submittingRef.current = false;
       setLoading(false);
-      setStoryIdentity(null);
-      onAuthFail();
     }
   }
 
   return (
-    <div
-      className={`login-cinematic auth-shell${formReady ? " is-form-ready" : ""}${success ? " is-ack" : ""}`}
-      data-login-success={success ? "true" : "false"}
-      data-login-stage={stage}
-      data-login-motion={motion}
-      data-login-preloaded={preloaded ? "true" : "false"}
-    >
+    <div className="login-cinematic auth-shell is-form-ready">
       <section className="login-form-pane">
         <div className="login-card">
           <p className="login-product">StudentLife AI</p>
@@ -322,34 +248,22 @@ export function CinematicLogin() {
       <aside className="login-visual" aria-label={t("login.visual.label")}>
         <LoginCampusScene />
         <div
-          className={`login-hero${success ? " is-ack" : ""}`}
+          className="login-hero"
           data-login-presentation={preview.presentation}
-          data-login-pose={pose ?? "none"}
+          data-login-pose="laptop"
         >
-          <div
-            key={`login-story-run-${storyRun}`}
-            className="login-hero-avatar"
-            data-login-avatar={showAvatar ? "visible" : "hidden"}
-          >
-            <div className="login-hero-breathe">
-              <LoginHeroAvatar
-                name={preview.displayName}
-                src={artworkSrc}
-                hidden={!showAvatar}
-                cutout={cutout}
-                crossfadeMs={poseCrossfadeMs}
-              />
-            </div>
+          <div className="login-hero-avatar" data-login-avatar="visible">
+            <LoginHeroAvatar
+              name={preview.displayName}
+              src={artworkSrc}
+              cutout={cutout}
+            />
           </div>
-          <p
-            className="login-speech"
-            aria-live="polite"
-            data-login-speech={showSpeech ? "visible" : "hidden"}
-          >
-            {showSpeech ? t(speechKey) : ""}
+          <p className="login-speech" aria-live="polite" data-login-speech="visible">
+            {t(speechKey)}
           </p>
           <LoginPreviewSwitcher
-            value={stagedPresentation}
+            value={presentation}
             onChange={selectPresentation}
           />
         </div>
