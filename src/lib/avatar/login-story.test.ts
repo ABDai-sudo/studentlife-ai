@@ -71,10 +71,16 @@ describe("login story sequence", () => {
   });
 
   it("keeps success near 700ms and shortens the walk on mobile", () => {
-    assert.equal(LOGIN_STORY_TIMING.desktop.introMs, 300);
-    assert.equal(LOGIN_STORY_TIMING.desktop.walkCrossfadeMs, 900);
-    assert.ok(LOGIN_STORY_TIMING.desktop.walkHoldMs >= 400);
+    assert.equal(LOGIN_STORY_TIMING.desktop.introMs, 450);
+    assert.equal(LOGIN_STORY_TIMING.desktop.walkCrossfadeMs, 1100);
+    assert.ok(LOGIN_STORY_TIMING.desktop.walkHoldMs >= 600);
     assert.equal(LOGIN_STORY_TIMING.desktop.successMs, 700);
+    assert.ok(LOGIN_STORY_TIMING.desktop.idleReplayMs > 3000);
     assert.ok(loginStoryTiming(true).walkCrossfadeMs < loginStoryTiming(false).walkCrossfadeMs);
+  });
+
+  it("replays the walk sequence from the settled idle state", () => {
+    assert.equal(nextLoginStoryStage("settled", "replay"), "walkA");
+    assert.equal(nextLoginStoryStage("authenticating", "replay"), "authenticating");
   });
 });

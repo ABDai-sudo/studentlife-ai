@@ -34,10 +34,12 @@ export function useLoginStory(frameSrcs: string[]): {
   compact: boolean;
   reduced: boolean;
   preloaded: boolean;
+  storyRun: number;
   onSubmitStart: () => void;
   onAuthSuccess: () => void;
   onAuthFail: () => void;
   restartEnter: () => void;
+  pauseIdleReplay: () => void;
 } {
   const [compact, setCompact] = useState(() => readMedia(COMPACT_QUERY));
   const [reduced, setReduced] = useState(() => readMedia(REDUCE_QUERY));
@@ -47,6 +49,8 @@ export function useLoginStory(frameSrcs: string[]): {
   const [stage, setStage] = useState<LoginStoryStage>(() =>
     readMedia(REDUCE_QUERY) ? "settled" : "intro"
   );
+  const [storyRun, setStoryRun] = useState(0);
+  const [idlePaused, setIdlePaused] = useState(false);
   const framesKey = frameSrcs.join("|");
   const preloaded = reduced || readyKey === framesKey;
   const loadGen = useRef(0);
@@ -95,19 +99,28 @@ export function useLoginStory(frameSrcs: string[]): {
               ? timing.standingMs
               : stage === "success"
                 ? timing.successMs
-                : 0;
+                : stage === "settled" && !idlePaused
+                  ? timing.idleReplayMs
+                  : 0;
     if (!delay) return;
     const timer = window.setTimeout(() => {
+      if (stage === "settled" && !idlePaused) {
+        setStoryRun((n) => n + 1);
+        setStage((current) => nextLoginStoryStage(current, "replay"));
+        return;
+      }
       setStage((current) => nextLoginStoryStage(current, "tick"));
     }, delay);
     return () => window.clearTimeout(timer);
-  }, [stage, compact, reduced, preloaded]);
+  }, [stage, compact, reduced, preloaded, idlePaused]);
 
   function onSubmitStart() {
+    setIdlePaused(true);
     setStage((current) => nextLoginStoryStage(current, "submit"));
   }
 
   function onAuthSuccess() {
+    setIdlePaused(true);
     if (readMedia(REDUCE_QUERY)) {
       setStage("settled");
       return;
@@ -116,6 +129,7 @@ export function useLoginStory(frameSrcs: string[]): {
   }
 
   function onAuthFail() {
+    setIdlePaused(false);
     setStage((current) => nextLoginStoryStage(current, "fail"));
   }
 
@@ -124,6 +138,8 @@ export function useLoginStory(frameSrcs: string[]): {
       setStage("settled");
       return;
     }
+    setIdlePaused(false);
+    setStoryRun((n) => n + 1);
     setStage((current) => {
       if (current === "success" || current === "exiting" || current === "authenticating") {
         return current;
@@ -132,14 +148,20 @@ export function useLoginStory(frameSrcs: string[]): {
     });
   }
 
+  function pauseIdleReplay() {
+    setIdlePaused(true);
+  }
+
   return {
     stage,
     compact,
     reduced,
     preloaded,
+    storyRun,
     onSubmitStart,
     onAuthSuccess,
     onAuthFail,
     restartEnter,
+    pauseIdleReplay,
   };
 }

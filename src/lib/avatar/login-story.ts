@@ -35,22 +35,24 @@ export const LOGIN_STORY_MALE_FRAMES: Record<LoginStoryPose, string> = {
 
 export const LOGIN_STORY_TIMING = {
   desktop: {
-    introMs: 300,
-    walkHoldMs: 480,
-    walkCrossfadeMs: 900,
-    standingMs: 520,
+    introMs: 450,
+    walkHoldMs: 700,
+    walkCrossfadeMs: 1100,
+    standingMs: 700,
     successMs: 700,
     exitingMs: 620,
-    poseCrossfadeMs: 420,
+    poseCrossfadeMs: 450,
+    idleReplayMs: 4200,
   },
   mobile: {
-    introMs: 180,
-    walkHoldMs: 280,
-    walkCrossfadeMs: 640,
-    standingMs: 360,
+    introMs: 280,
+    walkHoldMs: 420,
+    walkCrossfadeMs: 780,
+    standingMs: 480,
     successMs: 700,
     exitingMs: 460,
-    poseCrossfadeMs: 300,
+    poseCrossfadeMs: 320,
+    idleReplayMs: 3600,
   },
 } as const;
 
@@ -134,9 +136,12 @@ export function isLoginStoryCutout(src: string): boolean {
 
 export function nextLoginStoryStage(
   stage: LoginStoryStage,
-  event: "tick" | "submit" | "success" | "fail" | "reduce"
+  event: "tick" | "submit" | "success" | "fail" | "reduce" | "replay"
 ): LoginStoryStage {
   if (event === "reduce") return "settled";
+  if (event === "replay") {
+    return stage === "settled" ? "walkA" : stage;
+  }
   if (event === "fail") {
     return stage === "authenticating" || stage === "success" || stage === "exiting"
       ? "settled"

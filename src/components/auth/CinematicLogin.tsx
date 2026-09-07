@@ -88,10 +88,12 @@ export function CinematicLogin() {
     compact,
     reduced,
     preloaded,
+    storyRun,
     onSubmitStart,
     onAuthSuccess,
     onAuthFail,
     restartEnter,
+    pauseIdleReplay,
   } = useLoginStory(frameSrcs);
 
   const preview = useMemo(
@@ -244,6 +246,7 @@ export function CinematicLogin() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={pauseIdleReplay}
                 className="field-input auth-input"
                 placeholder={t("login.emailPlaceholder")}
                 autoComplete="email"
@@ -261,6 +264,7 @@ export function CinematicLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={pauseIdleReplay}
                   className="field-input auth-input pr-12"
                   placeholder={t("login.passwordPlaceholder")}
                   autoComplete="current-password"
@@ -327,6 +331,7 @@ export function CinematicLogin() {
           data-login-pose={pose ?? "none"}
         >
           <div
+            key={`login-story-run-${storyRun}`}
             className="login-hero-avatar"
             data-login-avatar={showAvatar ? "visible" : "hidden"}
           >
