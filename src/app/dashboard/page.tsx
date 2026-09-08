@@ -37,6 +37,7 @@ function toClientSummary(
     academicAura: summary.academicAura,
     displayName: summary.displayName,
     avatarPresetId: summary.avatarPresetId,
+    avatarImageUrl: summary.avatarImageUrl,
     avatarStatus: summary.avatarStatus,
     avatarPresence: summary.avatarPresence,
     avatarStatusSource: summary.avatarStatusSource,
@@ -132,6 +133,7 @@ export default async function DashboardPage() {
       userName={user.name ?? firstName}
       displayName={progress?.displayName}
       avatarPresetId={progress?.avatarPresetId}
+      avatarImageUrl={progress?.avatarImageUrl}
       avatarStatus={progress?.avatarStatus}
       avatarPresence={progress?.avatarPresence}
     >

@@ -7,6 +7,7 @@ export const IDENTITY_CHANGE_EVENT = "sl-identity-change";
 
 export type IdentityChangeDetail = {
   avatarPresetId?: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus?: string | null;
   resolvedAvatarStatus?: string | null;
   avatarPresence?: AvatarPresence | null;

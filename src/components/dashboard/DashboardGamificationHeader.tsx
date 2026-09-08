@@ -29,6 +29,7 @@ export type GamificationSummary = {
   academicAura: number;
   displayName: string | null;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   avatarStatus: string | null;
   avatarPresence?: AvatarPresence | null;
   avatarStatusSource?: AvatarStatusSource | null;
@@ -97,6 +98,7 @@ export function DashboardGamificationHeader({
         <AvatarStatusCard
           name={display}
           presetId={data?.avatarPresetId}
+          imageSrc={data?.avatarImageUrl}
           frame={data?.avatarFrameUi ?? "none"}
           presence={data?.avatarPresence}
           status={data?.avatarStatus}

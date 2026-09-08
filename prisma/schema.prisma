@@ -333,6 +333,8 @@ model StudentProfile {
   leaderboardOptIn         Boolean         @default(false) @map("leaderboard_opt_in")
   /// Curated StudentLife avatar preset id (optional). Initials used when null.
   avatarPresetId           String?         @map("avatar_preset_id")
+  /// Optional selfie / photo avatar as a compressed data URL (JPEG).
+  avatarImageUrl           String?         @map("avatar_image_url") @db.Text
   /// Optional social status chip (e.g. Locking In) — not a UI language.
   avatarStatus             String?         @map("avatar_status")
   /// When true, live study/class context can overlay the pinned status chip.

@@ -9,6 +9,7 @@ export type LeaderboardEntry = {
   xpTotal: number;
   academicAura: number;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   showAvatar: boolean;
   isYou: boolean;
 };
@@ -36,6 +37,7 @@ export async function getGlobalLeaderboard(viewerUserId: string, take = 50) {
       xpTotal: true,
       academicAura: true,
       avatarPresetId: true,
+      avatarImageUrl: true,
       leaderboardShowAvatar: true,
       user: { select: { name: true } },
     },
@@ -64,6 +66,7 @@ export async function getGlobalLeaderboard(viewerUserId: string, take = 50) {
         xpTotal: p.xpTotal,
         academicAura: p.academicAura,
         avatarPresetId: p.avatarPresetId,
+        avatarImageUrl: p.avatarImageUrl,
         showAvatar: p.leaderboardShowAvatar,
       };
     })
@@ -81,6 +84,7 @@ export async function getGlobalLeaderboard(viewerUserId: string, take = 50) {
     xpTotal: row.xpTotal,
     academicAura: row.academicAura,
     avatarPresetId: row.showAvatar ? row.avatarPresetId : null,
+    avatarImageUrl: row.showAvatar ? row.avatarImageUrl : null,
     showAvatar: row.showAvatar,
     isYou: row.userId === viewerUserId,
   }));
@@ -96,6 +100,7 @@ export async function getGlobalLeaderboard(viewerUserId: string, take = 50) {
       xpTotal: row.xpTotal,
       academicAura: row.academicAura,
       avatarPresetId: row.showAvatar ? row.avatarPresetId : null,
+      avatarImageUrl: row.showAvatar ? row.avatarImageUrl : null,
       showAvatar: row.showAvatar,
       isYou: true,
     };

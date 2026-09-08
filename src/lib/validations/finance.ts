@@ -49,6 +49,12 @@ export const updateProfileSchema = z
     shareRecapsEnabled: z.boolean().optional(),
     leaderboardOptIn: z.boolean().optional(),
     avatarPresetId: z.string().trim().max(40).optional().nullable().or(z.literal("")),
+    avatarImageUrl: z
+      .string()
+      .max(120_000)
+      .optional()
+      .nullable()
+      .or(z.literal("")),
     avatarStatus: z.string().trim().max(40).optional().nullable().or(z.literal("")),
     avatarStatusAuto: z.boolean().optional(),
     leaderboardShowAvatar: z.boolean().optional(),

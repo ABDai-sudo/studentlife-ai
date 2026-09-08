@@ -31,6 +31,7 @@ type Profile = {
   onboardingComplete: boolean;
   displayName: string | null;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   avatarStatus: string | null;
   avatarStatusAuto?: boolean;
   resolvedAvatarStatus?: string | null;
@@ -105,6 +106,7 @@ export function ProfileClient({
   const identity: IdentityStats = {
     displayName: profile?.displayName ?? null,
     avatarPresetId: profile?.avatarPresetId ?? null,
+    avatarImageUrl: profile?.avatarImageUrl ?? null,
     avatarStatus: profile?.avatarStatus ?? null,
     avatarStatusAuto: profile?.avatarStatusAuto !== false,
     resolvedAvatarStatus: profile?.resolvedAvatarStatus ?? null,
@@ -145,6 +147,7 @@ export function ProfileClient({
       setIdentitySave("saved");
       const p = json.data.profile as {
         avatarPresetId?: string | null;
+        avatarImageUrl?: string | null;
         avatarStatus?: string | null;
         resolvedAvatarStatus?: string | null;
         avatarPresence?: IdentityStats["avatarPresence"];
@@ -156,6 +159,7 @@ export function ProfileClient({
       if (p) {
         broadcastIdentityChange({
           avatarPresetId: p.avatarPresetId,
+          avatarImageUrl: p.avatarImageUrl,
           avatarStatus: p.avatarStatus,
           resolvedAvatarStatus: p.resolvedAvatarStatus,
           avatarPresence: p.avatarPresence,
@@ -228,7 +232,15 @@ export function ProfileClient({
             void patchSocial({ displayName: displayNameDraft });
           }
         }}
-        onPresetChange={(id) => patchSocial({ avatarPresetId: id })}
+        onPresetChange={(id) =>
+          patchSocial({ avatarPresetId: id, avatarImageUrl: null })
+        }
+        onSelfieChange={(url) =>
+          patchSocial({
+            avatarImageUrl: url,
+            ...(url ? { avatarPresetId: null } : {}),
+          })
+        }
         onStatusChange={(status) => patchSocial({ avatarStatus: status })}
         onAutoChange={(auto) => patchSocial({ avatarStatusAuto: auto })}
       />

@@ -9,11 +9,13 @@ export default async function GamesPage() {
   let headerIdentity: {
     displayName: string | null;
     avatarPresetId: string | null;
+    avatarImageUrl: string | null;
     avatarStatus: string | null;
     avatarPresence: "idle" | "session" | "class" | "exam" | "deadline" | "focus" | "break" | null;
   } = {
     displayName: null,
     avatarPresetId: null,
+    avatarImageUrl: null,
     avatarStatus: null,
     avatarPresence: "idle",
   };
@@ -22,6 +24,7 @@ export default async function GamesPage() {
     headerIdentity = {
       displayName: summary.displayName,
       avatarPresetId: summary.avatarPresetId,
+      avatarImageUrl: summary.avatarImageUrl,
       avatarStatus: summary.avatarStatus,
       avatarPresence: summary.avatarPresence,
     };
@@ -54,6 +57,7 @@ export default async function GamesPage() {
       userName={user.name ?? "Student"}
       displayName={headerIdentity.displayName}
       avatarPresetId={headerIdentity.avatarPresetId}
+      avatarImageUrl={headerIdentity.avatarImageUrl}
       avatarStatus={headerIdentity.avatarStatus}
       avatarPresence={headerIdentity.avatarPresence}
     >

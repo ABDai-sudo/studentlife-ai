@@ -12,7 +12,8 @@ import type {
   AvatarPresence,
   AvatarStatusSource,
 } from "@/lib/avatar/contextual-status";
-import { resolveStudentStatusForUser, ensureAvatarStatusAutoColumn } from "@/services/student-status.service";
+import { resolveStudentStatusForUser, ensureAvatarStatusAutoColumn, ensureAvatarImageUrlColumn } from "@/services/student-status.service";
+import { normalizeAvatarSelfieInput } from "@/lib/avatar/selfie";
 
 export type ProfileDto = {
   university: string | null;
@@ -39,6 +40,7 @@ export type ProfileDto = {
   shareRecapsEnabled: boolean;
   leaderboardOptIn: boolean;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   avatarStatus: string | null;
   avatarStatusAuto: boolean;
   resolvedAvatarStatus: string | null;
@@ -77,6 +79,7 @@ function toDto(row: {
   shareRecapsEnabled: boolean;
   leaderboardOptIn: boolean;
   avatarPresetId: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus: string | null;
   avatarStatusAuto?: boolean | null;
   leaderboardShowAvatar: boolean;
@@ -117,6 +120,7 @@ function toDto(row: {
     shareRecapsEnabled: row.shareRecapsEnabled,
     leaderboardOptIn: row.leaderboardOptIn,
     avatarPresetId: row.avatarPresetId,
+    avatarImageUrl: row.avatarImageUrl ?? null,
     avatarStatus: row.avatarStatus,
     avatarStatusAuto: row.avatarStatusAuto !== false,
     leaderboardShowAvatar: row.leaderboardShowAvatar,
@@ -143,6 +147,7 @@ async function withResolvedStatus(
 
 export async function getProfileForUser(userId: string): Promise<ProfileDto | null> {
   await ensureAvatarStatusAutoColumn();
+  await ensureAvatarImageUrlColumn();
   const profile = await withDbRetry(() =>
     prisma.studentProfile.findUnique({ where: { userId } })
   );
@@ -201,6 +206,7 @@ export async function updateProfileForUser(
   input: UpdateProfileInput
 ): Promise<ProfileDto> {
   await ensureAvatarStatusAutoColumn();
+  await ensureAvatarImageUrlColumn();
   const data: Prisma.StudentProfileUpdateInput = {};
 
   if (input.monthlyPocketMoney != null) {
@@ -246,6 +252,13 @@ export async function updateProfileForUser(
     }
     data.avatarPresetId = id;
   }
+  if (input.avatarImageUrl !== undefined) {
+    try {
+      data.avatarImageUrl = normalizeAvatarSelfieInput(input.avatarImageUrl);
+    } catch {
+      throw new Error("INVALID_AVATAR_SELFIE");
+    }
+  }
   if (input.avatarStatus !== undefined) {
     const status = input.avatarStatus || null;
     if (status && !isValidAvatarStatus(status)) {
@@ -290,6 +303,9 @@ export async function updateProfileForUser(
       shareRecapsEnabled: input.shareRecapsEnabled ?? true,
       leaderboardOptIn: input.leaderboardOptIn ?? false,
       avatarPresetId: input.avatarPresetId || null,
+      avatarImageUrl: input.avatarImageUrl
+        ? normalizeAvatarSelfieInput(input.avatarImageUrl)
+        : null,
       avatarStatus: input.avatarStatus || null,
       avatarStatusAuto: input.avatarStatusAuto ?? true,
       leaderboardShowAvatar: input.leaderboardShowAvatar ?? true,

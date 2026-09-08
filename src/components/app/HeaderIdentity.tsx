@@ -10,6 +10,7 @@ import type {
 export type HeaderIdentity = {
   displayName: string | null;
   avatarPresetId: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus: string | null;
   avatarPresence?: AvatarPresence | null;
   avatarStatusSource?: AvatarStatusSource | null;

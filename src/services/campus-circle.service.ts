@@ -156,7 +156,7 @@ async function cardsFor(userIds: string[]): Promise<Map<string, PublicStudentCar
   const [profiles, settings] = await Promise.all([
     prisma.studentProfile.findMany({
       where: { userId: { in: unique } },
-      select: { userId: true, displayName: true, avatarPresetId: true },
+      select: { userId: true, displayName: true, avatarPresetId: true, avatarImageUrl: true },
     }),
     prisma.campusCircleSettings.findMany({
       where: { userId: { in: unique } },
@@ -174,6 +174,7 @@ async function cardsFor(userIds: string[]): Promise<Map<string, PublicStudentCar
       id,
       displayName: publicDisplayName(profile?.displayName),
       avatarPresetId: profile?.avatarPresetId ?? null,
+      avatarImageUrl: profile?.avatarImageUrl ?? null,
       studyStatus: setting
         ? visibleStudyStatus({
             shareStudyStatus: setting.shareStudyStatus,
