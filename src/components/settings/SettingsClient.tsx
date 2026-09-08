@@ -65,6 +65,7 @@ type InitialProfile = {
   leaderboardOptIn: boolean;
   leaderboardShowAvatar: boolean;
   avatarPresetId: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus: string | null;
   avatarStatusAuto?: boolean;
   resolvedAvatarStatus?: string | null;
@@ -516,6 +517,7 @@ export function SettingsClient({
           leaderboardOptIn: initialProfile?.leaderboardOptIn ?? false,
           leaderboardShowAvatar: initialProfile?.leaderboardShowAvatar ?? true,
           avatarPresetId: initialProfile?.avatarPresetId ?? null,
+          avatarImageUrl: initialProfile?.avatarImageUrl ?? null,
           avatarStatus: initialProfile?.avatarStatus ?? null,
           avatarStatusAuto: initialProfile?.avatarStatusAuto !== false,
           resolvedAvatarStatus: initialProfile?.resolvedAvatarStatus ?? null,

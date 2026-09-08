@@ -490,6 +490,7 @@ export async function getProgressSummary(userId: string) {
     academicAura: profile?.academicAura ?? 50,
     displayName: profile?.displayName ?? null,
     avatarPresetId: profile?.avatarPresetId ?? null,
+    avatarImageUrl: profile?.avatarImageUrl ?? null,
     avatarStatus: resolved.status,
     avatarStatusPinned: profile?.avatarStatus ?? null,
     avatarStatusAuto: profile?.avatarStatusAuto !== false,

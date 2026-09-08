@@ -55,7 +55,11 @@ export async function PATCH(request: Request) {
     return ok({ profile });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
-    if (msg === "INVALID_AVATAR_PRESET" || msg === "INVALID_AVATAR_STATUS") {
+    if (
+      msg === "INVALID_AVATAR_PRESET" ||
+      msg === "INVALID_AVATAR_STATUS" ||
+      msg === "INVALID_AVATAR_SELFIE"
+    ) {
       return fail("Invalid avatar selection.", {
         code: "VALIDATION_ERROR",
         status: 422,

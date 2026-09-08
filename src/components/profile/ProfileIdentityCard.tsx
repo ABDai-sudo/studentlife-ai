@@ -23,6 +23,7 @@ import { xpProgressFromTotal } from "@/lib/gamification/xp-progress";
 export type IdentityStats = {
   displayName: string | null;
   avatarPresetId: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus: string | null;
   resolvedAvatarStatus?: string | null;
   avatarPresence?: AvatarPresence | null;
@@ -45,6 +46,7 @@ export function ProfileIdentityCard({
   saveState = "idle",
   saveError = null,
   onPresetChange,
+  onSelfieChange,
   onStatusChange,
   onAutoChange,
   onDisplayNameBlur,
@@ -57,6 +59,7 @@ export function ProfileIdentityCard({
   saveState?: "idle" | "saving" | "saved" | "error";
   saveError?: string | null;
   onPresetChange: (id: string | null) => void;
+  onSelfieChange?: (url: string | null) => void;
   onStatusChange: (status: string | null) => void;
   onAutoChange?: (auto: boolean) => void;
   displayNameDraft: string;
@@ -87,6 +90,7 @@ export function ProfileIdentityCard({
             name={name}
             size="2xl"
             presetId={identity.avatarPresetId}
+            imageSrc={identity.avatarImageUrl}
             frame={frame}
             aura={identity.academicAura}
             presence={identity.avatarPresence}
@@ -194,6 +198,7 @@ export function ProfileIdentityCard({
 
         <AvatarPicker
           presetId={identity.avatarPresetId}
+          imageSrc={identity.avatarImageUrl}
           status={identity.avatarStatus}
           resolvedStatus={identity.resolvedAvatarStatus}
           presence={identity.avatarPresence}
@@ -205,6 +210,7 @@ export function ProfileIdentityCard({
           saveState={saveState}
           saveError={saveError}
           onPresetChange={onPresetChange}
+          onSelfieChange={onSelfieChange}
           onStatusChange={onStatusChange}
           onAutoChange={onAutoChange}
         />

@@ -10,6 +10,7 @@ import {
 } from "@/lib/avatar/contextual-status";
 
 let ensurePromise: Promise<void> | null = null;
+let ensureSelfiePromise: Promise<void> | null = null;
 
 export async function ensureAvatarStatusAutoColumn() {
   if (!ensurePromise) {
@@ -22,6 +23,19 @@ export async function ensureAvatarStatusAutoColumn() {
       .catch(() => undefined);
   }
   await ensurePromise;
+}
+
+export async function ensureAvatarImageUrlColumn() {
+  if (!ensureSelfiePromise) {
+    ensureSelfiePromise = withDbRetry(() =>
+      prisma.$executeRawUnsafe(
+        `ALTER TABLE "student_profiles" ADD COLUMN IF NOT EXISTS "avatar_image_url" TEXT`
+      )
+    )
+      .then(() => undefined)
+      .catch(() => undefined);
+  }
+  await ensureSelfiePromise;
 }
 
 export type StudentStatusInput = {

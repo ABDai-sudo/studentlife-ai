@@ -43,6 +43,7 @@ export default async function SettingsPage() {
         userName={user.name ?? "Student"}
         displayName={profile?.displayName}
         avatarPresetId={profile?.avatarPresetId}
+        avatarImageUrl={profile?.avatarImageUrl}
         avatarStatus={profile?.resolvedAvatarStatus ?? profile?.avatarStatus}
         avatarPresence={profile?.avatarPresence}
       >
@@ -65,6 +66,7 @@ export default async function SettingsPage() {
                   leaderboardOptIn: profile.leaderboardOptIn,
                   leaderboardShowAvatar: profile.leaderboardShowAvatar,
                   avatarPresetId: profile.avatarPresetId,
+                  avatarImageUrl: profile.avatarImageUrl,
                   avatarStatus: profile.avatarStatus,
                   avatarStatusAuto: profile.avatarStatusAuto,
                   resolvedAvatarStatus: profile.resolvedAvatarStatus,

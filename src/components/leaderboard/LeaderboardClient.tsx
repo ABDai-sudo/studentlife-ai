@@ -16,6 +16,7 @@ type Entry = {
   xpTotal: number;
   academicAura: number;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   showAvatar: boolean;
   isYou: boolean;
 };
@@ -131,6 +132,7 @@ export function LeaderboardClient({
                   name={row.displayName}
                   size="md"
                   presetId={row.showAvatar ? row.avatarPresetId : null}
+                  imageSrc={row.showAvatar ? row.avatarImageUrl : null}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-foreground">
@@ -161,6 +163,9 @@ export function LeaderboardClient({
             size="md"
             presetId={
               data.viewer.showAvatar ? data.viewer.avatarPresetId : null
+            }
+            imageSrc={
+              data.viewer.showAvatar ? data.viewer.avatarImageUrl : null
             }
           />
           <div className="min-w-0">

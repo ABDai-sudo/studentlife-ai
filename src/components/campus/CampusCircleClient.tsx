@@ -17,6 +17,7 @@ type StudentCard = {
   id: string;
   displayName: string;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   studyStatus: CampusStudyStatusValue | null;
 };
 
@@ -167,7 +168,12 @@ function Person({ user, extra }: { user: StudentCard; extra?: string }) {
   const { t } = useT();
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <Avatar name={user.displayName} presetId={user.avatarPresetId} size="sm" />
+      <Avatar
+        name={user.displayName}
+        presetId={user.avatarPresetId}
+        imageSrc={user.avatarImageUrl}
+        size="sm"
+      />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-foreground">
           {user.displayName}

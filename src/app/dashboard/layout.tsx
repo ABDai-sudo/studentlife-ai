@@ -25,6 +25,7 @@ export default async function DashboardLayout({
         value={{
           displayName: profile?.displayName ?? null,
           avatarPresetId: profile?.avatarPresetId ?? null,
+          avatarImageUrl: profile?.avatarImageUrl ?? null,
           avatarStatus: profile?.resolvedAvatarStatus ?? profile?.avatarStatus ?? null,
           avatarPresence: profile?.avatarPresence ?? "idle",
           avatarStatusSource: profile?.avatarStatusSource ?? "none",

@@ -28,6 +28,7 @@ type AppHeaderProps = {
   /** Server-resolved display name (leaderboard / social) */
   displayName?: string | null;
   avatarPresetId?: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus?: string | null;
   avatarPresence?: AvatarPresence | null;
 };
@@ -40,6 +41,7 @@ export function AppHeader({
   userName = "Student",
   displayName: displayNameProp = null,
   avatarPresetId: avatarPresetIdProp = null,
+  avatarImageUrl: avatarImageUrlProp = null,
   avatarStatus: avatarStatusProp = null,
   avatarPresence: avatarPresenceProp = null,
 }: AppHeaderProps) {
@@ -49,6 +51,7 @@ export function AppHeader({
   const [open, setOpen] = useState(false);
   const [live, setLive] = useState<{
     avatarPresetId: string | null;
+    avatarImageUrl: string | null;
     avatarStatus: string | null;
     avatarPresence: AvatarPresence | null;
     displayName: string;
@@ -58,6 +61,11 @@ export function AppHeader({
 
   const avatarPresetId =
     live?.avatarPresetId ?? avatarPresetIdProp ?? identity?.avatarPresetId ?? null;
+  const avatarImageUrl =
+    live?.avatarImageUrl ??
+    avatarImageUrlProp ??
+    identity?.avatarImageUrl ??
+    null;
   const avatarStatus =
     live?.avatarStatus ?? avatarStatusProp ?? identity?.avatarStatus ?? null;
   const avatarPresence =
@@ -89,6 +97,7 @@ export function AppHeader({
         data?: {
           profile?: {
             avatarPresetId?: string | null;
+            avatarImageUrl?: string | null;
             avatarStatus?: string | null;
             resolvedAvatarStatus?: string | null;
             avatarPresence?: AvatarPresence | null;
@@ -102,6 +111,7 @@ export function AppHeader({
       const p = body.data?.profile;
       setLive({
         avatarPresetId: p?.avatarPresetId ?? null,
+        avatarImageUrl: p?.avatarImageUrl ?? null,
         avatarStatus: p?.resolvedAvatarStatus ?? p?.avatarStatus ?? null,
         avatarPresence: p?.avatarPresence ?? "idle",
         displayName:
@@ -120,6 +130,10 @@ export function AppHeader({
           "avatarPresetId" in detail
             ? (detail.avatarPresetId ?? null)
             : (prev?.avatarPresetId ?? avatarPresetIdProp),
+        avatarImageUrl:
+          "avatarImageUrl" in detail
+            ? (detail.avatarImageUrl ?? null)
+            : (prev?.avatarImageUrl ?? avatarImageUrlProp),
         avatarStatus:
           "resolvedAvatarStatus" in detail
             ? (detail.resolvedAvatarStatus ?? null)
@@ -138,7 +152,13 @@ export function AppHeader({
     }
     window.addEventListener(IDENTITY_CHANGE_EVENT, onIdentity);
     return () => window.removeEventListener(IDENTITY_CHANGE_EVENT, onIdentity);
-  }, [avatarPresetIdProp, avatarStatusProp, avatarPresenceProp, initialName]);
+  }, [
+    avatarPresetIdProp,
+    avatarImageUrlProp,
+    avatarStatusProp,
+    avatarPresenceProp,
+    initialName,
+  ]);
 
   return (
     <>
@@ -185,6 +205,7 @@ export function AppHeader({
             <Avatar
               name={displayName}
               presetId={avatarPresetId}
+              imageSrc={avatarImageUrl}
               presence={avatarPresence}
             />
             <span className="min-w-0">

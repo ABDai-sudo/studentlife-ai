@@ -33,6 +33,7 @@ export default async function ProfilePage() {
       userName={user.name ?? "Student"}
       displayName={profile?.displayName}
       avatarPresetId={profile?.avatarPresetId}
+      avatarImageUrl={profile?.avatarImageUrl}
       avatarStatus={profile?.resolvedAvatarStatus ?? profile?.avatarStatus}
       avatarPresence={profile?.avatarPresence}
     >
@@ -61,6 +62,7 @@ export default async function ProfilePage() {
                 onboardingComplete: profile.onboardingComplete,
                 displayName: profile.displayName,
                 avatarPresetId: profile.avatarPresetId,
+                avatarImageUrl: profile.avatarImageUrl,
                 avatarStatus: profile.avatarStatus,
                 avatarStatusAuto: profile.avatarStatusAuto,
                 resolvedAvatarStatus: profile.resolvedAvatarStatus,
