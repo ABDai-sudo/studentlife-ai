@@ -76,18 +76,20 @@ export function AuthShell({
         </div>
 
         <div className="auth-premium-brand-content">
-          <Logo light className="auth-premium-logo" />
-          <div className="auth-premium-brand-copy">
+          <div className="auth-premium-brand-top">
+            <Logo light className="auth-premium-logo" />
             <p className="auth-premium-kicker">{t("auth.brandKicker")}</p>
+          </div>
+          <div className="auth-premium-brand-copy">
             <h2 className="auth-premium-headline">{t("auth.panelTitle")}</h2>
             <p className="auth-premium-lede">{t("auth.panelBody")}</p>
             <ul className="auth-premium-pillars">
               {PILLARS.map(({ icon: Icon, labelKey }) => (
-                <li key={labelKey}>
+                <li key={labelKey} className="auth-premium-pillar">
                   <span className="auth-premium-pillar-icon" aria-hidden>
-                    <Icon className="h-4 w-4" strokeWidth={1.75} />
+                    <Icon className="h-4 w-4" strokeWidth={1.85} />
                   </span>
-                  <span>{t(labelKey)}</span>
+                  <span className="auth-premium-pillar-label">{t(labelKey)}</span>
                 </li>
               ))}
             </ul>
@@ -98,7 +100,7 @@ export function AuthShell({
 
       <section className="auth-premium-form-pane">
         <div className="auth-premium-mobile-hero lg:hidden">
-          <Logo />
+          <Logo className="auth-premium-logo" />
           <p className="auth-premium-mobile-kicker">{t("auth.brandKicker")}</p>
         </div>
 
@@ -144,49 +146,59 @@ export function AuthShell({
           <div className="auth-premium-body">{children}</div>
 
           <div className="auth-premium-controls">
-            <div
-              className="auth-control-group"
-              role="radiogroup"
-              aria-label={t("auth.language")}
-            >
-              {UI_LOCALE_CODES.map((code) => {
-                const selected = selectedLocale === code;
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    className={`auth-control-chip${selected ? " is-selected" : ""}`}
-                    onClick={() => setLocale(code)}
-                  >
-                    {LOCALE_LABEL[code]}
-                  </button>
-                );
-              })}
+            <div className="auth-control-block">
+              <p className="auth-control-label" id="auth-lang-label">
+                {t("auth.language")}
+              </p>
+              <div
+                className="auth-control-group"
+                role="radiogroup"
+                aria-labelledby="auth-lang-label"
+              >
+                {UI_LOCALE_CODES.map((code) => {
+                  const selected = selectedLocale === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      className={`auth-control-chip${selected ? " is-selected" : ""}`}
+                      onClick={() => setLocale(code)}
+                    >
+                      {LOCALE_LABEL[code]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div
-              className="auth-control-group"
-              role="radiogroup"
-              aria-label={t("settings.theme")}
-            >
-              {THEME_OPTIONS.map(({ value, icon: Icon, labelKey }) => {
-                const selected = selectedTheme === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    aria-label={t(labelKey)}
-                    title={t(labelKey)}
-                    className={`auth-control-chip auth-control-icon${selected ? " is-selected" : ""}`}
-                    onClick={() => setTheme(value)}
-                  >
-                    <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
-                  </button>
-                );
-              })}
+            <div className="auth-control-block">
+              <p className="auth-control-label" id="auth-theme-label">
+                {t("settings.theme")}
+              </p>
+              <div
+                className="auth-control-group"
+                role="radiogroup"
+                aria-labelledby="auth-theme-label"
+              >
+                {THEME_OPTIONS.map(({ value, icon: Icon, labelKey }) => {
+                  const selected = selectedTheme === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={t(labelKey)}
+                      title={t(labelKey)}
+                      className={`auth-control-chip auth-control-icon${selected ? " is-selected" : ""}`}
+                      onClick={() => setTheme(value)}
+                    >
+                      <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
