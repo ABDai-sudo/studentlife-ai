@@ -10,8 +10,11 @@ const STATUS_KEYS: Record<string, MessageKey> = {
   "Deadline week": "avatar.status.deadline",
   "Budget watch": "avatar.status.budget",
   "In session": "avatar.status.session",
+  Grinding: "avatar.status.grinding",
   "Taking a break": "avatar.status.break",
   "In class": "avatar.status.class",
+  Available: "avatar.status.available",
+  Offline: "avatar.status.offline",
 };
 
 export function avatarStatusMessageKey(

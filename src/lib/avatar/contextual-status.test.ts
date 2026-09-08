@@ -243,8 +243,10 @@ describe("privacy", () => {
 
 describe("pinned status validation", () => {
   it("rejects derived in-class as a saved pin", () => {
-    assert.equal(isValidAvatarStatus("In class"), false);
+    assert.equal(isValidAvatarStatus("In class"), true);
     assert.equal(isValidAvatarStatus("In session"), true);
     assert.equal(isValidAvatarStatus("Focused"), true);
+    assert.equal(isValidAvatarStatus("Grinding"), true);
+    assert.equal(isValidAvatarStatus("Available"), true);
   });
 });

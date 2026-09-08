@@ -37,7 +37,7 @@ const SIZE: Record<NonNullable<AvatarProps["size"]>, string> = {
   lg: "h-12 w-12 text-sm",
   xl: "h-16 w-16 text-base",
   "2xl": "h-[4.5rem] w-[4.5rem] text-lg sm:h-20 sm:w-20",
-  hero: "h-[4.75rem] w-[4.75rem] text-2xl lg:h-[10.5rem] lg:w-[10.5rem] lg:text-5xl",
+  hero: "h-[14rem] w-[14rem] text-4xl sm:h-[16rem] sm:w-[16rem] sm:text-5xl lg:h-[17.5rem] lg:w-[17.5rem] lg:text-6xl",
 };
 
 const FRAME_RING: Record<NonNullable<AvatarProps["frame"]>, string> = {

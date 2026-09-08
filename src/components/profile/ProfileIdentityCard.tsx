@@ -1,16 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Flame, Target, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Flame, Pencil, Settings2, Sparkles, Target, TrendingUp } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
-import { AvatarPicker } from "@/components/avatar/AvatarPicker";
-import { Button } from "@/components/ui/Button";
+import { AvatarStudio, StatusChipPicker } from "@/components/avatar/AvatarStudio";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useT } from "@/components/i18n/LocaleProvider";
 import {
   displayAvatarStatus,
   frameToUiRing,
-  getAvatarPreset,
   type AvatarFrameId,
 } from "@/lib/avatar/presets";
 import { avatarStatusMessageKey } from "@/lib/avatar/status-label";
@@ -37,7 +36,17 @@ export type IdentityStats = {
   cosmeticFrame: AvatarFrameId;
   leaderboardOptIn: boolean;
   studyGoal?: string | null;
+  institutionName?: string | null;
+  achievementCodes?: string[];
 };
+
+function handleFromName(name: string) {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .slice(0, 18);
+  return slug ? `@${slug}` : "@student";
+}
 
 export function ProfileIdentityCard({
   userName,
@@ -67,118 +76,116 @@ export function ProfileIdentityCard({
   onDisplayNameBlur: () => void;
 }) {
   const { t } = useT();
+  const [studioOpen, setStudioOpen] = useState(false);
   const name = identity.displayName?.trim() || userName;
   const frame = frameToUiRing(identity.cosmeticFrame);
-  const preset = getAvatarPreset(identity.avatarPresetId);
   const xp = xpProgressFromTotal(identity.xpTotal);
-  const studyNote = identity.studyGoal?.trim() || "";
   const shownStatus = identity.resolvedAvatarStatus || identity.avatarStatus;
   const shownStatusKey = avatarStatusMessageKey(shownStatus);
-
-  const badges: string[] = [];
-  if (identity.streakCurrent >= 7) badges.push("7-day streak");
-  if (identity.streakCurrent >= 30) badges.push("30-day streak");
-  if (identity.streakCurrent >= 100) badges.push("100-day streak");
-  if (identity.xpTotal >= 1000) badges.push("1,000 XP");
-  if (identity.academicAura >= 80) badges.push("Aura 80+");
-  if (identity.cosmeticFrame === "achievement") badges.push("Achievement");
+  const handle = handleFromName(name);
+  const institution = identity.institutionName?.trim() || "";
+  const achievements = identity.achievementCodes ?? [];
 
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <Avatar
-            name={name}
-            size="2xl"
-            presetId={identity.avatarPresetId}
-            imageSrc={identity.avatarImageUrl}
-            frame={frame}
-            aura={identity.academicAura}
-            presence={identity.avatarPresence}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted">
+    <section className="profile-experience space-y-6">
+      <div className="profile-hero">
+        <div className="profile-hero-glow" aria-hidden />
+        <div className="profile-hero-inner">
+          <div className="profile-hero-avatar">
+            <Avatar
+              name={name}
+              size="hero"
+              presetId={identity.avatarPresetId}
+              imageSrc={identity.avatarImageUrl}
+              frame={frame}
+              aura={identity.academicAura}
+              presence={identity.avatarPresence}
+            />
+          </div>
+
+          <div className="profile-hero-meta">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
               {t("profile.heroLabel")}
             </p>
-            <h2 className="mt-1 truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {name}
             </h2>
-            <p className="mt-1.5 text-sm text-secondary">
-              {preset ? preset.label : t("avatar.initialsOption")}
-              {shownStatus
-                ? ` · ${shownStatusKey ? t(shownStatusKey) : displayAvatarStatus(shownStatus)}`
-                : ""}
-            </p>
-            {studyNote ? (
-              <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-secondary">
-                {studyNote}
-              </p>
+            <p className="mt-1 text-sm font-medium text-white/75">{handle}</p>
+            {institution ? (
+              <p className="mt-2 text-sm text-white/80">{institution}</p>
             ) : null}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-3 gap-4 border-t border-border pt-5">
-          <div>
-            <p className="flex items-center gap-1 text-xs font-medium text-muted">
-              <TrendingUp className="h-3 w-3 shrink-0 text-primary" aria-hidden />
-              {t("dashboard.xp")}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {t("dashboard.level", { level: identity.level })}
-            </p>
-          </div>
-          <div>
-            <p className="flex items-center gap-1 text-xs font-medium text-muted">
-              <Flame className="h-3 w-3 shrink-0 text-warning" aria-hidden />
-              {t("dashboard.currentStreak")}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {t("dashboard.days", { count: identity.streakCurrent })}
-            </p>
-          </div>
-          <div>
-            <p className="flex items-center gap-1 text-xs font-medium text-muted">
-              <Target className="h-3 w-3 shrink-0 text-primary" aria-hidden />
-              {t("dashboard.academicAura")}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {identity.academicAura}/100
-            </p>
-          </div>
-        </div>
-
-        <ProgressBar
-          value={xp.levelProgress}
-          tone="primary"
-          label={
-            xp.xpToNext > 0
-              ? `${xp.levelName} · ${t("dashboard.xpToNext", { xp: xp.xpToNext })}`
-              : `${xp.levelName} · ${t("dashboard.maxLevel")}`
-          }
-        />
-
-        {badges.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {badges.map((b) => (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-3 py-1.5 text-sm text-white backdrop-blur-sm">
               <span
-                key={b}
-                className="inline-flex items-center rounded-md border border-border bg-surface-secondary px-2 py-0.5 text-[0.7rem] font-medium text-secondary"
-              >
-                {b}
+                className="profile-status-dot profile-status-dot-on-dark"
+                data-status={shownStatus || "none"}
+                aria-hidden
+              />
+              <span>
+                {shownStatus
+                  ? shownStatusKey
+                    ? t(shownStatusKey)
+                    : displayAvatarStatus(shownStatus)
+                  : t("avatar.statusNone")}
               </span>
-            ))}
+              {identity.avatarStatusLive ? (
+                <span className="text-xs text-white/70">· {t("avatar.liveNow")}</span>
+              ) : null}
+            </div>
+
+            <div className="profile-hero-stats">
+              <div className="profile-stat-card">
+                <p className="profile-stat-label">
+                  <TrendingUp className="h-3.5 w-3.5" aria-hidden />
+                  {t("dashboard.level", { level: identity.level })}
+                </p>
+                <p className="profile-stat-value">{identity.xpTotal} XP</p>
+              </div>
+              <div className="profile-stat-card">
+                <p className="profile-stat-label">
+                  <Flame className="h-3.5 w-3.5" aria-hidden />
+                  {t("dashboard.currentStreak")}
+                </p>
+                <p className="profile-stat-value">
+                  {t("dashboard.days", { count: identity.streakCurrent })}
+                </p>
+              </div>
+              <div className="profile-stat-card">
+                <p className="profile-stat-label">
+                  <Target className="h-3.5 w-3.5" aria-hidden />
+                  {t("dashboard.academicAura")}
+                </p>
+                <p className="profile-stat-value">{identity.academicAura}/100</p>
+              </div>
+            </div>
+
+            <div className="mt-4 max-w-md">
+              <ProgressBar
+                value={xp.levelProgress}
+                tone="primary"
+                label={
+                  xp.xpToNext > 0
+                    ? `${xp.levelName} · ${t("dashboard.xpToNext", { xp: xp.xpToNext })}`
+                    : `${xp.levelName} · ${t("dashboard.maxLevel")}`
+                }
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStudioOpen(true)}
+              className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-900 transition hover:bg-white/90"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+              {t("avatar.editAvatar")}
+            </button>
           </div>
-        ) : null}
+        </div>
+      </div>
 
-        <p className="text-xs text-muted">
-          {identity.leaderboardOptIn
-            ? t("leaderboard.optIn")
-            : t("leaderboard.hiddenTitle")}{" "}
-          <Link href="/settings#leaderboard" className="text-primary underline">
-            {t("leaderboard.openSettings")}
-          </Link>
-        </p>
-
-        <div className="border-t border-border pt-5">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="profile-section lg:col-span-1">
+          <h3 className="profile-section-title">{t("profile.section.identity")}</h3>
           <label
             htmlFor="profileDisplayName"
             className="mb-1.5 block text-sm font-medium text-foreground"
@@ -194,9 +201,126 @@ export function ProfileIdentityCard({
             onChange={(e) => onDisplayNameChange(e.target.value)}
             onBlur={onDisplayNameBlur}
           />
-        </div>
+          {institution ? (
+            <p className="mt-3 text-sm text-secondary">
+              <span className="font-medium text-foreground">{t("profile.institution")}: </span>
+              {institution}
+            </p>
+          ) : null}
+          <div className="mt-4">
+            <StatusChipPicker
+              status={identity.avatarStatus}
+              busy={saving}
+              onStatusChange={onStatusChange}
+            />
+          </div>
+          {onAutoChange ? (
+            <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+              <span className="text-sm text-foreground">{t("avatar.auto")}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={identity.avatarStatusAuto !== false}
+                disabled={saving}
+                onClick={() => onAutoChange(!(identity.avatarStatusAuto !== false))}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+                  identity.avatarStatusAuto !== false ? "bg-primary" : "bg-border"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 start-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    identity.avatarStatusAuto !== false
+                      ? "translate-x-5 rtl:-translate-x-5"
+                      : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </label>
+          ) : null}
+        </section>
 
-        <AvatarPicker
+        <section className="profile-section lg:col-span-1">
+          <h3 className="profile-section-title">{t("profile.section.progress")}</h3>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-center justify-between gap-3">
+              <span className="text-secondary">{t("dashboard.level", { level: identity.level })}</span>
+              <span className="font-semibold text-foreground">{identity.xpTotal} XP</span>
+            </li>
+            <li className="flex items-center justify-between gap-3">
+              <span className="text-secondary">{t("dashboard.currentStreak")}</span>
+              <span className="font-semibold text-foreground">
+                {t("dashboard.days", { count: identity.streakCurrent })}
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-3">
+              <span className="text-secondary">{t("dashboard.academicAura")}</span>
+              <span className="font-semibold text-foreground">{identity.academicAura}/100</span>
+            </li>
+          </ul>
+          <div className="mt-4">
+            <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
+              <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+              {t("profile.achievements")}
+            </p>
+            {achievements.length ? (
+              <div className="flex flex-wrap gap-1.5">
+                {achievements.slice(0, 8).map((code) => (
+                  <span
+                    key={code}
+                    className="rounded-lg border border-border bg-surface-secondary px-2 py-1 text-[0.7rem] font-medium text-secondary"
+                  >
+                    {code.replaceAll("_", " ")}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted">{t("profile.achievementsEmpty")}</p>
+            )}
+          </div>
+        </section>
+
+        <section className="profile-section lg:col-span-1">
+          <h3 className="profile-section-title">{t("profile.section.campus")}</h3>
+          <p className="text-sm text-secondary">
+            {identity.leaderboardOptIn
+              ? t("leaderboard.optIn")
+              : t("leaderboard.hiddenTitle")}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/settings#leaderboard"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition hover:bg-surface-secondary"
+            >
+              <Settings2 className="h-4 w-4" aria-hidden />
+              {t("leaderboard.openSettings")}
+            </Link>
+            <Link
+              href="/dashboard/campus-circle"
+              className="inline-flex min-h-11 items-center rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition hover:bg-surface-secondary"
+            >
+              {t("nav.campusCircle")}
+            </Link>
+            <Link
+              href="/dashboard/leaderboard"
+              className="inline-flex min-h-11 items-center rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition hover:bg-surface-secondary"
+            >
+              {t("nav.leaderboard")}
+            </Link>
+          </div>
+          {identity.studyGoal?.trim() ? (
+            <p className="mt-4 text-sm text-secondary">
+              <span className="font-medium text-foreground">{t("profile.studyGoal")}: </span>
+              {identity.studyGoal}
+            </p>
+          ) : null}
+        </section>
+      </div>
+
+      {onSelfieChange ? (
+        <AvatarStudio
+          open={studioOpen}
+          onClose={() => setStudioOpen(false)}
+          displayName={name}
           presetId={identity.avatarPresetId}
           imageSrc={identity.avatarImageUrl}
           status={identity.avatarStatus}
@@ -205,7 +329,7 @@ export function ProfileIdentityCard({
           statusSource={identity.avatarStatusSource}
           statusLive={identity.avatarStatusLive}
           autoEnabled={identity.avatarStatusAuto !== false}
-          displayName={name}
+          cosmeticFrame={identity.cosmeticFrame}
           disabled={saving}
           saveState={saveState}
           saveError={saveError}
@@ -214,10 +338,7 @@ export function ProfileIdentityCard({
           onStatusChange={onStatusChange}
           onAutoChange={onAutoChange}
         />
-
-        <Button href="/dashboard/leaderboard" size="sm" variant="secondary">
-          {t("nav.leaderboard")}
-        </Button>
+      ) : null}
     </section>
   );
 }

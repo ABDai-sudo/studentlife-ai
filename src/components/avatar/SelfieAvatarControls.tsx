@@ -9,10 +9,12 @@ export function SelfieAvatarControls({
   imageSrc,
   disabled,
   onSelfieChange,
+  compact = false,
 }: {
   imageSrc?: string | null;
   disabled?: boolean;
   onSelfieChange: (dataUrl: string | null) => void;
+  compact?: boolean;
 }) {
   const { t } = useT();
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -37,18 +39,30 @@ export function SelfieAvatarControls({
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-surface-secondary/40 p-3.5">
-      <div>
-        <p className="text-sm font-semibold text-foreground">{t("avatar.selfieTitle")}</p>
-        <p className="mt-1 text-xs leading-relaxed text-muted">{t("avatar.selfieHint")}</p>
-      </div>
+    <div
+      className={
+        compact
+          ? "space-y-3"
+          : "space-y-4 rounded-2xl border border-border bg-surface p-5 shadow-sm"
+      }
+    >
+      {!compact ? (
+        <div>
+          <p className="text-base font-semibold tracking-tight text-foreground">
+            {t("avatar.createYourLook")}
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-secondary">
+            {t("avatar.createYourLookHint")}
+          </p>
+        </div>
+      ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         <button
           type="button"
           disabled={disabled || busy}
           onClick={() => cameraRef.current?.click()}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-foreground hover:bg-surface-secondary disabled:opacity-60"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-95 disabled:opacity-60 sm:flex-none"
         >
           <Camera className="h-4 w-4" strokeWidth={1.75} aria-hidden />
           {busy ? t("avatar.selfieProcessing") : t("avatar.selfieCamera")}
@@ -57,7 +71,7 @@ export function SelfieAvatarControls({
           type="button"
           disabled={disabled || busy}
           onClick={() => galleryRef.current?.click()}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-foreground hover:bg-surface-secondary disabled:opacity-60"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-surface-secondary px-4 text-sm font-semibold text-foreground transition hover:bg-surface disabled:opacity-60 sm:flex-none"
         >
           <ImagePlus className="h-4 w-4" strokeWidth={1.75} aria-hidden />
           {t("avatar.selfieUpload")}
@@ -67,7 +81,7 @@ export function SelfieAvatarControls({
             type="button"
             disabled={disabled || busy}
             onClick={() => onSelfieChange(null)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-error hover:bg-error-soft disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold text-error transition hover:bg-error-soft disabled:opacity-60"
           >
             <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden />
             {t("avatar.selfieRemove")}

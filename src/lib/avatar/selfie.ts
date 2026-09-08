@@ -1,5 +1,6 @@
 /**
- * Selfie avatar helpers — square JPEG data URLs stored on the profile.
+ * Selfie avatar helpers — square JPEG data URLs stored on the profile,
+ * plus allowlisted curated StudentLife identity stills.
  * Not a Bitmoji clone; uses the student's own photo as their face.
  */
 
@@ -7,8 +8,23 @@ export const AVATAR_SELFIE_MAX_CHARS = 120_000;
 export const AVATAR_SELFIE_SIZE_PX = 384;
 export const AVATAR_SELFIE_QUALITY = 0.72;
 
+export const CURATED_AVATAR_IMAGE_PATHS = [
+  "/login/student-male.png",
+  "/login/student-female.png",
+  "/login/student-neutral.png",
+  "/login/student-custom.png",
+] as const;
+
+const CURATED_PATH_SET = new Set<string>(CURATED_AVATAR_IMAGE_PATHS);
+
 const DATA_URL_RE =
   /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i;
+
+export function isCuratedAvatarImagePath(
+  value: string | null | undefined
+): boolean {
+  return Boolean(value && CURATED_PATH_SET.has(value));
+}
 
 export function isAvatarSelfieDataUrl(value: string | null | undefined): boolean {
   if (!value) return false;
@@ -21,6 +37,7 @@ export function normalizeAvatarSelfieInput(
 ): string | null {
   if (value == null || value === "") return null;
   const trimmed = value.trim();
+  if (isCuratedAvatarImagePath(trimmed)) return trimmed;
   if (!isAvatarSelfieDataUrl(trimmed)) {
     throw new Error("INVALID_AVATAR_SELFIE");
   }

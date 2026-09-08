@@ -13,6 +13,13 @@ describe("avatar selfie", () => {
     assert.equal(normalizeAvatarSelfieInput(sample), sample);
   });
 
+  it("accepts allowlisted curated identity stills", () => {
+    assert.equal(
+      normalizeAvatarSelfieInput("/login/student-male.png"),
+      "/login/student-male.png"
+    );
+  });
+
   it("rejects empty, oversized, or non-image payloads", () => {
     assert.equal(normalizeAvatarSelfieInput(""), null);
     assert.equal(normalizeAvatarSelfieInput(null), null);

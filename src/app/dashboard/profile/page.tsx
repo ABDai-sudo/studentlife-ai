@@ -27,9 +27,9 @@ export default async function ProfilePage() {
   return (
     <AppShell
       title="Profile"
-      subtitle="Your account and money settings"
+      subtitle="Your student identity"
       titleKey="profile.title"
-      subtitleKey="profile.subtitle"
+      subtitleKey="profile.subtitleRedesign"
       userName={user.name ?? "Student"}
       displayName={profile?.displayName}
       avatarPresetId={profile?.avatarPresetId}
@@ -43,6 +43,7 @@ export default async function ProfilePage() {
         plan={user.plan}
         streakCurrent={streak?.currentCount ?? 0}
         cosmeticFrame={cosmeticFrame}
+        achievementCodes={achievements.map((a) => a.code)}
         initialProfile={
           profile
             ? {

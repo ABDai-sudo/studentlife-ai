@@ -34,29 +34,33 @@ export const AVATAR_PRESETS: readonly AvatarPreset[] = [
   { id: "peach", label: "Peach", bg: "linear-gradient(145deg,#fdba74,#fb923c)", mark: "◈", markColor: "#7c2d12" },
 ] as const;
 
+/** Compact status picker for profile / Avatar Studio. */
 export const AVATAR_STATUSES = [
   "Focused",
+  "In class",
   "Exam mode",
-  "Under pressure",
-  "Catching up",
-  "On track",
-  "Deadline week",
-  "Budget watch",
-  "In session",
+  "Grinding",
   "Taking a break",
+  "Available",
+  "Offline",
 ] as const;
 
-/** Older stored values — still valid, shown with the labels above. */
+/** Older stored values — still valid, mapped to current labels where possible. */
 const LEGACY_STATUS_ALIASES: Record<string, string> = {
   "Locking In": "Focused",
   "Exam Mode": "Exam mode",
-  "Barely Surviving": "Under pressure",
-  "On a Comeback": "Catching up",
-  "Academic Villain": "On track",
-  "Focus Mode": "On track",
-  "Deadline Survivor": "Deadline week",
-  "Financial Damage": "Budget watch",
-  "Grinding": "In session",
+  "Barely Surviving": "Focused",
+  "On a Comeback": "Grinding",
+  "Academic Villain": "Focused",
+  "Focus Mode": "Focused",
+  "Deadline Survivor": "Exam mode",
+  "Financial Damage": "Focused",
+  "In session": "Grinding",
+  "Under pressure": "Exam mode",
+  "Catching up": "Grinding",
+  "On track": "Available",
+  "Deadline week": "Exam mode",
+  "Budget watch": "Focused",
   "Touching Grass": "Taking a break",
 };
 
@@ -80,10 +84,28 @@ export function isValidAvatarPresetId(id: string | null | undefined): boolean {
 
 export function isValidAvatarStatus(status: string | null | undefined): boolean {
   if (!status) return true;
-  if (status === "In class") return false;
   if ((AVATAR_STATUSES as readonly string[]).includes(status)) return true;
   return Object.prototype.hasOwnProperty.call(LEGACY_STATUS_ALIASES, status);
 }
+
+/** Curated identity looks for Avatar Studio (not Bitmoji clones). */
+export const AVATAR_IDENTITY_LOOKS = [
+  {
+    id: "male",
+    labelKey: "avatar.identity.male" as const,
+    imageSrc: "/login/student-male.png",
+  },
+  {
+    id: "female",
+    labelKey: "avatar.identity.female" as const,
+    imageSrc: "/login/student-female.png",
+  },
+  {
+    id: "neutral",
+    labelKey: "avatar.identity.neutral" as const,
+    imageSrc: "/login/student-neutral.png",
+  },
+] as const;
 
 /** Server-derived cosmetic frame from real progress (never client-spoofable). */
 export type AvatarFrameId = "none" | "streak7" | "streak30" | "streak100" | "xp" | "aura" | "achievement";
