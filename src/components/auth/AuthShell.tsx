@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { GraduationCap, Monitor, Moon, Sun } from "lucide-react";
+import { BookOpen, Landmark, Monitor, Moon, Sun, TrendingUp, Wallet } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { UI_LOCALE_CODES, type UiLocale } from "@/lib/i18n/types";
 import type { MessageKey } from "@/lib/i18n/dictionaries/en";
 import type { ThemeMode } from "@/lib/personality";
+import { LOGIN_ARTWORK } from "@/lib/avatar/login-preview";
 
 const LOCALE_LABEL: Record<UiLocale, string> = {
   en: "EN",
@@ -25,13 +26,25 @@ const THEME_OPTIONS: {
   { value: "SYSTEM", icon: Monitor, labelKey: "settings.themeSystem" },
 ];
 
+const PILLARS: {
+  icon: typeof BookOpen;
+  labelKey: MessageKey;
+}[] = [
+  { icon: BookOpen, labelKey: "auth.pillar.study" },
+  { icon: Wallet, labelKey: "auth.pillar.money" },
+  { icon: Landmark, labelKey: "auth.pillar.campus" },
+  { icon: TrendingUp, labelKey: "auth.pillar.progress" },
+];
+
 export function AuthShell({
   title,
   subtitle,
+  progress,
   children,
 }: {
   title: string;
   subtitle: string;
+  progress?: { step: number; labels: string[] };
   children: ReactNode;
 }) {
   const { t, locale, setLocale } = useT();
@@ -47,61 +60,92 @@ export function AuthShell({
   const selectedLocale = mounted ? locale : "en";
 
   return (
-    <div className="auth-shell flex min-h-full flex-1 bg-background">
-      <div className="relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden border-r border-border bg-surface p-10 xl:p-12 lg:flex">
-        <Logo />
-        <div className="relative max-w-md">
-          <h2 className="auth-panel-title text-[1.65rem] font-semibold leading-snug text-foreground">
-            {t("auth.panelTitle")}
-          </h2>
-          <p className="auth-panel-copy mt-3.5 max-w-sm text-base leading-[1.65] text-secondary">
-            {t("auth.panelBody")}
-          </p>
-          <ul className="mt-8 space-y-2.5">
-            {(
-              [
-                "auth.featureTutor",
-                "auth.featureStreaks",
-                "auth.featureBudget",
-              ] as const
-            ).map((key) => (
-              <li
-                key={key}
-                className="border-t border-border pt-3 text-[0.9375rem] font-medium leading-snug tracking-normal text-foreground"
-              >
-                {t(key)}
-              </li>
-            ))}
-          </ul>
+    <div className="auth-premium">
+      <aside className="auth-premium-brand" aria-hidden={false}>
+        <div className="auth-premium-brand-media" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={LOGIN_ARTWORK.campus}
+            alt=""
+            className="auth-premium-campus"
+            width={768}
+            height={1024}
+            decoding="async"
+          />
+          <div className="auth-premium-brand-scrim" />
         </div>
-        <p className="relative text-[0.8125rem] leading-relaxed tracking-normal text-muted">
-          {t("auth.footerNote")}
-        </p>
-      </div>
 
-      <div className="flex flex-1 flex-col justify-center px-4 py-8 sm:px-8 sm:py-10">
-        <div className="auth-card mx-auto w-full max-w-[26rem] rounded-2xl border border-border bg-surface p-6 shadow-md sm:p-8">
-          <div className="mb-6 flex flex-col items-center text-center sm:items-start sm:text-left">
-            <div className="mb-5 lg:hidden">
-              <Logo />
-            </div>
-            <div
-              className="auth-mark mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/15 bg-primary-soft"
-              aria-hidden
-            >
-              <GraduationCap className="h-[1.15rem] w-[1.15rem] text-primary" />
-            </div>
-            <h1 className="auth-title text-[1.5rem] font-semibold leading-snug text-foreground sm:text-[1.625rem]">
-              {title}
-            </h1>
-            <p className="auth-subtitle mt-2.5 max-w-sm text-base leading-[1.65] text-secondary">
-              {subtitle}
-            </p>
+        <div className="auth-premium-brand-content">
+          <Logo light className="auth-premium-logo" />
+          <div className="auth-premium-brand-copy">
+            <p className="auth-premium-kicker">{t("auth.brandKicker")}</p>
+            <h2 className="auth-premium-headline">{t("auth.panelTitle")}</h2>
+            <p className="auth-premium-lede">{t("auth.panelBody")}</p>
+            <ul className="auth-premium-pillars">
+              {PILLARS.map(({ icon: Icon, labelKey }) => (
+                <li key={labelKey}>
+                  <span className="auth-premium-pillar-icon" aria-hidden>
+                    <Icon className="h-4 w-4" strokeWidth={1.75} />
+                  </span>
+                  <span>{t(labelKey)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div>{children}</div>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+          <p className="auth-premium-footnote">{t("auth.footerNote")}</p>
+        </div>
+      </aside>
+
+      <section className="auth-premium-form-pane">
+        <div className="auth-premium-mobile-hero lg:hidden">
+          <Logo />
+          <p className="auth-premium-mobile-kicker">{t("auth.brandKicker")}</p>
+        </div>
+
+        <div className="auth-premium-card auth-card">
+          {progress ? (
             <div
-              className="flex gap-1"
+              className="auth-progress"
+              role="group"
+              aria-label={t("signup.progressLabel")}
+            >
+              <ol className="auth-progress-list">
+                {progress.labels.map((label, index) => {
+                  const step = index + 1;
+                  const state =
+                    step < progress.step
+                      ? "done"
+                      : step === progress.step
+                        ? "current"
+                        : "upcoming";
+                  return (
+                    <li
+                      key={label}
+                      className="auth-progress-item"
+                      data-state={state}
+                      aria-current={state === "current" ? "step" : undefined}
+                    >
+                      <span className="auth-progress-index" aria-hidden>
+                        {step}
+                      </span>
+                      <span className="auth-progress-label">{label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          ) : null}
+
+          <header className="auth-premium-header">
+            <h1 className="auth-title">{title}</h1>
+            <p className="auth-subtitle">{subtitle}</p>
+          </header>
+
+          <div className="auth-premium-body">{children}</div>
+
+          <div className="auth-premium-controls">
+            <div
+              className="auth-control-group"
               role="radiogroup"
               aria-label={t("auth.language")}
             >
@@ -113,11 +157,7 @@ export function AuthShell({
                     type="button"
                     role="radio"
                     aria-checked={selected}
-                    className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border px-2 text-sm font-semibold ${
-                      selected
-                        ? "border-primary bg-primary-soft text-primary"
-                        : "border-border text-secondary"
-                    }`}
+                    className={`auth-control-chip${selected ? " is-selected" : ""}`}
                     onClick={() => setLocale(code)}
                   >
                     {LOCALE_LABEL[code]}
@@ -126,7 +166,7 @@ export function AuthShell({
               })}
             </div>
             <div
-              className="flex gap-1"
+              className="auth-control-group"
               role="radiogroup"
               aria-label={t("settings.theme")}
             >
@@ -140,11 +180,7 @@ export function AuthShell({
                     aria-checked={selected}
                     aria-label={t(labelKey)}
                     title={t(labelKey)}
-                    className={`inline-flex h-11 w-11 items-center justify-center rounded-lg border ${
-                      selected
-                        ? "border-primary bg-primary-soft text-primary"
-                        : "border-border text-secondary"
-                    }`}
+                    className={`auth-control-chip auth-control-icon${selected ? " is-selected" : ""}`}
                     onClick={() => setTheme(value)}
                   >
                     <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
@@ -154,7 +190,7 @@ export function AuthShell({
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
