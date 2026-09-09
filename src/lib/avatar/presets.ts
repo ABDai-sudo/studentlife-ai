@@ -34,29 +34,33 @@ export const AVATAR_PRESETS: readonly AvatarPreset[] = [
   { id: "peach", label: "Peach", bg: "linear-gradient(145deg,#fdba74,#fb923c)", mark: "◈", markColor: "#7c2d12" },
 ] as const;
 
+/** Compact status picker for profile / Avatar Studio. */
 export const AVATAR_STATUSES = [
   "Focused",
+  "In class",
   "Exam mode",
-  "Under pressure",
-  "Catching up",
-  "On track",
-  "Deadline week",
-  "Budget watch",
-  "In session",
+  "Grinding",
   "Taking a break",
+  "Available",
+  "Offline",
 ] as const;
 
-/** Older stored values — still valid, shown with the labels above. */
+/** Older stored values — still valid, mapped to current labels where possible. */
 const LEGACY_STATUS_ALIASES: Record<string, string> = {
   "Locking In": "Focused",
   "Exam Mode": "Exam mode",
-  "Barely Surviving": "Under pressure",
-  "On a Comeback": "Catching up",
-  "Academic Villain": "On track",
-  "Focus Mode": "On track",
-  "Deadline Survivor": "Deadline week",
-  "Financial Damage": "Budget watch",
-  "Grinding": "In session",
+  "Barely Surviving": "Focused",
+  "On a Comeback": "Grinding",
+  "Academic Villain": "Focused",
+  "Focus Mode": "Focused",
+  "Deadline Survivor": "Exam mode",
+  "Financial Damage": "Focused",
+  "In session": "Grinding",
+  "Under pressure": "Exam mode",
+  "Catching up": "Grinding",
+  "On track": "Available",
+  "Deadline week": "Exam mode",
+  "Budget watch": "Focused",
   "Touching Grass": "Taking a break",
 };
 
@@ -80,9 +84,41 @@ export function isValidAvatarPresetId(id: string | null | undefined): boolean {
 
 export function isValidAvatarStatus(status: string | null | undefined): boolean {
   if (!status) return true;
-  if (status === "In class") return false;
   if ((AVATAR_STATUSES as readonly string[]).includes(status)) return true;
   return Object.prototype.hasOwnProperty.call(LEGACY_STATUS_ALIASES, status);
+}
+
+/** @deprecated Temporary character stills — not shown in current avatar UI. */
+export const AVATAR_NEUTRAL_SRC = "/login/student-neutral.png";
+
+/** @deprecated Curated looks removed from UI; kept for legacy path checks only. */
+export const AVATAR_IDENTITY_LOOKS = [
+  {
+    id: "male",
+    labelKey: "avatar.identity.male" as const,
+    imageSrc: "/login/student-male.png",
+  },
+  {
+    id: "female",
+    labelKey: "avatar.identity.female" as const,
+    imageSrc: "/login/student-female.png",
+  },
+  {
+    id: "neutral",
+    labelKey: "avatar.identity.neutral" as const,
+    imageSrc: AVATAR_NEUTRAL_SRC,
+  },
+] as const;
+
+/** Photo identity only — no character-image fallback. */
+export function resolveIdentityAvatarSrc(
+  imageSrc?: string | null,
+  options?: { allowFallback?: boolean }
+): string | null {
+  const trimmed = imageSrc?.trim() || null;
+  if (!trimmed) return null;
+  if (options?.allowFallback === false) return trimmed;
+  return trimmed;
 }
 
 /** Server-derived cosmetic frame from real progress (never client-spoofable). */

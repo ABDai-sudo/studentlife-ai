@@ -5,8 +5,10 @@ import {
   AVATAR_STATUSES,
   getAvatarPreset,
 } from "@/lib/avatar/presets";
+import { userAvatarPhotoSrc } from "@/lib/avatar/selfie";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { Avatar } from "@/components/ui/Avatar";
+import { SelfieAvatarControls } from "@/components/avatar/SelfieAvatarControls";
 import type { AvatarPresence, AvatarStatusSource } from "@/lib/avatar/contextual-status";
 import {
   avatarStatusMessageKey,
@@ -17,6 +19,7 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 type AvatarPickerProps = {
   presetId: string | null;
+  imageSrc?: string | null;
   status: string | null;
   resolvedStatus?: string | null;
   presence?: AvatarPresence | null;
@@ -28,12 +31,14 @@ type AvatarPickerProps = {
   saveState?: SaveState;
   saveError?: string | null;
   onPresetChange: (id: string | null) => void;
+  onSelfieChange?: (dataUrl: string | null) => void;
   onStatusChange: (status: string | null) => void;
   onAutoChange?: (auto: boolean) => void;
 };
 
 export function AvatarPicker({
   presetId,
+  imageSrc = null,
   status,
   resolvedStatus,
   presence = "idle",
@@ -45,12 +50,18 @@ export function AvatarPicker({
   saveState = "idle",
   saveError = null,
   onPresetChange,
+  onSelfieChange,
   onStatusChange,
   onAutoChange,
 }: AvatarPickerProps) {
   const { t } = useT();
   const preset = getAvatarPreset(presetId);
-  const selectedLabel = preset ? preset.label : t("avatar.initialsOption");
+  const photoSrc = userAvatarPhotoSrc(imageSrc);
+  const selectedLabel = photoSrc
+    ? t("avatar.selfieTitle")
+    : preset
+      ? preset.label
+      : t("avatar.createYourLook");
   const busy = Boolean(disabled) || saveState === "saving";
   const shownStatus = resolvedStatus || status;
   const statusKey = avatarStatusMessageKey(shownStatus);
@@ -64,6 +75,7 @@ export function AvatarPicker({
           name={displayName}
           size="2xl"
           presetId={presetId}
+          imageSrc={photoSrc}
           status={shownStatus || undefined}
           presence={presence}
         />
@@ -96,6 +108,14 @@ export function AvatarPicker({
         </div>
       </div>
 
+      {onSelfieChange ? (
+        <SelfieAvatarControls
+          imageSrc={photoSrc}
+          disabled={busy}
+          onSelfieChange={onSelfieChange}
+        />
+      ) : null}
+
       <div>
         <p id="avatar-grid-label" className="mb-2 text-sm font-medium text-foreground">
           {t("avatar.choose")}
@@ -107,20 +127,6 @@ export function AvatarPicker({
           aria-disabled={busy || undefined}
           className="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-2.5"
         >
-          <button
-            type="button"
-            role="radio"
-            aria-checked={!presetId}
-            aria-label={t("avatar.initialsOption")}
-            disabled={busy}
-            onClick={() => onPresetChange(null)}
-            className={`avatar-option min-h-[4.5rem] ${!presetId ? "avatar-option-selected" : ""}`}
-          >
-            <Avatar name={displayName} size="md" presetId={null} />
-            <span className="max-w-full truncate text-[0.65rem] font-medium text-secondary">
-              {t("avatar.initialsOption")}
-            </span>
-          </button>
           {AVATAR_PRESETS.map((p) => {
             const selected = presetId === p.id;
             return (
@@ -131,10 +137,12 @@ export function AvatarPicker({
                 aria-checked={selected}
                 aria-label={p.label}
                 disabled={busy}
-                onClick={() => onPresetChange(p.id)}
+                onClick={() => {
+                  onPresetChange(selected ? null : p.id);
+                }}
                 className={`avatar-option min-h-[4.5rem] ${selected ? "avatar-option-selected" : ""}`}
               >
-                <Avatar name={p.label} size="md" presetId={p.id} />
+                <Avatar name={p.label} size="md" presetId={p.id} mode="swatch" />
                 <span className="max-w-full truncate text-[0.65rem] font-medium text-secondary">
                   {p.label}
                 </span>

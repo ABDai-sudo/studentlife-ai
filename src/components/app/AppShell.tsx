@@ -12,6 +12,7 @@ export function AppShell({
   userName,
   displayName,
   avatarPresetId,
+  avatarImageUrl,
   avatarStatus,
   avatarPresence,
   children,
@@ -23,6 +24,7 @@ export function AppShell({
   userName?: string;
   displayName?: string | null;
   avatarPresetId?: string | null;
+  avatarImageUrl?: string | null;
   avatarStatus?: string | null;
   avatarPresence?: AvatarPresence | null;
   children: ReactNode;
@@ -41,6 +43,7 @@ export function AppShell({
           userName={userName}
           displayName={displayName}
           avatarPresetId={avatarPresetId}
+          avatarImageUrl={avatarImageUrl}
           avatarStatus={avatarStatus}
           avatarPresence={avatarPresence}
         />

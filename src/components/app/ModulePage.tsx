@@ -33,6 +33,7 @@ export async function ModulePage({
       userName={user.name ?? "Student"}
       displayName={profile?.displayName}
       avatarPresetId={profile?.avatarPresetId}
+      avatarImageUrl={profile?.avatarImageUrl}
       avatarStatus={profile?.resolvedAvatarStatus ?? profile?.avatarStatus}
       avatarPresence={profile?.avatarPresence}
     >

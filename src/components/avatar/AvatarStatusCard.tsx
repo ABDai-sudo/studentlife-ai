@@ -39,6 +39,7 @@ export type AvatarCardContextView = {
 export function AvatarStatusCard({
   name,
   presetId,
+  imageSrc,
   frame,
   presence,
   status,
@@ -47,6 +48,7 @@ export function AvatarStatusCard({
 }: {
   name: string;
   presetId?: string | null;
+  imageSrc?: string | null;
   frame?: "none" | "streak" | "achievement" | "crown";
   presence?: AvatarPresence | null;
   status?: string | null;
@@ -127,6 +129,7 @@ export function AvatarStatusCard({
         <DynamicAvatar
           name={name}
           presetId={presetId}
+          imageSrc={imageSrc}
           frame={frame}
           presence={presence}
           size="2xl"

@@ -92,6 +92,7 @@ export type PublicStudentCard = {
   id: string;
   displayName: string;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   studyStatus: CampusStudyStatusValue | null;
 };
 

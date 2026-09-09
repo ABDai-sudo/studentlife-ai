@@ -31,6 +31,7 @@ type Profile = {
   onboardingComplete: boolean;
   displayName: string | null;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   avatarStatus: string | null;
   avatarStatusAuto?: boolean;
   resolvedAvatarStatus?: string | null;
@@ -67,6 +68,7 @@ export function ProfileClient({
   initialProfile,
   streakCurrent = 0,
   cosmeticFrame = "none",
+  achievementCodes = [],
 }: {
   email: string;
   name: string | null;
@@ -74,6 +76,7 @@ export function ProfileClient({
   initialProfile: Profile | null;
   streakCurrent?: number;
   cosmeticFrame?: AvatarFrameId;
+  achievementCodes?: string[];
 }) {
   const initial = fieldsFromProfile(initialProfile);
   const { t } = useT();
@@ -105,6 +108,7 @@ export function ProfileClient({
   const identity: IdentityStats = {
     displayName: profile?.displayName ?? null,
     avatarPresetId: profile?.avatarPresetId ?? null,
+    avatarImageUrl: profile?.avatarImageUrl ?? null,
     avatarStatus: profile?.avatarStatus ?? null,
     avatarStatusAuto: profile?.avatarStatusAuto !== false,
     resolvedAvatarStatus: profile?.resolvedAvatarStatus ?? null,
@@ -118,6 +122,8 @@ export function ProfileClient({
     cosmeticFrame,
     leaderboardOptIn: profile?.leaderboardOptIn ?? false,
     studyGoal: profile?.studyGoal ?? null,
+    institutionName: profile?.institutionName || profile?.university || null,
+    achievementCodes,
   };
 
   async function patchSocial(partial: Record<string, unknown>) {
@@ -145,6 +151,7 @@ export function ProfileClient({
       setIdentitySave("saved");
       const p = json.data.profile as {
         avatarPresetId?: string | null;
+        avatarImageUrl?: string | null;
         avatarStatus?: string | null;
         resolvedAvatarStatus?: string | null;
         avatarPresence?: IdentityStats["avatarPresence"];
@@ -156,6 +163,7 @@ export function ProfileClient({
       if (p) {
         broadcastIdentityChange({
           avatarPresetId: p.avatarPresetId,
+          avatarImageUrl: p.avatarImageUrl,
           avatarStatus: p.avatarStatus,
           resolvedAvatarStatus: p.resolvedAvatarStatus,
           avatarPresence: p.avatarPresence,
@@ -214,7 +222,7 @@ export function ProfileClient({
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-5">
+    <div className="mx-auto max-w-5xl space-y-6">
       <ProfileIdentityCard
         userName={name ?? "Student"}
         identity={identity}
@@ -229,11 +237,24 @@ export function ProfileClient({
           }
         }}
         onPresetChange={(id) => patchSocial({ avatarPresetId: id })}
+        onSelfieChange={(url) => patchSocial({ avatarImageUrl: url })}
         onStatusChange={(status) => patchSocial({ avatarStatus: status })}
         onAutoChange={(auto) => patchSocial({ avatarStatusAuto: auto })}
+        onAvatarCommit={(draft) =>
+          patchSocial({
+            avatarPresetId: draft.presetId,
+            avatarImageUrl: draft.imageSrc,
+            avatarStatus: draft.status,
+            avatarStatusAuto: draft.autoEnabled,
+          })
+        }
       />
 
-      <div className="space-y-3 border-t border-border pt-6 text-sm">
+      <details className="rounded-2xl border border-border bg-surface open:pb-5">
+        <summary className="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
+          {t("profile.moreSettings")}
+        </summary>
+        <div className="space-y-3 border-t border-border px-5 pt-4 text-sm">
         <div>
           <p className="text-muted">{t("settings.name")}</p>
           <p className="font-medium">{name ?? "Not set"}</p>
@@ -256,7 +277,7 @@ export function ProfileClient({
         ) : null}
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 border-t border-border pt-6">
+      <form onSubmit={onSubmit} className="space-y-4 border-t border-border px-5 pt-5">
         <h3 className="font-semibold">{t("profile.academicContext")}</h3>
         <p className="text-xs text-muted">{t("profile.academicHint")}</p>
         <FormField id="institution" label={t("profile.institution")}>
@@ -373,6 +394,7 @@ export function ProfileClient({
           </p>
         ) : null}
       </form>
+      </details>
     </div>
   );
 }

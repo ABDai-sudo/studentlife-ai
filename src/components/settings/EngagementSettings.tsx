@@ -32,6 +32,7 @@ type SocialState = {
   leaderboardOptIn: boolean;
   leaderboardShowAvatar: boolean;
   avatarPresetId: string | null;
+  avatarImageUrl: string | null;
   avatarStatus: string | null;
   avatarStatusAuto: boolean;
   resolvedAvatarStatus: string | null;
@@ -216,6 +217,7 @@ export function EngagementSettings({
           leaderboardOptIn: Boolean(p.leaderboardOptIn),
           leaderboardShowAvatar: p.leaderboardShowAvatar !== false,
           avatarPresetId: p.avatarPresetId ?? null,
+          avatarImageUrl: p.avatarImageUrl ?? null,
           avatarStatus: p.avatarStatus ?? null,
           avatarStatusAuto: p.avatarStatusAuto !== false,
           resolvedAvatarStatus: p.resolvedAvatarStatus ?? null,
@@ -227,6 +229,7 @@ export function EngagementSettings({
         lastSavedDisplayName.current = nextSocial.displayName;
         broadcastIdentityChange({
           avatarPresetId: nextSocial.avatarPresetId,
+          avatarImageUrl: nextSocial.avatarImageUrl,
           avatarStatus: nextSocial.avatarStatus,
           resolvedAvatarStatus: nextSocial.resolvedAvatarStatus,
           avatarPresence: nextSocial.avatarPresence,
@@ -254,6 +257,7 @@ export function EngagementSettings({
       >
         <AvatarPicker
           presetId={social.avatarPresetId}
+          imageSrc={social.avatarImageUrl}
           status={social.avatarStatus}
           resolvedStatus={social.resolvedAvatarStatus}
           presence={social.avatarPresence}
@@ -263,7 +267,14 @@ export function EngagementSettings({
           displayName={social.displayName || "Student"}
           disabled={saving}
           saveState={saving ? "saving" : "idle"}
-          onPresetChange={(id) => patchProfile({ avatarPresetId: id })}
+          onPresetChange={(id) =>
+            patchProfile({ avatarPresetId: id })
+          }
+          onSelfieChange={(url) =>
+            patchProfile({
+              avatarImageUrl: url,
+            })
+          }
           onStatusChange={(status) => patchProfile({ avatarStatus: status })}
           onAutoChange={(auto) => patchProfile({ avatarStatusAuto: auto })}
         />
