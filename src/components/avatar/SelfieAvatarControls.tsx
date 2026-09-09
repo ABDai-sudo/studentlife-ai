@@ -62,7 +62,7 @@ export function SelfieAvatarControls({
           type="button"
           disabled={disabled || busy}
           onClick={() => cameraRef.current?.click()}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-95 disabled:opacity-60 sm:flex-none"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-60 sm:flex-none"
         >
           <Camera className="h-4 w-4" strokeWidth={1.75} aria-hidden />
           {busy ? t("avatar.selfieProcessing") : t("avatar.selfieCamera")}

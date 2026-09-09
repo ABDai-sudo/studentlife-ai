@@ -12,6 +12,7 @@ import {
   frameToUiRing,
   type AvatarFrameId,
 } from "@/lib/avatar/presets";
+import { userAvatarPhotoSrc } from "@/lib/avatar/selfie";
 import { avatarStatusMessageKey } from "@/lib/avatar/status-label";
 import type {
   AvatarPresence,
@@ -58,6 +59,7 @@ export function ProfileIdentityCard({
   onSelfieChange,
   onStatusChange,
   onAutoChange,
+  onAvatarCommit,
   onDisplayNameBlur,
   displayNameDraft,
   onDisplayNameChange,
@@ -71,6 +73,12 @@ export function ProfileIdentityCard({
   onSelfieChange?: (url: string | null) => void;
   onStatusChange: (status: string | null) => void;
   onAutoChange?: (auto: boolean) => void;
+  onAvatarCommit?: (draft: {
+    presetId: string | null;
+    imageSrc: string | null;
+    status: string | null;
+    autoEnabled: boolean;
+  }) => void;
   displayNameDraft: string;
   onDisplayNameChange: (v: string) => void;
   onDisplayNameBlur: () => void;
@@ -85,6 +93,7 @@ export function ProfileIdentityCard({
   const handle = handleFromName(name);
   const institution = identity.institutionName?.trim() || "";
   const achievements = identity.achievementCodes ?? [];
+  const photoSrc = userAvatarPhotoSrc(identity.avatarImageUrl);
 
   return (
     <section className="profile-experience space-y-6">
@@ -95,8 +104,9 @@ export function ProfileIdentityCard({
             <Avatar
               name={name}
               size="hero"
+              shape={photoSrc ? "figure" : "circle"}
               presetId={identity.avatarPresetId}
-              imageSrc={identity.avatarImageUrl}
+              imageSrc={photoSrc}
               frame={frame}
               aura={identity.academicAura}
               presence={identity.avatarPresence}
@@ -316,7 +326,7 @@ export function ProfileIdentityCard({
         </section>
       </div>
 
-      {onSelfieChange ? (
+      {studioOpen && (onSelfieChange || onAvatarCommit) ? (
         <AvatarStudio
           open={studioOpen}
           onClose={() => setStudioOpen(false)}
@@ -333,10 +343,27 @@ export function ProfileIdentityCard({
           disabled={saving}
           saveState={saveState}
           saveError={saveError}
-          onPresetChange={onPresetChange}
-          onSelfieChange={onSelfieChange}
-          onStatusChange={onStatusChange}
-          onAutoChange={onAutoChange}
+          onSave={(draft) => {
+            if (onAvatarCommit) {
+              onAvatarCommit(draft);
+              return;
+            }
+            if (draft.imageSrc !== (identity.avatarImageUrl ?? null) && onSelfieChange) {
+              onSelfieChange(draft.imageSrc);
+            }
+            if (draft.presetId !== (identity.avatarPresetId ?? null)) {
+              onPresetChange(draft.presetId);
+            }
+            if (draft.status !== (identity.avatarStatus ?? null)) {
+              onStatusChange(draft.status);
+            }
+            if (
+              onAutoChange &&
+              draft.autoEnabled !== (identity.avatarStatusAuto !== false)
+            ) {
+              onAutoChange(draft.autoEnabled);
+            }
+          }}
         />
       ) : null}
     </section>

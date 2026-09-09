@@ -1000,6 +1000,98 @@ html.dark .avatar-face {
 .profile-hero-avatar {
   display: flex;
   justify-content: center;
+  align-items: flex-end;
+  min-height: 13.75rem;
+}
+
+@media (min-width: 768px) {
+  .profile-hero-avatar {
+    min-height: 16rem;
+  }
+}
+
+.avatar-figure {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+  line-height: 0;
+}
+
+.avatar-figure-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 18px 28px rgba(15, 23, 42, 0.42));
+  user-select: none;
+  pointer-events: none;
+}
+
+.dark .avatar-figure-img,
+html.dark .avatar-figure-img {
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.55));
+}
+
+.avatar-figure-sm {
+  height: 2.5rem;
+  width: 2rem;
+}
+
+.avatar-figure-md {
+  height: 3rem;
+  width: 2.4rem;
+}
+
+.avatar-figure-lg {
+  height: 4.25rem;
+  width: 3.4rem;
+}
+
+.avatar-figure-xl {
+  height: 5.5rem;
+  width: 4.4rem;
+}
+
+.avatar-figure-2xl {
+  height: 6.5rem;
+  width: 5.2rem;
+}
+
+.avatar-figure-hero {
+  height: 13.75rem; /* 220px */
+  width: 11rem;
+}
+
+@media (min-width: 640px) {
+  .avatar-figure-hero {
+    height: 16rem; /* 256px */
+    width: 12.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .avatar-figure-hero {
+    height: 17.5rem; /* 280px */
+    width: 13.5rem;
+  }
+}
+
+.avatar-presence-figure {
+  right: 12%;
+  bottom: 8%;
+}
+
+.profile-studio-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 0 1.25rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
 }
 
 .profile-hero-meta {
@@ -1182,6 +1274,27 @@ html.dark .avatar-face {
   }
 }
 
+.profile-studio-shell-simple {
+  width: min(920px, 100%);
+}
+
+@media (min-width: 768px) {
+  .profile-studio-shell-simple {
+    height: min(720px, 100%);
+  }
+}
+
+.profile-studio-controls-simple {
+  justify-content: space-between;
+  padding-bottom: 0;
+  gap: 1rem;
+}
+
+.profile-studio-controls-simple .profile-studio-actions {
+  margin-top: auto;
+}
+
+/* Reserved for a future full avatar creator — unused in current release UI */
 .profile-studio-tabs {
   display: flex;
   gap: 0.4rem;
@@ -1217,7 +1330,7 @@ html.dark .avatar-face {
   flex-direction: column;
   align-items: center;
   gap: 0.55rem;
-  min-height: 6.5rem;
+  min-height: 8.5rem;
   border-radius: 1rem;
   border: 1px solid var(--border);
   background: var(--surface);

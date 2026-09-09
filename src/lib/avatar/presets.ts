@@ -88,7 +88,10 @@ export function isValidAvatarStatus(status: string | null | undefined): boolean 
   return Object.prototype.hasOwnProperty.call(LEGACY_STATUS_ALIASES, status);
 }
 
-/** Curated identity looks for Avatar Studio (not Bitmoji clones). */
+/** @deprecated Temporary character stills — not shown in current avatar UI. */
+export const AVATAR_NEUTRAL_SRC = "/login/student-neutral.png";
+
+/** @deprecated Curated looks removed from UI; kept for legacy path checks only. */
 export const AVATAR_IDENTITY_LOOKS = [
   {
     id: "male",
@@ -103,9 +106,20 @@ export const AVATAR_IDENTITY_LOOKS = [
   {
     id: "neutral",
     labelKey: "avatar.identity.neutral" as const,
-    imageSrc: "/login/student-neutral.png",
+    imageSrc: AVATAR_NEUTRAL_SRC,
   },
 ] as const;
+
+/** Photo identity only — no character-image fallback. */
+export function resolveIdentityAvatarSrc(
+  imageSrc?: string | null,
+  options?: { allowFallback?: boolean }
+): string | null {
+  const trimmed = imageSrc?.trim() || null;
+  if (!trimmed) return null;
+  if (options?.allowFallback === false) return trimmed;
+  return trimmed;
+}
 
 /** Server-derived cosmetic frame from real progress (never client-spoofable). */
 export type AvatarFrameId = "none" | "streak7" | "streak30" | "streak100" | "xp" | "aura" | "achievement";

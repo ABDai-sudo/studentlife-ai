@@ -236,17 +236,18 @@ export function ProfileClient({
             void patchSocial({ displayName: displayNameDraft });
           }
         }}
-        onPresetChange={(id) =>
-          patchSocial({ avatarPresetId: id, avatarImageUrl: null })
-        }
-        onSelfieChange={(url) =>
-          patchSocial({
-            avatarImageUrl: url,
-            ...(url ? { avatarPresetId: null } : {}),
-          })
-        }
+        onPresetChange={(id) => patchSocial({ avatarPresetId: id })}
+        onSelfieChange={(url) => patchSocial({ avatarImageUrl: url })}
         onStatusChange={(status) => patchSocial({ avatarStatus: status })}
         onAutoChange={(auto) => patchSocial({ avatarStatusAuto: auto })}
+        onAvatarCommit={(draft) =>
+          patchSocial({
+            avatarPresetId: draft.presetId,
+            avatarImageUrl: draft.imageSrc,
+            avatarStatus: draft.status,
+            avatarStatusAuto: draft.autoEnabled,
+          })
+        }
       />
 
       <details className="rounded-2xl border border-border bg-surface open:pb-5">

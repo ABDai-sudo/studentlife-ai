@@ -5,6 +5,7 @@ import {
   AVATAR_STATUSES,
   getAvatarPreset,
 } from "@/lib/avatar/presets";
+import { userAvatarPhotoSrc } from "@/lib/avatar/selfie";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { SelfieAvatarControls } from "@/components/avatar/SelfieAvatarControls";
@@ -55,11 +56,12 @@ export function AvatarPicker({
 }: AvatarPickerProps) {
   const { t } = useT();
   const preset = getAvatarPreset(presetId);
-  const selectedLabel = imageSrc
+  const photoSrc = userAvatarPhotoSrc(imageSrc);
+  const selectedLabel = photoSrc
     ? t("avatar.selfieTitle")
     : preset
       ? preset.label
-      : t("avatar.initialsOption");
+      : t("avatar.createYourLook");
   const busy = Boolean(disabled) || saveState === "saving";
   const shownStatus = resolvedStatus || status;
   const statusKey = avatarStatusMessageKey(shownStatus);
@@ -73,7 +75,7 @@ export function AvatarPicker({
           name={displayName}
           size="2xl"
           presetId={presetId}
-          imageSrc={imageSrc}
+          imageSrc={photoSrc}
           status={shownStatus || undefined}
           presence={presence}
         />
@@ -108,7 +110,7 @@ export function AvatarPicker({
 
       {onSelfieChange ? (
         <SelfieAvatarControls
-          imageSrc={imageSrc}
+          imageSrc={photoSrc}
           disabled={busy}
           onSelfieChange={onSelfieChange}
         />
@@ -125,25 +127,8 @@ export function AvatarPicker({
           aria-disabled={busy || undefined}
           className="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-2.5"
         >
-          <button
-            type="button"
-            role="radio"
-            aria-checked={!presetId && !imageSrc}
-            aria-label={t("avatar.initialsOption")}
-            disabled={busy}
-            onClick={() => {
-              onPresetChange(null);
-              onSelfieChange?.(null);
-            }}
-            className={`avatar-option min-h-[4.5rem] ${!presetId && !imageSrc ? "avatar-option-selected" : ""}`}
-          >
-            <Avatar name={displayName} size="md" presetId={null} />
-            <span className="max-w-full truncate text-[0.65rem] font-medium text-secondary">
-              {t("avatar.initialsOption")}
-            </span>
-          </button>
           {AVATAR_PRESETS.map((p) => {
-            const selected = !imageSrc && presetId === p.id;
+            const selected = presetId === p.id;
             return (
               <button
                 key={p.id}
@@ -153,12 +138,11 @@ export function AvatarPicker({
                 aria-label={p.label}
                 disabled={busy}
                 onClick={() => {
-                  onSelfieChange?.(null);
-                  onPresetChange(p.id);
+                  onPresetChange(selected ? null : p.id);
                 }}
                 className={`avatar-option min-h-[4.5rem] ${selected ? "avatar-option-selected" : ""}`}
               >
-                <Avatar name={p.label} size="md" presetId={p.id} />
+                <Avatar name={p.label} size="md" presetId={p.id} mode="swatch" />
                 <span className="max-w-full truncate text-[0.65rem] font-medium text-secondary">
                   {p.label}
                 </span>

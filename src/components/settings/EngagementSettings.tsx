@@ -268,12 +268,11 @@ export function EngagementSettings({
           disabled={saving}
           saveState={saving ? "saving" : "idle"}
           onPresetChange={(id) =>
-            patchProfile({ avatarPresetId: id, avatarImageUrl: null })
+            patchProfile({ avatarPresetId: id })
           }
           onSelfieChange={(url) =>
             patchProfile({
               avatarImageUrl: url,
-              ...(url ? { avatarPresetId: null } : {}),
             })
           }
           onStatusChange={(status) => patchProfile({ avatarStatus: status })}

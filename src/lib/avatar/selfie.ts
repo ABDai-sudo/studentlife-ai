@@ -26,6 +26,16 @@ export function isCuratedAvatarImagePath(
   return Boolean(value && CURATED_PATH_SET.has(value));
 }
 
+/** Selfie/upload data URLs only — curated character stills are not shown in UI. */
+export function userAvatarPhotoSrc(
+  value: string | null | undefined
+): string | null {
+  const trimmed = value?.trim() || null;
+  if (!trimmed) return null;
+  if (isCuratedAvatarImagePath(trimmed)) return null;
+  return trimmed;
+}
+
 export function isAvatarSelfieDataUrl(value: string | null | undefined): boolean {
   if (!value) return false;
   if (value.length > AVATAR_SELFIE_MAX_CHARS) return false;

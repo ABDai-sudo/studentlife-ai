@@ -6,43 +6,22 @@ import { Avatar } from "@/components/ui/Avatar";
 import { SelfieAvatarControls } from "@/components/avatar/SelfieAvatarControls";
 import { useT } from "@/components/i18n/LocaleProvider";
 import {
-  AVATAR_IDENTITY_LOOKS,
-  AVATAR_PRESETS,
   AVATAR_STATUSES,
   frameToUiRing,
   type AvatarFrameId,
 } from "@/lib/avatar/presets";
+import { userAvatarPhotoSrc } from "@/lib/avatar/selfie";
 import type { AvatarPresence, AvatarStatusSource } from "@/lib/avatar/contextual-status";
 import {
   avatarStatusMessageKey,
   avatarStatusSourceKey,
 } from "@/lib/avatar/status-label";
-import type { MessageKey } from "@/lib/i18n/dictionaries/en";
 
-type StudioTab =
-  | "identity"
-  | "face"
-  | "hair"
-  | "outfit"
-  | "accessories"
-  | "background"
-  | "status";
-
-const TABS: { id: StudioTab; labelKey: MessageKey; soon?: boolean }[] = [
-  { id: "identity", labelKey: "avatar.studio.identity" },
-  { id: "face", labelKey: "avatar.studio.face", soon: true },
-  { id: "hair", labelKey: "avatar.studio.hair", soon: true },
-  { id: "outfit", labelKey: "avatar.studio.outfit", soon: true },
-  { id: "accessories", labelKey: "avatar.studio.accessories", soon: true },
-  { id: "background", labelKey: "avatar.studio.background" },
-  { id: "status", labelKey: "avatar.studio.status" },
-];
-
-function isCuratedLook(src: string | null | undefined) {
-  if (!src) return false;
-  return AVATAR_IDENTITY_LOOKS.some((look) => look.imageSrc === src);
-}
-
+/**
+ * Current-release Avatar Studio: preview + Create Your Look (selfie/upload).
+ * Future customization categories (face/hair/outfit/etc.) stay out of the UI
+ * until that phase ships — architecture elsewhere is intentionally left intact.
+ */
 export function AvatarStudio({
   open,
   onClose,
@@ -59,10 +38,7 @@ export function AvatarStudio({
   disabled,
   saveState,
   saveError,
-  onPresetChange,
-  onSelfieChange,
-  onStatusChange,
-  onAutoChange,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
@@ -79,20 +55,25 @@ export function AvatarStudio({
   disabled?: boolean;
   saveState?: "idle" | "saving" | "saved" | "error";
   saveError?: string | null;
-  onPresetChange: (id: string | null) => void;
-  onSelfieChange: (url: string | null) => void;
-  onStatusChange: (status: string | null) => void;
-  onAutoChange?: (auto: boolean) => void;
+  onSave: (draft: {
+    presetId: string | null;
+    imageSrc: string | null;
+    status: string | null;
+    autoEnabled: boolean;
+  }) => void;
 }) {
   const { t } = useT();
   const titleId = useId();
-  const [tab, setTab] = useState<StudioTab>("identity");
+  const [draftImageSrc, setDraftImageSrc] = useState<string | null>(() =>
+    userAvatarPhotoSrc(imageSrc)
+  );
+
   const busy = Boolean(disabled) || saveState === "saving";
   const frame = frameToUiRing(cosmeticFrame);
   const shownStatus = resolvedStatus || status;
   const statusKey = avatarStatusMessageKey(shownStatus);
   const sourceKey = avatarStatusSourceKey(statusSource);
-  const yourLookActive = Boolean(imageSrc) && !isCuratedLook(imageSrc);
+  const photoSrc = userAvatarPhotoSrc(draftImageSrc);
 
   useEffect(() => {
     if (!open) return;
@@ -108,6 +89,20 @@ export function AvatarStudio({
     };
   }, [open, onClose]);
 
+  function handleCancel() {
+    onClose();
+  }
+
+  function handleSave() {
+    onSave({
+      presetId: presetId ?? null,
+      imageSrc: userAvatarPhotoSrc(draftImageSrc),
+      status: status ?? null,
+      autoEnabled: Boolean(autoEnabled),
+    });
+    onClose();
+  }
+
   if (!open) return null;
 
   return (
@@ -117,7 +112,7 @@ export function AvatarStudio({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="profile-studio-shell">
+      <div className="profile-studio-shell profile-studio-shell-simple">
         <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
           <div>
             <p id={titleId} className="text-lg font-semibold tracking-tight text-foreground">
@@ -127,7 +122,7 @@ export function AvatarStudio({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCancel}
             className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border text-secondary transition hover:bg-surface-secondary hover:text-foreground"
             aria-label={t("avatar.studio.close")}
           >
@@ -140,8 +135,9 @@ export function AvatarStudio({
             <Avatar
               name={displayName}
               size="hero"
+              shape={photoSrc ? "figure" : "circle"}
               presetId={presetId}
-              imageSrc={imageSrc}
+              imageSrc={photoSrc}
               frame={frame}
               presence={presence}
             />
@@ -171,177 +167,32 @@ export function AvatarStudio({
             </p>
           </aside>
 
-          <div className="profile-studio-controls">
-            <div
-              role="tablist"
-              aria-label={t("avatar.studio.categories")}
-              className="profile-studio-tabs"
-            >
-              {TABS.map((item) => {
-                const selected = tab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    disabled={item.soon}
-                    onClick={() => setTab(item.id)}
-                    className={`profile-studio-tab${selected ? " is-selected" : ""}${
-                      item.soon ? " is-soon" : ""
-                    }`}
-                  >
-                    {t(item.labelKey)}
-                    {item.soon ? (
-                      <span className="ms-1 text-[0.65rem] font-medium uppercase tracking-wide opacity-70">
-                        {t("avatar.studio.soon")}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
+          <div className="profile-studio-controls profile-studio-controls-simple">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <SelfieAvatarControls
+                imageSrc={photoSrc}
+                disabled={busy}
+                onSelfieChange={(url) => setDraftImageSrc(url)}
+              />
             </div>
 
-            <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-6">
-              {tab === "identity" ? (
-                <div className="space-y-5">
-                  <SelfieAvatarControls
-                    imageSrc={yourLookActive ? imageSrc : null}
-                    disabled={busy}
-                    onSelfieChange={onSelfieChange}
-                  />
-                  <div>
-                    <p className="mb-3 text-sm font-medium text-foreground">
-                      {t("avatar.studio.curatedLooks")}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => {
-                          onSelfieChange(null);
-                          onPresetChange(null);
-                        }}
-                        className={`profile-look-card${!imageSrc && !presetId ? " is-selected" : ""}`}
-                      >
-                        <Avatar name={displayName} size="lg" presetId={null} />
-                        <span>{t("avatar.initialsOption")}</span>
-                      </button>
-                      {AVATAR_IDENTITY_LOOKS.map((look) => {
-                        const selected = imageSrc === look.imageSrc;
-                        return (
-                          <button
-                            key={look.id}
-                            type="button"
-                            disabled={busy}
-                            onClick={() => {
-                              onPresetChange(null);
-                              onSelfieChange(look.imageSrc);
-                            }}
-                            className={`profile-look-card${selected ? " is-selected" : ""}`}
-                          >
-                            <Avatar
-                              name={t(look.labelKey)}
-                              size="lg"
-                              imageSrc={look.imageSrc}
-                            />
-                            <span>{t(look.labelKey)}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {tab === "background" ? (
-                <div>
-                  <p className="mb-2 text-sm font-medium text-foreground">
-                    {t("avatar.studio.themeHint")}
-                  </p>
-                  <div
-                    role="radiogroup"
-                    aria-label={t("avatar.studio.background")}
-                    className="grid grid-cols-4 gap-2 sm:grid-cols-6"
-                  >
-                    {AVATAR_PRESETS.map((p) => {
-                      const selected = !imageSrc && presetId === p.id;
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          disabled={busy}
-                          onClick={() => {
-                            onSelfieChange(null);
-                            onPresetChange(p.id);
-                          }}
-                          className={`avatar-option min-h-[4.5rem] ${
-                            selected ? "avatar-option-selected" : ""
-                          }`}
-                        >
-                          <Avatar name={p.label} size="md" presetId={p.id} />
-                          <span className="max-w-full truncate text-[0.65rem] font-medium text-secondary">
-                            {p.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-
-              {tab === "status" ? (
-                <div className="space-y-4">
-                  {onAutoChange ? (
-                    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-2xl border border-border bg-surface-secondary/50 px-4 py-3">
-                      <span>
-                        <span className="block text-sm font-medium text-foreground">
-                          {t("avatar.auto")}
-                        </span>
-                        <span className="mt-0.5 block text-xs text-muted">
-                          {t("avatar.autoHint")}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={Boolean(autoEnabled)}
-                        disabled={busy}
-                        onClick={() => onAutoChange(!autoEnabled)}
-                        className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-                          autoEnabled ? "bg-primary" : "bg-border"
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 start-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                            autoEnabled
-                              ? "translate-x-5 rtl:-translate-x-5"
-                              : "translate-x-0"
-                          }`}
-                        />
-                      </button>
-                    </label>
-                  ) : null}
-                  <StatusChipPicker
-                    status={status}
-                    busy={busy}
-                    onStatusChange={onStatusChange}
-                  />
-                </div>
-              ) : null}
-
-              {TABS.find((item) => item.id === tab)?.soon ? (
-                <div className="rounded-2xl border border-dashed border-border bg-surface-secondary/40 px-5 py-10 text-center">
-                  <p className="text-base font-semibold text-foreground">
-                    {t("avatar.studio.comingSoonTitle")}
-                  </p>
-                  <p className="mt-2 text-sm text-secondary">
-                    {t("avatar.studio.comingSoonBody")}
-                  </p>
-                </div>
-              ) : null}
+            <div className="profile-studio-actions">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={busy}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition hover:bg-surface-secondary disabled:opacity-50"
+              >
+                {t("avatar.studio.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={busy}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-50"
+              >
+                {t("avatar.studio.save")}
+              </button>
             </div>
           </div>
         </div>
@@ -350,6 +201,7 @@ export function AvatarStudio({
   );
 }
 
+/** Kept for profile status editing outside Avatar Studio. */
 export function StatusChipPicker({
   status,
   busy,
