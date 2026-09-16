@@ -1,19 +1,30 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 
 /**
  * Security headers (OWASP ASVS-aligned defaults).
  * CSP starts Report-Only — see docs/DEPLOYMENT_SECURITY.md to enforce.
+ *
+ * Clarity allowlist follows Microsoft Learn CSP guidance:
+ * https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-csp
+ * Explicit script-src / connect-src entries are required because those
+ * directives override default-src for scripts and XHR/fetch.
  */
+const clarityCspSources = [
+  "https://*.clarity.ms",
+  "https://www.clarity.ms",
+  "https://c.bing.com",
+].join(" ");
+
 const cspReportOnly = [
-  "default-src 'self'",
+  `default-src 'self' ${clarityCspSources}`,
   "base-uri 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "connect-src 'self'",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${clarityCspSources}`,
+  `connect-src 'self' ${clarityCspSources}`,
   "form-action 'self'",
 ].join("; ");
 
