@@ -11,6 +11,7 @@ import { LocaleHydrator } from "@/components/i18n/LocaleProvider";
 import { getThemeInitScript } from "@/lib/theme/storage";
 import { AppFlagsProvider } from "@/components/app/AppFlags";
 import { features } from "@/lib/features";
+import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -72,6 +73,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{ __html: getThemeInitScript() }}
         />
+        <MicrosoftClarity />
       </head>
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <ThemeProvider initialTheme="SYSTEM" initialPersonality="PROFESSIONAL">
