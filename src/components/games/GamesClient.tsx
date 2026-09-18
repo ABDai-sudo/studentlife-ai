@@ -7,6 +7,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { mountFetch } from "@/lib/react/mount-fetch";
 import { useT } from "@/components/i18n/LocaleProvider";
+import { localizedQuestTitle, localizedLevelName } from "@/lib/i18n/localized-content";
 
 type Summary = {
   xpTotal: number;
@@ -19,6 +20,7 @@ type Summary = {
     title: string;
     status: string;
     xpReward: number;
+    code?: string;
   }[];
 };
 
@@ -312,12 +314,12 @@ export function GamesClient({
           <StatCard
             label={t("dashboard.xp")}
             value={`${data.xpTotal}`}
-            hint={data.levelName}
+            hint={localizedLevelName(data.level, t)}
           />
           <StatCard
             label={t("dashboard.level", { level: data.level })}
             value={`${data.level}`}
-            hint={data.levelName}
+            hint={localizedLevelName(data.level, t)}
           />
           <StatCard
             label={t("dashboard.academicAura")}
@@ -358,7 +360,7 @@ export function GamesClient({
                 key={q.id}
                 className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5 text-sm last:border-b-0"
               >
-                <span>{q.title}</span>
+                <span>{localizedQuestTitle(q, t)}</span>
                 {q.status === "COMPLETED" ? (
                   <span className="text-xs font-medium text-success">Done</span>
                 ) : (

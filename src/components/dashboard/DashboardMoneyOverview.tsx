@@ -6,11 +6,14 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { formatMoney } from "@/lib/money";
+import { SafeSpendBreakdown } from "@/components/money/SafeSpendBreakdown";
 
 export type DashboardMoneySummaryView = {
   currency: string;
   moneyLeft: number | null;
   pocketMoney: number | null;
+  necessaryCommitted?: number;
+  discretionaryBudget?: number | null;
   daysLeft: number;
   safePerDay: number | null;
   monthSpent: number;
@@ -59,7 +62,9 @@ export function DashboardMoneyOverview({
           hint={
             summary.pocketMoney == null
               ? t("money.setPocketHint")
-              : t("money.pocketMinusSpend")
+              : summary.necessaryCommitted
+                ? t("money.pocketMinusCommittedSpend")
+                : t("money.pocketMinusSpend")
           }
         />
         <StatCard
@@ -69,7 +74,11 @@ export function DashboardMoneyOverview({
               ? "—"
               : formatMoney(summary.safePerDay, currency)
           }
-          hint={t("money.leftDivDays")}
+          hint={
+            summary.necessaryCommitted
+              ? t("money.pocketMinusCommittedSpend")
+              : t("money.leftDivDays")
+          }
         />
         <StatCard
           label={t("money.daysLeft")}
@@ -103,7 +112,17 @@ export function DashboardMoneyOverview({
 
       {snapshot ? (
         <div className="mt-4">
-          <Button href="/dashboard/money" variant="secondary" size="sm" className="min-h-11">
+          <SafeSpendBreakdown
+            currency={currency}
+            pocketMoney={summary.pocketMoney}
+            necessaryCommitted={summary.necessaryCommitted ?? 0}
+            discretionaryBudget={summary.discretionaryBudget ?? summary.moneyLeft}
+            monthSpent={summary.monthSpent}
+            moneyLeft={summary.moneyLeft}
+            daysLeft={summary.daysLeft}
+            safePerDay={summary.safePerDay}
+          />
+          <Button href="/dashboard/money" variant="secondary" size="sm" className="mt-3 min-h-11">
             {t("nav.moneyDashboard")}
           </Button>
         </div>

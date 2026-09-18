@@ -12,7 +12,7 @@ import type {
   AvatarPresence,
   AvatarStatusSource,
 } from "@/lib/avatar/contextual-status";
-import { resolveStudentStatusForUser, ensureAvatarStatusAutoColumn, ensureAvatarImageUrlColumn } from "@/services/student-status.service";
+import { resolveStudentStatusForUser, ensureAvatarStatusAutoColumn, ensureAvatarImageUrlColumn, ensureNecessaryExpensesColumn } from "@/services/student-status.service";
 import { normalizeAvatarSelfieInput } from "@/lib/avatar/selfie";
 
 export type ProfileDto = {
@@ -23,6 +23,7 @@ export type ProfileDto = {
   country: string;
   currency: string;
   monthlyPocketMoney: number | null;
+  monthlyNecessaryExpenses: number | null;
   primaryGoal: string | null;
   onboardingComplete: boolean;
   timezone: string;
@@ -62,6 +63,7 @@ function toDto(row: {
   country: string;
   currency: string;
   monthlyPocketMoney: Prisma.Decimal | null;
+  monthlyNecessaryExpenses?: Prisma.Decimal | null;
   primaryGoal: string | null;
   onboardingComplete: boolean;
   timezone: string;
@@ -103,6 +105,10 @@ function toDto(row: {
     currency: row.currency,
     monthlyPocketMoney:
       row.monthlyPocketMoney != null ? Number(row.monthlyPocketMoney) : null,
+    monthlyNecessaryExpenses:
+      row.monthlyNecessaryExpenses != null
+        ? Number(row.monthlyNecessaryExpenses)
+        : null,
     primaryGoal: row.primaryGoal,
     onboardingComplete: row.onboardingComplete,
     timezone: row.timezone,
@@ -148,6 +154,7 @@ async function withResolvedStatus(
 export async function getProfileForUser(userId: string): Promise<ProfileDto | null> {
   await ensureAvatarStatusAutoColumn();
   await ensureAvatarImageUrlColumn();
+  await ensureNecessaryExpensesColumn();
   const profile = await withDbRetry(() =>
     prisma.studentProfile.findUnique({ where: { userId } })
   );
@@ -158,11 +165,16 @@ export async function completeOnboardingForUser(
   userId: string,
   input: OnboardingInput
 ): Promise<ProfileDto> {
+  await ensureNecessaryExpensesColumn();
   const profile = await prisma.studentProfile.upsert({
     where: { userId },
     create: {
       userId,
       monthlyPocketMoney: new Prisma.Decimal(input.monthlyPocketMoney.toFixed(2)),
+      monthlyNecessaryExpenses:
+        input.monthlyNecessaryExpenses != null
+          ? new Prisma.Decimal(input.monthlyNecessaryExpenses.toFixed(2))
+          : null,
       studentType: input.studentType,
       primaryGoal: input.primaryGoal,
       country: input.country,
@@ -180,6 +192,10 @@ export async function completeOnboardingForUser(
     },
     update: {
       monthlyPocketMoney: new Prisma.Decimal(input.monthlyPocketMoney.toFixed(2)),
+      monthlyNecessaryExpenses:
+        input.monthlyNecessaryExpenses != null
+          ? new Prisma.Decimal(input.monthlyNecessaryExpenses.toFixed(2))
+          : null,
       studentType: input.studentType,
       primaryGoal: input.primaryGoal,
       country: input.country,
@@ -207,12 +223,19 @@ export async function updateProfileForUser(
 ): Promise<ProfileDto> {
   await ensureAvatarStatusAutoColumn();
   await ensureAvatarImageUrlColumn();
+  await ensureNecessaryExpensesColumn();
   const data: Prisma.StudentProfileUpdateInput = {};
 
   if (input.monthlyPocketMoney != null) {
     data.monthlyPocketMoney = new Prisma.Decimal(
       input.monthlyPocketMoney.toFixed(2)
     );
+  }
+  if (input.monthlyNecessaryExpenses !== undefined) {
+    data.monthlyNecessaryExpenses =
+      input.monthlyNecessaryExpenses == null
+        ? null
+        : new Prisma.Decimal(input.monthlyNecessaryExpenses.toFixed(2));
   }
   if (input.studentType) data.studentType = input.studentType;
   if (input.primaryGoal) data.primaryGoal = input.primaryGoal;
@@ -280,6 +303,10 @@ export async function updateProfileForUser(
       monthlyPocketMoney:
         input.monthlyPocketMoney != null
           ? new Prisma.Decimal(input.monthlyPocketMoney.toFixed(2))
+          : null,
+      monthlyNecessaryExpenses:
+        input.monthlyNecessaryExpenses != null
+          ? new Prisma.Decimal(input.monthlyNecessaryExpenses.toFixed(2))
           : null,
       studentType: input.studentType ?? "DAY_SCHOLAR",
       primaryGoal: input.primaryGoal ?? null,

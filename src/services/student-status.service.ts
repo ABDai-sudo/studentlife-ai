@@ -11,6 +11,20 @@ import {
 
 let ensurePromise: Promise<void> | null = null;
 let ensureSelfiePromise: Promise<void> | null = null;
+let ensureNecessaryPromise: Promise<void> | null = null;
+
+export async function ensureNecessaryExpensesColumn() {
+  if (!ensureNecessaryPromise) {
+    ensureNecessaryPromise = withDbRetry(() =>
+      prisma.$executeRawUnsafe(
+        `ALTER TABLE "student_profiles" ADD COLUMN IF NOT EXISTS "monthly_necessary_expenses" DECIMAL(12, 2)`
+      )
+    )
+      .then(() => undefined)
+      .catch(() => undefined);
+  }
+  await ensureNecessaryPromise;
+}
 
 export async function ensureAvatarStatusAutoColumn() {
   if (!ensurePromise) {

@@ -25,6 +25,7 @@ export function xpProgressFromTotal(xpTotal: number) {
   const prevAt = current.xp;
   const span = Math.max(1, nextAt - prevAt);
   return {
+    level: current.level,
     levelName: current.name,
     levelProgress: next
       ? Math.min(100, Math.round(((safe - prevAt) / span) * 100))

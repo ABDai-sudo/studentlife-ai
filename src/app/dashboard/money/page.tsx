@@ -19,6 +19,7 @@ import {
   MoneyNoBudgets,
   MoneySpentLabel,
 } from "@/components/money/MoneyCategoryHeading";
+import { SafeSpendBreakdown } from "@/components/money/SafeSpendBreakdown";
 
 export default async function MoneyDashboardPage() {
   const user = await requireUser();
@@ -75,7 +76,9 @@ export default async function MoneyDashboardPage() {
             moneyLeftHintKey={
               summary.pocketMoney == null
                 ? "money.setPocketHint"
-                : "money.pocketMinusSpend"
+                : summary.necessaryCommitted
+                  ? "money.pocketMinusCommittedSpend"
+                  : "money.pocketMinusSpend"
             }
             daysLeft={String(summary.daysLeft)}
             safeDaily={
@@ -85,6 +88,17 @@ export default async function MoneyDashboardPage() {
             }
             healthScore={score ? String(score.score) : "—"}
             healthHint={score?.label}
+          />
+
+          <SafeSpendBreakdown
+            currency={currency}
+            pocketMoney={summary.pocketMoney}
+            necessaryCommitted={summary.necessaryCommitted}
+            discretionaryBudget={summary.discretionaryBudget}
+            monthSpent={summary.monthSpent}
+            moneyLeft={summary.moneyLeft}
+            daysLeft={summary.daysLeft}
+            safePerDay={summary.safePerDay}
           />
 
           <div className="mt-8 grid gap-8 border-t border-border pt-6 lg:grid-cols-2">

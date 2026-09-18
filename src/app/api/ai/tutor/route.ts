@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, serverError, unauthorized } from "@/lib/api";
 import { aiTutorSchema } from "@/lib/validations/ai-tools";
 import { askStudyTutor } from "@/services/ai-tutor.service";
+import { sanitizeTutorVisibleText } from "@/services/ai/visible-output";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { safeLog } from "@/lib/security/safe-log";
@@ -42,9 +43,12 @@ export async function POST(request: Request) {
 
     void trackAnalyticsEvent({ eventName: "ai_tutor_opened" }, user.id);
 
+    const safeReply = sanitizeTutorVisibleText(result.reply || "");
+    const publicResult = { ...result, reply: safeReply || "I could not generate a reply. Please try again." };
+
     if (parsed.data.stream) {
       const encoder = new TextEncoder();
-      const text = result.reply || "No reply generated.";
+      const text = publicResult.reply;
       const stream = new ReadableStream({
         start(controller) {
           controller.enqueue(encoder.encode(text));
@@ -61,7 +65,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return ok(result);
+    return ok(publicResult);
   } catch (error) {
     safeLog("error", "AI tutor failed", { error: String(error) });
     return serverError("Tutor is temporarily unavailable.");

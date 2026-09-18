@@ -11,6 +11,7 @@ import {
   type GamificationSummary,
 } from "@/components/dashboard/DashboardGamificationHeader";
 import { DashboardMoneyOverview } from "@/components/dashboard/DashboardMoneyOverview";
+import { DashboardStartHere } from "@/components/dashboard/DashboardStartHere";
 import { DashboardFocusStrip } from "@/components/dashboard/DashboardFocusStrip";
 import { runEngagementTick } from "@/services/engagement-tick.service";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
@@ -58,6 +59,7 @@ function toClientSummary(
       title: q.title,
       status: q.status,
       xpReward: q.xpReward,
+      code: q.code,
     })),
   };
 }
@@ -101,6 +103,8 @@ export default async function DashboardPage() {
         currency: summary.currency,
         moneyLeft: summary.moneyLeft,
         pocketMoney: summary.pocketMoney,
+        necessaryCommitted: summary.necessaryCommitted,
+        discretionaryBudget: summary.discretionaryBudget,
         daysLeft: summary.daysLeft,
         safePerDay: summary.safePerDay,
         monthSpent: summary.monthSpent,
@@ -123,6 +127,10 @@ export default async function DashboardPage() {
 
   const nextQuest =
     progress?.quests.find((q) => q.status !== "COMPLETED")?.title ?? null;
+  const firstTime =
+    (progress?.xpTotal ?? 0) === 0 &&
+    (progress?.streak.current ?? 0) === 0 &&
+    (progress?.questsDone ?? 0) === 0;
 
   return (
     <AppShell
@@ -137,17 +145,26 @@ export default async function DashboardPage() {
       avatarStatus={progress?.avatarStatus}
       avatarPresence={progress?.avatarPresence}
     >
-      <DashboardFocusStrip
-        nextDeadline={focus?.nextDeadline ?? null}
-        nextQuestTitle={nextQuest}
-        todayComplete={progress?.todayComplete ?? false}
-      />
-      <DashboardGamificationHeader
-        userName={user.name ?? firstName}
-        initialData={progress}
-        loadError={progressError}
-        avatarContext={avatarContext}
-      />
+      {firstTime ? (
+        <DashboardStartHere
+          name={progress?.displayName?.trim() || firstName}
+          hasExam={focus?.nextDeadline?.kind === "exam"}
+        />
+      ) : (
+        <DashboardFocusStrip
+          nextDeadline={focus?.nextDeadline ?? null}
+          nextQuestTitle={nextQuest}
+          todayComplete={progress?.todayComplete ?? false}
+        />
+      )}
+      {firstTime ? null : (
+        <DashboardGamificationHeader
+          userName={user.name ?? firstName}
+          initialData={progress}
+          loadError={progressError}
+          avatarContext={avatarContext}
+        />
+      )}
       <DashboardMoneyOverview summary={view} variant="snapshot" />
     </AppShell>
   );

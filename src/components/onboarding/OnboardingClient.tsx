@@ -44,6 +44,7 @@ export function OnboardingClient() {
   const router = useRouter();
   const { t, locale } = useT();
   const [monthlyPocketMoney, setMonthlyPocketMoney] = useState("5000");
+  const [necessaryExpenses, setNecessaryExpenses] = useState("");
   const [studentType, setStudentType] = useState<"HOSTEL" | "DAY_SCHOLAR">(
     "DAY_SCHOLAR"
   );
@@ -98,6 +99,9 @@ export function OnboardingClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           monthlyPocketMoney: Number(monthlyPocketMoney),
+          monthlyNecessaryExpenses: necessaryExpenses
+            ? Number(necessaryExpenses)
+            : 0,
           studentType,
           primaryGoal,
           currency,
@@ -253,6 +257,21 @@ export function OnboardingClient() {
               inputMode="numeric"
               value={monthlyPocketMoney}
               onChange={(e) => setMonthlyPocketMoney(e.target.value)}
+              className="field-input auth-input"
+            />
+          </FormField>
+          <FormField
+            id="necessary"
+            label={t("onboarding.necessary")}
+            hint={t("onboarding.necessaryHint")}
+          >
+            <input
+              id="necessary"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={necessaryExpenses}
+              onChange={(e) => setNecessaryExpenses(e.target.value)}
               className="field-input auth-input"
             />
           </FormField>

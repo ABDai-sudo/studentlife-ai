@@ -31,6 +31,12 @@ export const loginSchema = z.object({
 
 export const onboardingSchema = z.object({
   monthlyPocketMoney: z.coerce.number().positive("Pocket money must be positive"),
+  monthlyNecessaryExpenses: z.coerce
+    .number()
+    .min(0)
+    .max(10_000_000)
+    .optional()
+    .nullable(),
   studentType: z.enum(["HOSTEL", "DAY_SCHOLAR"]),
   primaryGoal: z.string().trim().min(1).max(200),
   country: z.enum(["IN", "CA", "US", "UK", "AU", "AE"]).default("IN"),

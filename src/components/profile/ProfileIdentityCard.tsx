@@ -19,6 +19,7 @@ import type {
   AvatarStatusSource,
 } from "@/lib/avatar/contextual-status";
 import { xpProgressFromTotal } from "@/lib/gamification/xp-progress";
+import { localizedLevelName } from "@/lib/i18n/localized-content";
 
 export type IdentityStats = {
   displayName: string | null;
@@ -175,8 +176,8 @@ export function ProfileIdentityCard({
                 tone="primary"
                 label={
                   xp.xpToNext > 0
-                    ? `${xp.levelName} · ${t("dashboard.xpToNext", { xp: xp.xpToNext })}`
-                    : `${xp.levelName} · ${t("dashboard.maxLevel")}`
+                    ? `${localizedLevelName(xp.level, t)} · ${t("dashboard.xpToNext", { xp: xp.xpToNext })}`
+                    : `${localizedLevelName(xp.level, t)} · ${t("dashboard.maxLevel")}`
                 }
               />
             </div>

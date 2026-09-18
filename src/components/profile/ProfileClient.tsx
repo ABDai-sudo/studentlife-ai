@@ -16,6 +16,7 @@ import type { AvatarFrameId } from "@/lib/avatar/presets";
 
 type Profile = {
   monthlyPocketMoney: number | null;
+  monthlyNecessaryExpenses?: number | null;
   studentType: string;
   primaryGoal: string | null;
   currency: string;
@@ -47,6 +48,10 @@ type Profile = {
 function fieldsFromProfile(p: Profile | null) {
   return {
     pocket: p?.monthlyPocketMoney != null ? String(p.monthlyPocketMoney) : "",
+    necessary:
+      p?.monthlyNecessaryExpenses != null
+        ? String(p.monthlyNecessaryExpenses)
+        : "",
     goal: p?.primaryGoal ?? "",
     studentType: p?.studentType || "DAY_SCHOLAR",
     institutionName: p?.institutionName || p?.university || "",
@@ -82,6 +87,7 @@ export function ProfileClient({
   const { t } = useT();
   const [profile, setProfile] = useState<Profile | null>(initialProfile);
   const [pocket, setPocket] = useState(initial.pocket);
+  const [necessary, setNecessary] = useState(initial.necessary);
   const [goal, setGoal] = useState(initial.goal);
   const [studentType, setStudentType] = useState(initial.studentType);
   const [institutionName, setInstitutionName] = useState(initial.institutionName);
@@ -194,6 +200,8 @@ export function ProfileClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           monthlyPocketMoney: pocket ? Number(pocket) : undefined,
+          monthlyNecessaryExpenses:
+            necessary === "" ? 0 : Number(necessary),
           primaryGoal: goal || undefined,
           studentType,
           institutionName: institutionName || "",
@@ -363,6 +371,20 @@ export function ProfileClient({
             className="field-input"
             value={pocket}
             onChange={(e) => setPocket(e.target.value)}
+          />
+        </FormField>
+        <FormField
+          id="necessary"
+          label={t("money.necessary")}
+          hint={t("money.necessaryHint")}
+        >
+          <input
+            id="necessary"
+            type="number"
+            min={0}
+            className="field-input"
+            value={necessary}
+            onChange={(e) => setNecessary(e.target.value)}
           />
         </FormField>
         <FormField id="goal" label={t("profile.primaryGoal")}>

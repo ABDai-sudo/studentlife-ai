@@ -27,7 +27,6 @@ import {
   PERSONALITY_MODES,
   type PersonalityMode,
 } from "@/lib/personality";
-import { seriousCopy } from "@/lib/personality/copy";
 import { PERSONALITY_I18N_KEYS } from "@/lib/languages";
 import {
   getExplanationLanguages,
@@ -540,7 +539,7 @@ export function SettingsClient({
       <Section
         icon={Shield}
         title={t("settings.privacy")}
-        description={seriousCopy.privacyBody}
+        description={t("settings.privacyBody")}
       >
         <div className="divide-y divide-border">
           <Toggle
@@ -559,8 +558,7 @@ export function SettingsClient({
           />
         </div>
         <p className="mt-3 text-xs text-muted">
-          We do not sell personal data. Budgeting guidance only — not banking or
-          credit advice.
+          {t("settings.privacyNoSell")}
         </p>
       </Section>
 
@@ -609,8 +607,7 @@ export function SettingsClient({
           </div>
         </dl>
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          © {new Date().getFullYear()} {COMPANY.legalName}. {COMPANY.tagline}{" "}
-          Not a bank, lender, or investment platform.
+          © {new Date().getFullYear()} {COMPANY.legalName}. {t("settings.aboutBody")}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button href="/privacy" variant="secondary" size="sm">

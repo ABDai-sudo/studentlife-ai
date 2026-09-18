@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState, LoadingState } from "@/components/ui/ErrorState";
 import { SafeMarkdown } from "@/components/ui/SafeMarkdown";
 import { useT } from "@/components/i18n/LocaleProvider";
+import { localizedBuddyReason } from "@/lib/i18n/localized-content";
 import { mountFetch } from "@/lib/react/mount-fetch";
 
 type StudyNow = {
@@ -276,7 +277,9 @@ export function StudyBuddyClient({
             <p className="text-lg font-semibold text-foreground">
               {data.studyNow.title}
             </p>
-            <p className="text-sm text-secondary">{data.studyNow.reason}</p>
+            <p className="text-sm text-secondary">
+              {localizedBuddyReason(data.studyNow.reason, t)}
+            </p>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -364,7 +367,7 @@ export function StudyBuddyClient({
                           {item.fromDatabase ? t("buddy.fact") : t("buddy.suggestion")}
                         </Badge>
                         {t("buddy.minutes", { n: item.minutes })}
-                        {item.reason ? ` · ${item.reason}` : ""}
+                        {item.reason ? ` · ${localizedBuddyReason(item.reason, t)}` : ""}
                       </p>
                     </div>
                     <Button

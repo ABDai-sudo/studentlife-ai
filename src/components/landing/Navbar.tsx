@@ -190,41 +190,69 @@ export function Navbar() {
       {open ? (
         <div
           id="mobile-nav"
-          className="max-h-[min(80vh,32rem)] overflow-y-auto border-t border-border bg-surface xl:hidden"
+          className="max-h-[min(85vh,40rem)] overflow-y-auto overflow-x-hidden border-t border-border bg-surface xl:hidden"
         >
-          <div className="container-shell space-y-4 py-4">
-            <MobileGroup title="Product" links={productLinks} onPick={() => setOpen(false)} />
-            <MobileGroup title="AI Tutor" links={aiTutorLinks} onPick={() => setOpen(false)} />
+          <div className="container-shell space-y-2 py-4">
+            <a
+              href="#ai-tutor"
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold hover:bg-surface-secondary"
+              onClick={() => setOpen(false)}
+            >
+              AI Tutor
+            </a>
             <a
               href="#assignments"
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold hover:bg-surface-secondary"
               onClick={() => setOpen(false)}
             >
               Assignments
             </a>
-            <MobileGroup title="Exam Prep" links={examPrepLinks} onPick={() => setOpen(false)} />
             <a
-              href="#games"
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+              href="#exam-prep"
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold hover:bg-surface-secondary"
               onClick={() => setOpen(false)}
             >
-              Games & Streaks
+              Exam Prep
             </a>
-            <MobileGroup title="Budget" links={budgetLinks} onPick={() => setOpen(false)} />
             <a
-              href="#pricing"
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+              href="#budget"
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold hover:bg-surface-secondary"
               onClick={() => setOpen(false)}
             >
-              Pricing
+              Money
             </a>
-            <Link
-              href="/support"
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
-              onClick={() => setOpen(false)}
-            >
-              Resources
-            </Link>
+            <details className="rounded-lg border border-border">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm font-semibold">
+                More
+              </summary>
+              <div className="space-y-1 border-t border-border p-2">
+                <MobileGroup title="Product" links={productLinks} onPick={() => setOpen(false)} />
+                <MobileGroup title="AI Tutor" links={aiTutorLinks} onPick={() => setOpen(false)} />
+                <MobileGroup title="Exam Prep" links={examPrepLinks} onPick={() => setOpen(false)} />
+                <MobileGroup title="Budget" links={budgetLinks} onPick={() => setOpen(false)} />
+                <a
+                  href="#games"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+                  onClick={() => setOpen(false)}
+                >
+                  Games & Streaks
+                </a>
+                <a
+                  href="#pricing"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+                  onClick={() => setOpen(false)}
+                >
+                  Pricing
+                </a>
+                <Link
+                  href="/support"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-surface-secondary"
+                  onClick={() => setOpen(false)}
+                >
+                  Resources
+                </Link>
+              </div>
+            </details>
             <div className="grid gap-2 border-t border-border pt-3">
               <Link
                 href="/login"

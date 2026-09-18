@@ -8,6 +8,14 @@ import { getCopy } from "@/lib/personality";
 import { mountFetch } from "@/lib/react/mount-fetch";
 import { useT } from "@/components/i18n/LocaleProvider";
 
+function stripLeakedTutorText(text: string): string {
+  if (!text) return text;
+  if (!/LANGUAGE RULE|Your saved context|Student context:/i.test(text)) {
+    return text;
+  }
+  return "This older reply included internal notes and was hidden. Ask again and I will explain the topic.";
+}
+
 type Msg = { id?: string; role: "user" | "assistant"; text: string };
 type Convo = { id: string; title: string; updatedAt: string };
 
@@ -90,7 +98,7 @@ export function AiTutorClient() {
         (m: { id: string; role: string; content: string }) => ({
           id: m.id,
           role: m.role === "USER" ? "user" : "assistant",
-          text: m.content,
+          text: stripLeakedTutorText(m.content),
         })
       )
     );
@@ -135,10 +143,11 @@ export function AiTutorClient() {
         setConversationId(json.data.conversationId);
       }
 
-      const reply =
+      const raw =
         typeof json.data.reply === "string" && json.data.reply.trim()
           ? json.data.reply
           : "I could not generate a reply. Please try again.";
+      const reply = stripLeakedTutorText(raw);
 
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
       void loadConvos();

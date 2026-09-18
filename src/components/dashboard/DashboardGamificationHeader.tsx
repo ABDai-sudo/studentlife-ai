@@ -11,6 +11,7 @@ import {
   AvatarStatusCard,
   type AvatarCardContextView,
 } from "@/components/avatar/AvatarStatusCard";
+import { localizedQuestTitle, localizedLevelName } from "@/lib/i18n/localized-content";
 import type { AvatarPresence, AvatarStatusSource } from "@/lib/avatar/contextual-status";
 
 type Quest = {
@@ -18,6 +19,7 @@ type Quest = {
   title: string;
   status: string;
   xpReward: number;
+  code?: string;
 };
 
 export type GamificationSummary = {
@@ -174,7 +176,7 @@ export function DashboardGamificationHeader({
           {data ? (
             <>
               <p className="mt-1 text-lg font-semibold text-foreground">
-                {data.levelName}
+                {localizedLevelName(data.level, t)}
               </p>
               <p className="mt-0.5 text-sm text-secondary">
                 {t("dashboard.level", { level: data.level })} · {data.xpTotal}{" "}
@@ -224,7 +226,7 @@ export function DashboardGamificationHeader({
                       : "font-medium text-foreground"
                   }
                 >
-                  {quest.title}
+                  {localizedQuestTitle(quest, t)}
                 </span>
                 <span className="shrink-0 text-sm text-secondary">
                   +{quest.xpReward} {t("dashboard.xp")}

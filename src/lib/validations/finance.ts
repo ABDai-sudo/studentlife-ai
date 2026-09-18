@@ -8,6 +8,12 @@ export const updateProfileSchema = z
       .positive("Pocket money must be positive")
       .max(10_000_000)
       .optional(),
+    monthlyNecessaryExpenses: z.coerce
+      .number()
+      .min(0)
+      .max(10_000_000)
+      .optional()
+      .nullable(),
     studentType: z.enum(["HOSTEL", "DAY_SCHOLAR"]).optional(),
     primaryGoal: z.string().trim().min(1).max(200).optional(),
     country: z.enum(["IN", "CA", "US", "UK", "AU", "AE"]).optional(),

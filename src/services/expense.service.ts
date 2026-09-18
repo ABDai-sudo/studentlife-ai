@@ -5,6 +5,8 @@ import type {
   ListExpensesInput,
 } from "@/lib/validations/expense";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
+import { computeSafeSpend } from "@/lib/money/safe-spend";
+import { ensureNecessaryExpensesColumn } from "@/services/student-status.service";
 
 export type ExpenseDto = {
   id: string;
@@ -170,6 +172,7 @@ export async function deleteExpenseForUser(
 }
 
 export async function getDashboardMoneySummary(userId: string) {
+  await ensureNecessaryExpensesColumn();
   const now = new Date();
   const startOfMonth = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
@@ -189,7 +192,11 @@ export async function getDashboardMoneySummary(userId: string) {
     await Promise.all([
       prisma.studentProfile.findUnique({
         where: { userId },
-        select: { monthlyPocketMoney: true, currency: true },
+        select: {
+          monthlyPocketMoney: true,
+          monthlyNecessaryExpenses: true,
+          currency: true,
+        },
       }),
       prisma.expense.aggregate({
         where: { userId, date: { gte: startOfMonth } },
@@ -219,9 +226,16 @@ export async function getDashboardMoneySummary(userId: string) {
     profile?.monthlyPocketMoney != null
       ? Number(profile.monthlyPocketMoney)
       : null;
-  const moneyLeft = pocket != null ? Math.max(0, pocket - monthSpent) : null;
-  const safePerDay =
-    moneyLeft != null ? Math.floor((moneyLeft / daysLeft) * 100) / 100 : null;
+  const necessaryCommitted =
+    profile?.monthlyNecessaryExpenses != null
+      ? Number(profile.monthlyNecessaryExpenses)
+      : 0;
+  const spend = computeSafeSpend({
+    pocketMoney: pocket,
+    necessaryCommitted,
+    monthSpent,
+    daysLeft,
+  });
 
   const categoryTotal = categoryGroups.reduce(
     (sum, g) => sum + Number(g._sum.amount ?? 0),
@@ -231,12 +245,14 @@ export async function getDashboardMoneySummary(userId: string) {
   return {
     available: true,
     currency: profile?.currency ?? "INR",
-    pocketMoney: pocket,
+    pocketMoney: spend.pocketMoney,
+    necessaryCommitted: spend.necessaryCommitted,
+    discretionaryBudget: spend.discretionaryBudget,
     monthSpent,
     todaySpent,
-    moneyLeft,
-    daysLeft,
-    safePerDay,
+    moneyLeft: spend.moneyLeft,
+    daysLeft: spend.daysLeft,
+    safePerDay: spend.safePerDay,
     categories: categoryGroups.map((g) => ({
       category: g.category,
       amount: Number(g._sum.amount ?? 0),

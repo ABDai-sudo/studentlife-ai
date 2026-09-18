@@ -315,6 +315,8 @@ model StudentProfile {
   country                  Country         @default(IN)
   currency                 Currency        @default(INR)
   monthlyPocketMoney       Decimal?        @map("monthly_pocket_money") @db.Decimal(12, 2)
+  /// Reserved necessary/committed bills for the month (not logged expenses).
+  monthlyNecessaryExpenses Decimal?        @map("monthly_necessary_expenses") @db.Decimal(12, 2)
   primaryGoal              String?         @map("primary_goal")
   onboardingComplete       Boolean         @default(false) @map("onboarding_complete")
   timezone                 String          @default("Asia/Kolkata")

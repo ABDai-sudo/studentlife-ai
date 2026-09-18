@@ -42,6 +42,7 @@ export default async function GamesPage() {
         title: q.title,
         status: q.status,
         xpReward: q.xpReward,
+        code: q.code,
       })),
     };
   } catch {

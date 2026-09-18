@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Menu, Settings, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
-import { Sidebar } from "@/components/app/Sidebar";
+import { MobileNav } from "@/components/app/MobileNav";
 import { ThemeQuickToggle } from "@/components/theme/ThemeQuickToggle";
 import { NotificationInbox } from "@/components/app/NotificationInbox";
 import { useT } from "@/components/i18n/LocaleProvider";
@@ -56,6 +56,7 @@ export function AppHeader({
     avatarPresence: AvatarPresence | null;
     displayName: string;
     level: number | null;
+    xpTotal: number | null;
   } | null>(null);
   const { t } = useT();
 
@@ -91,6 +92,15 @@ export function AppHeader({
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  useEffect(() => {
     return mountFetch("/api/profile", ({ ok, json }) => {
       const body = json as {
         success?: boolean;
@@ -103,6 +113,7 @@ export function AppHeader({
             avatarPresence?: AvatarPresence | null;
             displayName?: string | null;
             level?: number | null;
+            xpTotal?: number | null;
           } | null;
           user?: { name?: string | null };
         };
@@ -117,6 +128,7 @@ export function AppHeader({
         displayName:
           p?.displayName?.trim() || body.data?.user?.name || userName,
         level: typeof p?.level === "number" ? p.level : null,
+        xpTotal: typeof p?.xpTotal === "number" ? p.xpTotal : null,
       });
     });
   }, [userName]);
@@ -148,6 +160,7 @@ export function AppHeader({
           ? detail.displayName.trim()
           : (prev?.displayName ?? initialName),
         level: prev?.level ?? null,
+        xpTotal: prev?.xpTotal ?? null,
       }));
     }
     window.addEventListener(IDENTITY_CHANGE_EVENT, onIdentity);
@@ -235,8 +248,11 @@ export function AppHeader({
             aria-label={t("actions.close")}
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 shadow-xl">
-            <Sidebar onNavigate={() => setOpen(false)} />
+          <div className="absolute inset-y-0 left-0 w-[min(20rem,100vw)] max-w-full overflow-x-hidden shadow-xl">
+            <MobileNav
+              onNavigate={() => setOpen(false)}
+              firstTime={(live?.xpTotal ?? 0) === 0}
+            />
           </div>
         </div>
       ) : null}
