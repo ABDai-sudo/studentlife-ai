@@ -4,19 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { appNav } from "@/components/app/nav";
+import { PRIMARY_NAV_HREFS } from "@/components/app/nav-groups";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { useAppFlags } from "@/components/app/AppFlags";
 import { useState } from "react";
-
-const PRIMARY_HREFS = new Set([
-  "/dashboard",
-  "/dashboard/ai-tutor",
-  "/dashboard/study-buddy",
-  "/dashboard/assignments",
-  "/dashboard/exam-prep",
-  "/dashboard/money",
-  "/dashboard/profile",
-]);
 
 type MobileNavProps = {
   onNavigate?: () => void;
@@ -33,12 +24,12 @@ export function MobileNav({ onNavigate, firstTime = false }: MobileNavProps) {
   const visible = appNav.filter(
     (item) => item.feature !== "campusCircle" || flags.campusCircle
   );
-  const primary = visible.filter((item) => PRIMARY_HREFS.has(item.href));
+  const primary = visible.filter((item) => PRIMARY_NAV_HREFS.has(item.href));
   const moreStudy = visible.filter(
-    (item) => item.section === "main" && !PRIMARY_HREFS.has(item.href)
+    (item) => item.section === "main" && !PRIMARY_NAV_HREFS.has(item.href)
   );
   const moreMoney = visible.filter(
-    (item) => item.section === "money" && !PRIMARY_HREFS.has(item.href)
+    (item) => item.section === "money" && !PRIMARY_NAV_HREFS.has(item.href)
   );
   const account = visible.filter((item) => item.section === "account");
 

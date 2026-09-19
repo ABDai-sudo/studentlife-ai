@@ -13,11 +13,13 @@ import { ProductOverview } from "@/components/landing/ProductOverview";
 import { StudentBudgetSection } from "@/components/landing/StudentBudgetSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { WeeklyRecapSection } from "@/components/landing/WeeklyRecapSection";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
   return (
     <div className="flex min-h-full flex-col bg-background">
-      <Navbar />
+      <Navbar signedIn={Boolean(user)} />
       <main className="flex-1">
         <HeroSection />
         <ProductOverview />

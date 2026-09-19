@@ -678,6 +678,8 @@ export const hi: EnMessages = {
   "auth.pillar.progress": "प्रगति",
   "auth.footerNote": "मुफ़्त स्टूडेंट प्लान · सुरक्षित अकाउंट · कार्ड की ज़रूरत नहीं",
   "auth.language": "भाषा",
+  "auth.alreadySignedIn": "आप पहले से साइन इन हैं.",
+  "auth.alreadySignedInHint": "यह आपका वर्कस्पेस है — नया अकाउंट फेल नहीं हुआ. प्रोफ़ाइल अपडेट करें, या दूसरे अकाउंट के लिए Settings से साइन आउट करें.",
 
   "onboarding.title": "StudentLife AI सेट अप करें",
   "onboarding.subtitle": "कुछ बातें ताकि पढ़ाई और पैसे के टूल्स काम आएँ. बाद में बदल सकते हैं.",

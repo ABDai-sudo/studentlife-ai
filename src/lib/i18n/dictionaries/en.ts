@@ -695,6 +695,8 @@ export const en = {
   "auth.pillar.progress": "Progress",
   "auth.footerNote": "Free student plan · Secure accounts · No credit card required",
   "auth.language": "Language",
+  "auth.alreadySignedIn": "You're already signed in.",
+  "auth.alreadySignedInHint": "This is your workspace — signup did not fail. Update your profile, or sign out from Settings to use a different account.",
 
   "onboarding.title": "Set up StudentLife AI",
   "onboarding.subtitle": "A few details so study tools and money stay useful. You can change these later.",

@@ -61,7 +61,7 @@ export function AuthShell({
 
   return (
     <div className="auth-premium">
-      <aside className="auth-premium-brand" aria-hidden={false}>
+      <aside className="auth-premium-brand">
         <div className="auth-premium-brand-media" aria-hidden>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

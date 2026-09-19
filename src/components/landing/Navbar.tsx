@@ -54,7 +54,7 @@ function getServerScrollSnapshot() {
   return false;
 }
 
-export function Navbar() {
+export function Navbar({ signedIn = false }: { signedIn?: boolean }) {
   const [open, setOpen] = useState(false);
   const scrolled = useSyncExternalStore(
     subscribeScroll,
@@ -162,17 +162,25 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 xl:flex">
-          <Button href="/login" variant="ghost" size="sm">
-            Log in
-          </Button>
-          <Button href="/signup" size="sm">
-            Create account
-          </Button>
+          {signedIn ? (
+            <Button href="/dashboard" size="sm">
+              Open dashboard
+            </Button>
+          ) : (
+            <>
+              <Button href="/login" variant="ghost" size="sm">
+                Log in
+              </Button>
+              <Button href="/signup" size="sm">
+                Create account
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 xl:hidden">
-          <Button href="/signup" size="sm">
-            Create account
+          <Button href={signedIn ? "/dashboard" : "/signup"} size="sm">
+            {signedIn ? "Open dashboard" : "Create account"}
           </Button>
           <button
             type="button"
@@ -254,20 +262,32 @@ export function Navbar() {
               </div>
             </details>
             <div className="grid gap-2 border-t border-border pt-3">
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-border text-sm font-semibold transition-colors hover:bg-surface-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-11 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                Create account
-              </Link>
+              {signedIn ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-11 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  Open dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-11 items-center justify-center rounded-lg border border-border text-sm font-semibold transition-colors hover:bg-surface-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-11 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    Create account
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

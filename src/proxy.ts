@@ -55,7 +55,9 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAuthPage && authenticated) {
-    const res = NextResponse.redirect(new URL("/dashboard", request.url));
+    const dest = new URL("/dashboard", request.url);
+    dest.searchParams.set("notice", "already-signed-in");
+    const res = NextResponse.redirect(dest);
     res.headers.set("x-request-id", requestId);
     return res;
   }

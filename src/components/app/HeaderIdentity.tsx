@@ -15,6 +15,8 @@ export type HeaderIdentity = {
   avatarPresence?: AvatarPresence | null;
   avatarStatusSource?: AvatarStatusSource | null;
   avatarStatusLive?: boolean;
+  /** Used to simplify desktop nav for brand-new students (xpTotal === 0). */
+  xpTotal?: number | null;
 };
 
 const HeaderIdentityContext = createContext<HeaderIdentity | null>(null);

@@ -30,6 +30,7 @@ export default async function DashboardLayout({
           avatarPresence: profile?.avatarPresence ?? "idle",
           avatarStatusSource: profile?.avatarStatusSource ?? "none",
           avatarStatusLive: profile?.avatarStatusLive ?? false,
+          xpTotal: profile?.xpTotal ?? 0,
         }}
       >
         {children}

@@ -17,6 +17,7 @@ import { runEngagementTick } from "@/services/engagement-tick.service";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
 import { withDbRetry } from "@/lib/db";
 import type { AvatarCardContextView } from "@/components/avatar/AvatarStatusCard";
+import { AlreadySignedInNotice } from "@/components/app/AlreadySignedInNotice";
 
 function categoryLabel(category: string) {
   return (
@@ -64,8 +65,13 @@ function toClientSummary(
   };
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string }>;
+}) {
   const user = await requireUser();
+  const { notice } = await searchParams;
   const firstName = user.name?.split(" ")[0] ?? "there";
 
   const [summary, progressRaw, avatarSignals, focus] = await Promise.all([
@@ -145,6 +151,7 @@ export default async function DashboardPage() {
       avatarStatus={progress?.avatarStatus}
       avatarPresence={progress?.avatarPresence}
     >
+      <AlreadySignedInNotice notice={notice} />
       {firstTime ? (
         <DashboardStartHere
           name={progress?.displayName?.trim() || firstName}

@@ -678,6 +678,8 @@ export const gu: EnMessages = {
   "auth.pillar.progress": "પ્રોગ્રેસ",
   "auth.footerNote": "મફત સ્ટુડન્ટ પ્લાન · સુરક્ષિત એકાઉન્ટ · કાર્ડની જરૂર નથી",
   "auth.language": "ભાષા",
+  "auth.alreadySignedIn": "તમે પહેલેથી સાઇન ઇન છો.",
+  "auth.alreadySignedInHint": "આ તમારું વર્કસ્પેસ છે — સાઇનઅપ નિષ્ફળ નથી. પ્રોફાઇલ અપડેટ કરો, અથવા બીજા એકાઉન્ટ માટે Settingsમાંથી સાઇન આઉટ કરો.",
 
   "onboarding.title": "StudentLife AI સેટ અપ કરો",
   "onboarding.subtitle": "થોડી વિગતો જેથી ભણતર અને પૈસાનાં ટૂલ્સ કામ આવે. પછીથી બદલી શકો છો.",
