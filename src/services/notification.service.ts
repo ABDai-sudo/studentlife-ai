@@ -258,3 +258,73 @@ export async function maybeEnqueueStreakReminder(input: {
     idempotencyKey: windowKey,
   });
 }
+
+const MS_DAY = 86_400_000;
+
+/** Assignment/exam reminders: once per source+date, safe to re-run. */
+export async function maybeEnqueueDeadlineReminders(
+  userId: string,
+  now = new Date()
+) {
+  if (!features.studyNotifications) {
+    return { assignments: [] as string[], exams: [] as string[] };
+  }
+  const prefs = await ensureNotificationPreferences(userId);
+  if (prefs.pauseAll) {
+    return { assignments: [] as string[], exams: [] as string[] };
+  }
+
+  const created: { assignments: string[]; exams: string[] } = {
+    assignments: [],
+    exams: [],
+  };
+  const assignHorizon = new Date(now.getTime() + 7 * MS_DAY);
+  const examHorizon = new Date(now.getTime() + 14 * MS_DAY);
+
+  if (prefs.assignmentDeadline !== false) {
+    const assignments = await prisma.assignment.findMany({
+      where: {
+        userId,
+        status: { in: ["PENDING", "IN_PROGRESS"] },
+        dueDate: { gte: new Date(now.getTime() - MS_DAY), lte: assignHorizon },
+      },
+      select: { id: true, title: true, dueDate: true },
+    });
+    for (const row of assignments) {
+      const due = row.dueDate.toISOString().slice(0, 10);
+      const notif = await enqueueInAppNotification({
+        userId,
+        category: "ASSIGNMENT_DEADLINE",
+        title: "Assignment due soon",
+        body: `${row.title} is due ${due}.`,
+        href: "/dashboard",
+        idempotencyKey: `assign-deadline:${row.id}:${due}`,
+      });
+      if (notif) created.assignments.push(notif.id);
+    }
+  }
+
+  if (prefs.upcomingExam !== false) {
+    const exams = await prisma.exam.findMany({
+      where: {
+        userId,
+        examDate: { gte: new Date(now.toISOString().slice(0, 10)), lte: examHorizon },
+      },
+      select: { id: true, title: true, examDate: true, subject: true },
+    });
+    for (const row of exams) {
+      const when = row.examDate.toISOString().slice(0, 10);
+      const notif = await enqueueInAppNotification({
+        userId,
+        category: "UPCOMING_EXAM",
+        title: "Upcoming exam",
+        body: `${row.title} (${row.subject}) is on ${when}.`,
+        href: "/dashboard/exams",
+        idempotencyKey: `exam-upcoming:${row.id}:${when}`,
+      });
+      if (notif) created.exams.push(notif.id);
+    }
+  }
+
+  return created;
+}

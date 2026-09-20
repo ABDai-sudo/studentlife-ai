@@ -10,6 +10,8 @@ import {
 } from "@/lib/auth/session";
 import type { SignupInput, LoginInput } from "@/lib/validations/auth";
 import type { AuthUser } from "@/lib/auth";
+import { publicPlan } from "@/lib/billing/entitlements";
+import type { Plan, SubscriptionStatus } from "@prisma/client";
 import { hashToken } from "@/lib/security/hash";
 import { progressiveLoginDelayMs } from "@/lib/security/rate-limit";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
@@ -38,14 +40,20 @@ function toAuthUser(user: {
   status: AccountStatus;
   mfaEnabled: boolean;
   profile: { onboardingComplete: boolean } | null;
-  subscriptions: { plan: "FREE" | "PREMIUM" }[];
+  subscriptions: {
+    plan: Plan;
+    status: SubscriptionStatus;
+    currentPeriodEnd: Date | null;
+    cancelAtPeriodEnd: boolean;
+    graceUntil?: Date | null;
+  }[];
 }): AuthUser {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     onboardingComplete: user.profile?.onboardingComplete ?? false,
-    plan: user.subscriptions[0]?.plan ?? "FREE",
+    plan: publicPlan(user.subscriptions[0]),
     role: user.role,
     status: user.status,
     mfaEnabled: user.mfaEnabled,
@@ -61,10 +69,15 @@ const userSelect = {
   mfaEnabled: true,
   profile: { select: { onboardingComplete: true } },
   subscriptions: {
-    where: { status: "ACTIVE" as const },
-    orderBy: { createdAt: "desc" as const },
+    orderBy: { updatedAt: "desc" as const },
     take: 1,
-    select: { plan: true },
+    select: {
+      plan: true,
+      status: true,
+      currentPeriodEnd: true,
+      cancelAtPeriodEnd: true,
+      graceUntil: true,
+    },
   },
 };
 

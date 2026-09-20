@@ -13,6 +13,7 @@ export async function GET() {
         name: user.name,
         onboardingComplete: user.onboardingComplete,
         plan: user.plan,
+      entitled: user.plan !== "FREE",
       },
     });
   } catch (error) {

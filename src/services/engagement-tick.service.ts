@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { features } from "@/lib/features";
 import {
   maybeEnqueueStreakReminder,
+  maybeEnqueueDeadlineReminders,
 } from "@/services/notification.service";
 import { evaluateMoneyGuardianAlerts } from "@/services/money-alerts.service";
 
@@ -19,7 +20,7 @@ export async function runEngagementTick(userId: string) {
       xpTotal: true,
     },
   });
-  if (!profile) return { streak: null, money: null };
+  if (!profile) return { streak: null, money: null, deadlines: null };
 
   const streak = await prisma.streak.findUnique({
     where: { userId_type: { userId, type: "study" } },
@@ -43,10 +44,15 @@ export async function runEngagementTick(userId: string) {
     });
   }
 
+  let deadlines = null;
+  if (features.studyNotifications) {
+    deadlines = await maybeEnqueueDeadlineReminders(userId);
+  }
+
   let money = null;
   if (features.moneyGuardianAlerts) {
     money = await evaluateMoneyGuardianAlerts(userId);
   }
 
-  return { streak: streakNotif, money };
+  return { streak: streakNotif, money, deadlines };
 }

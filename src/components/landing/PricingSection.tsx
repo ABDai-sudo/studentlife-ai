@@ -28,7 +28,7 @@ const plans = [
     price: "₹49",
     period: "/month",
     description:
-      "Coming later — higher AI limits and advanced academic tools when billing is ready. Payments are not enabled yet.",
+      "Higher AI limits and advanced academic tools. Checkout is server-verified — never trust a client plan flag.",
     features: [
       "Everything in Free",
       "More AI usage",
@@ -39,10 +39,10 @@ const plans = [
       "Advanced weekly recaps",
       "Priority AI processing",
     ],
-    cta: "Join waitlist via signup",
+    cta: "Open billing in Settings",
     highlighted: false,
-    href: "/signup",
-    badge: "Coming soon",
+    href: "/settings#billing",
+    badge: "Student Pro",
   },
 ];
 
@@ -53,7 +53,7 @@ export function PricingSection() {
         <SectionHeader
           eyebrow="Pricing"
           title="Free for the core student workspace"
-          description="The free plan covers academics and budget. Pro expands AI depth later — no payments are charged until billing ships."
+          description="The free plan covers academics and budget. Student Pro is billed only through a verified provider — this site never pretends a production payment succeeded."
           align="center"
           className="mb-8"
         />

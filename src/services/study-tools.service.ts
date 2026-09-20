@@ -148,12 +148,13 @@ export async function createUploadedDocument(
     sizeBytes: number;
     kind?: "PDF" | "IMAGE" | "NOTES" | "QUESTION_PAPER" | "SYLLABUS" | "ASSIGNMENT" | "TEXT" | "OTHER";
     textExcerpt?: string;
+    maxBytes?: number;
   }
 ) {
   if (!ALLOWED_MIME.has(input.mimeType)) {
     throw new Error("INVALID_TYPE");
   }
-  if (input.sizeBytes > 5 * 1024 * 1024) {
+  if (input.sizeBytes > (input.maxBytes ?? 5 * 1024 * 1024)) {
     throw new Error("TOO_LARGE");
   }
   return prisma.uploadedDocument.create({

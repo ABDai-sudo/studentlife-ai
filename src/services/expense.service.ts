@@ -7,6 +7,10 @@ import type {
 import { trackAnalyticsEvent } from "@/services/analytics.service";
 import { computeSafeSpend } from "@/lib/money/safe-spend";
 import { ensureNecessaryExpensesColumn } from "@/services/student-status.service";
+import {
+  materializeRecurringForMonth,
+  necessaryCommittedFromRecurring,
+} from "@/services/recurring-expense.service";
 
 export type ExpenseDto = {
   id: string;
@@ -55,31 +59,66 @@ export async function createExpenseForUser(
       ? input.description.trim()
       : null;
 
-  const expense = await prisma.expense.create({
-    data: {
-      userId,
-      amount: new Prisma.Decimal(input.amount.toFixed(2)),
-      currency: input.currency,
-      category: input.category,
-      description,
-      date,
-    },
-  });
+  if (input.clientRequestId) {
+    const existing = await prisma.expense.findFirst({
+      where: { userId, clientRequestId: input.clientRequestId },
+    });
+    if (existing) return toDto(existing);
+  } else {
+    const recent = await prisma.expense.findFirst({
+      where: {
+        userId,
+        category: input.category,
+        date,
+        description,
+        amount: new Prisma.Decimal(input.amount.toFixed(2)),
+        createdAt: { gte: new Date(Date.now() - 15_000) },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (recent) return toDto(recent);
+  }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { lastActiveAt: new Date() },
-  });
+  try {
+    const expense = await prisma.expense.create({
+      data: {
+        userId,
+        amount: new Prisma.Decimal(input.amount.toFixed(2)),
+        currency: input.currency,
+        category: input.category,
+        description,
+        date,
+        clientRequestId: input.clientRequestId ?? null,
+      },
+    });
 
-  void trackAnalyticsEvent(
-    {
-      eventName: "expense_module_opened",
-      metadata: { action: "created" },
-    },
-    userId
-  );
+    await prisma.user.update({
+      where: { id: userId },
+      data: { lastActiveAt: new Date() },
+    });
 
-  return toDto(expense);
+    void trackAnalyticsEvent(
+      {
+        eventName: "expense_module_opened",
+        metadata: { action: "created" },
+      },
+      userId
+    );
+
+    return toDto(expense);
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      input.clientRequestId
+    ) {
+      const existing = await prisma.expense.findFirst({
+        where: { userId, clientRequestId: input.clientRequestId },
+      });
+      if (existing) return toDto(existing);
+    }
+    throw error;
+  }
 }
 
 export async function listExpensesForUser(
@@ -127,17 +166,17 @@ export async function listExpensesForUser(
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    prisma.expense.aggregate({
-      where: { userId, date: { gte: startOfMonth } },
-      _sum: { amount: true },
-    }),
-    prisma.expense.aggregate({
-      where: { userId, date: { gte: startOfToday } },
-      _sum: { amount: true },
-    }),
-    prisma.expense.groupBy({
-      by: ["category"],
-      where: { userId, date: { gte: startOfMonth } },
+      prisma.expense.aggregate({
+        where: { userId, date: { gte: startOfMonth }, countsTowardSpend: true },
+        _sum: { amount: true },
+      }),
+      prisma.expense.aggregate({
+        where: { userId, date: { gte: startOfToday }, countsTowardSpend: true },
+        _sum: { amount: true },
+      }),
+      prisma.expense.groupBy({
+        by: ["category"],
+        where: { userId, date: { gte: startOfMonth }, countsTowardSpend: true },
       _sum: { amount: true },
       orderBy: { _sum: { amount: "desc" } },
       take: 1,
@@ -173,6 +212,7 @@ export async function deleteExpenseForUser(
 
 export async function getDashboardMoneySummary(userId: string) {
   await ensureNecessaryExpensesColumn();
+  await materializeRecurringForMonth(userId);
   const now = new Date();
   const startOfMonth = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
@@ -199,16 +239,16 @@ export async function getDashboardMoneySummary(userId: string) {
         },
       }),
       prisma.expense.aggregate({
-        where: { userId, date: { gte: startOfMonth } },
+        where: { userId, date: { gte: startOfMonth }, countsTowardSpend: true },
         _sum: { amount: true },
       }),
       prisma.expense.aggregate({
-        where: { userId, date: { gte: startOfToday } },
+        where: { userId, date: { gte: startOfToday }, countsTowardSpend: true },
         _sum: { amount: true },
       }),
       prisma.expense.groupBy({
         by: ["category"],
-        where: { userId, date: { gte: startOfMonth } },
+        where: { userId, date: { gte: startOfMonth }, countsTowardSpend: true },
         _sum: { amount: true },
         orderBy: { _sum: { amount: "desc" } },
         take: 5,
@@ -226,10 +266,12 @@ export async function getDashboardMoneySummary(userId: string) {
     profile?.monthlyPocketMoney != null
       ? Number(profile.monthlyPocketMoney)
       : null;
-  const necessaryCommitted =
+  const profileNecessary =
     profile?.monthlyNecessaryExpenses != null
       ? Number(profile.monthlyNecessaryExpenses)
       : 0;
+  const recurringNecessary = await necessaryCommittedFromRecurring(userId, now);
+  const necessaryCommitted = profileNecessary + recurringNecessary;
   const spend = computeSafeSpend({
     pocketMoney: pocket,
     necessaryCommitted,

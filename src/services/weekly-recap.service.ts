@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { dayKeyInTz } from "@/services/gamification.service";
 import { getDashboardMoneySummary } from "@/services/expense.service";
+import { userHasPaidAccess } from "@/services/billing.service";
 
 export async function buildWeeklyRecap(userId: string) {
   const profile = await prisma.studentProfile.findUnique({ where: { userId } });
@@ -68,6 +69,15 @@ export async function buildWeeklyRecap(userId: string) {
     xpTotal: profile.xpTotal,
   };
 
+  const entitled = await userHasPaidAccess(userId);
+  const advanced = entitled
+    ? {
+        weakSubjects: profile.weakSubjects || null,
+        course: profile.course || null,
+        semester: profile.classOrSemester || null,
+      }
+    : null;
+
   const recap = await prisma.weeklyRecap.upsert({
     where: { userId_weekStart: { userId, weekStart } },
     create: {
@@ -79,5 +89,5 @@ export async function buildWeeklyRecap(userId: string) {
     update: { payload },
   });
 
-  return { disabled: false as const, recap, payload };
+  return { disabled: false as const, recap, payload, advanced };
 }

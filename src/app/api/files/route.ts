@@ -7,6 +7,7 @@ import {
 } from "@/services/study-tools.service";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { z } from "zod";
+import { uploadLimitBytes } from "@/services/billing.service";
 
 export async function GET() {
   try {
@@ -26,12 +27,13 @@ export async function POST(request: Request) {
     }
     const user = await getCurrentUser();
     if (!user) return unauthorized();
+    const maxBytes = await uploadLimitBytes(user.id);
     const body = await request.json().catch(() => null);
     const parsed = z
       .object({
         fileName: z.string().trim().min(1).max(200),
         mimeType: z.string().trim().min(3).max(120),
-        sizeBytes: z.coerce.number().int().positive().max(5_000_000),
+        sizeBytes: z.coerce.number().int().positive(),
         kind: z
           .enum([
             "PDF",
@@ -53,7 +55,16 @@ export async function POST(request: Request) {
         status: 422,
       });
     }
-    const row = await createUploadedDocument(user.id, parsed.data);
+    if (parsed.data.sizeBytes > maxBytes) {
+      return fail(`File too large (max ${Math.round(maxBytes / 1_000_000)}MB).`, {
+        code: "ENTITLEMENT_REQUIRED",
+        status: 403,
+      });
+    }
+    const row = await createUploadedDocument(user.id, {
+      ...parsed.data,
+      maxBytes,
+    });
     return ok(row);
   } catch (error) {
     const msg = String(error);
@@ -64,7 +75,7 @@ export async function POST(request: Request) {
       });
     }
     if (msg.includes("TOO_LARGE")) {
-      return fail("File too large (max 5MB).", {
+      return fail("File too large.", {
         code: "VALIDATION_ERROR",
         status: 422,
       });

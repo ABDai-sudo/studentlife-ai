@@ -7,6 +7,7 @@ import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { safeLog } from "@/lib/security/safe-log";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
+import { aiRateLimit } from "@/services/billing.service";
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return unauthorized();
 
-    const rl = rateLimit(`ai:tutor:${user.id}`, { limit: 60, windowSec: 3600 });
+    const rl = rateLimit(`ai:tutor:${user.id}`, await aiRateLimit(user.id, "tutor"));
     if (!rl.allowed) {
       return fail("Too many requests. Try again later.", {
         code: "RATE_LIMITED",

@@ -7,6 +7,8 @@ import {
 } from "@/services/question-paper.service";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { aiRateLimit, userHasPaidAccess } from "@/services/billing.service";
+import { ADVANCED_PAPER_MODES } from "@/lib/billing/entitlements";
 
 export async function GET() {
   try {
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
     }
     const user = await getCurrentUser();
     if (!user) return unauthorized();
-    const rl = rateLimit(`ai:paper:${user.id}`, { limit: 15, windowSec: 3600 });
+    const rl = rateLimit(`ai:paper:${user.id}`, await aiRateLimit(user.id, "paper"));
     if (!rl.allowed) {
       return fail("Too many requests. Try again later.", {
         code: "RATE_LIMITED",
@@ -41,6 +43,14 @@ export async function POST(request: Request) {
         status: 422,
         details: parsed.error.flatten(),
       });
+    }
+    if (ADVANCED_PAPER_MODES.has(parsed.data.mode)) {
+      if (!(await userHasPaidAccess(user.id))) {
+        return fail("Student Pro is required for advanced mock and practical papers.", {
+          code: "ENTITLEMENT_REQUIRED",
+          status: 403,
+        });
+      }
     }
     const result = await generateQuestionPaper(user.id, parsed.data);
     return ok(result);

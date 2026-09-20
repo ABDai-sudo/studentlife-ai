@@ -10,7 +10,8 @@ import {
 import { recordAuditLog } from "@/services/audit.service";
 import { safeLog } from "@/lib/security/safe-log";
 import { getRequestContext } from "@/lib/security/request";
-import type { AccountStatus, UserRole } from "@prisma/client";
+import type { AccountStatus, Plan, UserRole } from "@prisma/client";
+import { publicPlan } from "@/lib/billing/entitlements";
 import { AuthorizationError } from "./errors";
 
 export { AuthorizationError } from "./errors";
@@ -20,7 +21,7 @@ export type AuthUser = {
   email: string;
   name: string | null;
   onboardingComplete: boolean;
-  plan: "FREE" | "PREMIUM";
+  plan: Plan;
   role: UserRole;
   status: AccountStatus;
   mfaEnabled: boolean;
@@ -53,10 +54,15 @@ async function loadAuthUser(userId: string): Promise<AuthUser | null> {
           mfaEnabled: true,
           profile: { select: { onboardingComplete: true } },
           subscriptions: {
-            where: { status: "ACTIVE" },
-            orderBy: { createdAt: "desc" },
+            orderBy: { updatedAt: "desc" },
             take: 1,
-            select: { plan: true },
+            select: {
+              plan: true,
+              status: true,
+              currentPeriodEnd: true,
+              cancelAtPeriodEnd: true,
+              graceUntil: true,
+            },
           },
         },
       })
@@ -67,7 +73,7 @@ async function loadAuthUser(userId: string): Promise<AuthUser | null> {
       email: user.email,
       name: user.name,
       onboardingComplete: user.profile?.onboardingComplete ?? false,
-      plan: user.subscriptions[0]?.plan ?? "FREE",
+      plan: publicPlan(user.subscriptions[0]),
       role: user.role,
       status: user.status,
       mfaEnabled: user.mfaEnabled,

@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { StatCard } from "@/components/ui/StatCard";
 import { FormField } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
@@ -56,6 +56,7 @@ export function ExpensesClient() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const submitKeyRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -139,8 +140,11 @@ export function ExpensesClient() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (saving) return;
     setFormError(null);
     setSaving(true);
+    const clientRequestId = submitKeyRef.current ?? crypto.randomUUID();
+    submitKeyRef.current = clientRequestId;
     try {
       const res = await fetch("/api/expenses", {
         method: "POST",
@@ -151,6 +155,7 @@ export function ExpensesClient() {
           description,
           date,
           currency: "INR",
+          clientRequestId,
         }),
       });
       const json = await res.json().catch(() => null);
@@ -158,6 +163,7 @@ export function ExpensesClient() {
         setFormError(json?.error?.message || "Could not save expense.");
         return;
       }
+      submitKeyRef.current = null;
       setAmount("");
       setDescription("");
       setDate(todayIso());

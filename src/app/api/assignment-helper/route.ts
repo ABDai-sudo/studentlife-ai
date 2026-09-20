@@ -9,6 +9,8 @@ import {
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { z } from "zod";
+import { aiRateLimit, userHasPaidAccess } from "@/services/billing.service";
+import { PRO_ASSIGNMENT_MODES } from "@/lib/billing/entitlements";
 
 export async function GET() {
   try {
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
     }
     const user = await getCurrentUser();
     if (!user) return unauthorized();
-    const rl = rateLimit(`ai:assign:${user.id}`, { limit: 20, windowSec: 3600 });
+    const rl = rateLimit(`ai:assign:${user.id}`, await aiRateLimit(user.id, "assign"));
     if (!rl.allowed) {
       return fail("Too many requests. Try again later.", {
         code: "RATE_LIMITED",
@@ -43,6 +45,14 @@ export async function POST(request: Request) {
         status: 422,
         details: parsed.error.flatten(),
       });
+    }
+    if (PRO_ASSIGNMENT_MODES.has(parsed.data.mode)) {
+      if (!(await userHasPaidAccess(user.id))) {
+        return fail("Student Pro is required for full drafts and exam-style answers.", {
+          code: "ENTITLEMENT_REQUIRED",
+          status: 403,
+        });
+      }
     }
     const result = await generateAssignmentDraft(user.id, parsed.data);
     return ok(result);

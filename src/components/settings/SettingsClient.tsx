@@ -45,6 +45,7 @@ import { useT } from "@/components/i18n/LocaleProvider";
 import { LanguageSelector } from "@/components/i18n/LanguageSelector";
 import { PersonalityVibeCard } from "@/components/i18n/PersonalityVibeCard";
 import { EngagementSettings } from "@/components/settings/EngagementSettings";
+import { BillingPanel } from "@/components/settings/BillingPanel";
 import { t as translate } from "@/lib/i18n/translator";
 import { languageNameToLocale } from "@/lib/i18n/config";
 import type {
@@ -263,6 +264,8 @@ export function SettingsClient({
           </Button>
         </div>
       </Section>
+
+      <BillingPanel />
 
       <Section
         icon={Globe2}

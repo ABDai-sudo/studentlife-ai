@@ -66,8 +66,8 @@ export async function awardXp(
     const cap = DAILY_CAPS[capKey] ?? DAILY_CAPS.default;
     const reasonKey = `${capKey}:${reason}`;
 
-    // Quests and weekly challenges: one XP grant per reason per day.
-    if (capKey === "quest" || capKey === "weekly") {
+    // Quests, weekly challenges, and Study Buddy items: one XP grant per reason per day.
+    if (capKey === "quest" || capKey === "weekly" || capKey === "study_buddy") {
       const dup = await tx.xpTransaction.findFirst({
         where: { userId, dayKey, reason: reasonKey },
         select: { id: true },

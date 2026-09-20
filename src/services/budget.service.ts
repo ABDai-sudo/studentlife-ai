@@ -47,7 +47,7 @@ export async function listBudgetsForUser(userId: string): Promise<BudgetDto[]> {
 
   const spentGroups = await prisma.expense.groupBy({
     by: ["category"],
-    where: { userId, date: { gte: startOfMonth } },
+    where: { userId, date: { gte: startOfMonth }, countsTowardSpend: true },
     _sum: { amount: true },
   });
   const spentMap = new Map(
