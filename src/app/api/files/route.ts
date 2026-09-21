@@ -5,6 +5,7 @@ import {
   deleteUploadedDocument,
   listUploadedDocuments,
 } from "@/services/study-tools.service";
+import { ingestUploadedFile, retryDocumentProcessing } from "@/services/documents.service";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { z } from "zod";
 import { uploadLimitBytes } from "@/services/billing.service";
@@ -28,6 +29,27 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return unauthorized();
     const maxBytes = await uploadLimitBytes(user.id);
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      const file = form.get("file");
+      if (!(file instanceof File)) {
+        return fail("Choose a file to upload.", {
+          code: "VALIDATION_ERROR",
+          status: 422,
+        });
+      }
+      const bytes = Buffer.from(await file.arrayBuffer());
+      const row = await ingestUploadedFile(user.id, {
+        fileName: file.name || "upload",
+        mimeType: file.type || "application/octet-stream",
+        bytes,
+        maxBytes,
+      });
+      return ok(row);
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = z
       .object({
@@ -80,7 +102,30 @@ export async function POST(request: Request) {
         status: 422,
       });
     }
-    return serverError("Could not save file metadata.");
+    return serverError("Could not save file.");
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const ctx = await getRequestContext();
+    if (!isAllowedOrigin(ctx.origin)) {
+      return fail("Invalid origin", { code: "FORBIDDEN", status: 403 });
+    }
+    const user = await getCurrentUser();
+    if (!user) return unauthorized();
+    const body = await request.json().catch(() => null);
+    const id = typeof body?.id === "string" ? body.id : "";
+    if (!id) {
+      return fail("Missing id", { code: "VALIDATION_ERROR", status: 422 });
+    }
+    const row = await retryDocumentProcessing(user.id, id);
+    return ok(row);
+  } catch (error) {
+    if (String(error).includes("NOT_FOUND")) {
+      return fail("Not found", { code: "NOT_FOUND", status: 404 });
+    }
+    return serverError("Could not retry file processing.");
   }
 }
 

@@ -40,8 +40,6 @@ export function AvatarStatusCard({
   name,
   presetId,
   imageSrc,
-  frame,
-  presence,
   status,
   streak,
   context,
@@ -130,8 +128,8 @@ export function AvatarStatusCard({
           name={name}
           presetId={presetId}
           imageSrc={imageSrc}
-          frame={frame}
-          presence={presence}
+          frame="none"
+          presence={undefined}
           size="2xl"
           forceStatic={dev?.forceStatic ?? false}
           force3dFailure={dev?.force3dFailure ?? false}

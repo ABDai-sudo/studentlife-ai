@@ -21,6 +21,7 @@ export const aiTutorSchema = z
       ])
       .optional(),
     stream: z.boolean().optional(),
+    documentIds: z.array(z.string().cuid()).max(5).optional(),
   })
   .strict();
 

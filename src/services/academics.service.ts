@@ -98,6 +98,10 @@ export async function createAssignment(
     },
   });
   void trackAnalyticsEvent({ eventName: "assignment_created" }, userId);
+  const { syncAfterAssignmentChange } = await import(
+    "@/services/student-sync.service"
+  );
+  void syncAfterAssignmentChange(userId, assignment);
   return assignment;
 }
 
@@ -161,6 +165,10 @@ export async function createExam(userId: string, input: CreateExamInput) {
     },
   });
   void trackAnalyticsEvent({ eventName: "exam_created" }, userId);
+  const { syncAfterExamChange } = await import(
+    "@/services/student-sync.service"
+  );
+  void syncAfterExamChange(userId, exam);
   return exam;
 }
 

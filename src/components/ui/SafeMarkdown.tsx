@@ -83,6 +83,10 @@ export function SafeMarkdown({ content }: { content: string }) {
             /`([^`]+)`/g,
             "<code class='rounded bg-surface-secondary px-1'>$1</code>"
           )
+          .replace(
+            /\[([^\]]+)\]\((\/api\/artifacts\/[a-zA-Z0-9_-]+\/file)\)/g,
+            "<a class='text-primary underline' href='$2'>$1</a>"
+          )
           .replace(/\n/g, "<br/>");
         return <p key={i} dangerouslySetInnerHTML={{ __html: html }} />;
       })}

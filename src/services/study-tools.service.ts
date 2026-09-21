@@ -132,13 +132,10 @@ export async function reviewFlashcard(
   });
 }
 
-const ALLOWED_MIME = new Set([
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "text/plain",
-]);
+export {
+  listUploadedDocuments,
+  deleteUploadedDocument,
+} from "@/services/documents.service";
 
 export async function createUploadedDocument(
   userId: string,
@@ -151,12 +148,11 @@ export async function createUploadedDocument(
     maxBytes?: number;
   }
 ) {
-  if (!ALLOWED_MIME.has(input.mimeType)) {
-    throw new Error("INVALID_TYPE");
-  }
+  const excerpt = input.textExcerpt?.trim() || "";
   if (input.sizeBytes > (input.maxBytes ?? 5 * 1024 * 1024)) {
     throw new Error("TOO_LARGE");
   }
+  const ready = excerpt.length > 0;
   return prisma.uploadedDocument.create({
     data: {
       userId,
@@ -164,22 +160,11 @@ export async function createUploadedDocument(
       mimeType: input.mimeType,
       sizeBytes: input.sizeBytes,
       kind: input.kind || "OTHER",
-      textExcerpt: input.textExcerpt?.slice(0, 20000) || null,
+      textExcerpt: excerpt.slice(0, 20000) || null,
+      extractedText: excerpt.slice(0, 400000) || null,
+      processStatus: ready ? "READY" : "FAILED",
+      errorCode: ready ? null : "FILE_BYTES_REQUIRED",
       storageKey: null,
     },
   });
-}
-
-export async function listUploadedDocuments(userId: string) {
-  return prisma.uploadedDocument.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
-}
-
-export async function deleteUploadedDocument(userId: string, id: string) {
-  const row = await prisma.uploadedDocument.findFirst({ where: { id, userId } });
-  if (!row) throw new Error("NOT_FOUND");
-  await prisma.uploadedDocument.delete({ where: { id } });
 }

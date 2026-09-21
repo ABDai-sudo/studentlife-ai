@@ -7,7 +7,6 @@ import { SelfieAvatarControls } from "@/components/avatar/SelfieAvatarControls";
 import { useT } from "@/components/i18n/LocaleProvider";
 import {
   AVATAR_STATUSES,
-  frameToUiRing,
   type AvatarFrameId,
 } from "@/lib/avatar/presets";
 import { userAvatarPhotoSrc } from "@/lib/avatar/selfie";
@@ -30,11 +29,9 @@ export function AvatarStudio({
   imageSrc,
   status,
   resolvedStatus,
-  presence,
   statusSource,
   statusLive,
   autoEnabled,
-  cosmeticFrame,
   disabled,
   saveState,
   saveError,
@@ -69,7 +66,6 @@ export function AvatarStudio({
   );
 
   const busy = Boolean(disabled) || saveState === "saving";
-  const frame = frameToUiRing(cosmeticFrame);
   const shownStatus = resolvedStatus || status;
   const statusKey = avatarStatusMessageKey(shownStatus);
   const sourceKey = avatarStatusSourceKey(statusSource);
@@ -138,8 +134,6 @@ export function AvatarStudio({
               shape={photoSrc ? "figure" : "circle"}
               presetId={presetId}
               imageSrc={photoSrc}
-              frame={frame}
-              presence={presence}
             />
             <p className="mt-4 text-center text-base font-semibold text-foreground">
               {displayName}

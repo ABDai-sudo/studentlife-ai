@@ -242,6 +242,12 @@ enum DocumentKind {
   OTHER
 }
 
+enum DocumentProcessStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
 // ─── Users & Auth ────────────────────────────────────────────────────────────
 
 model User {
@@ -288,6 +294,8 @@ model User {
   mfaRecoveryCodes    MfaRecoveryCode[]
   aiConversations     AiConversation[]
   uploadedDocuments   UploadedDocument[]
+  generatedArtifacts  GeneratedArtifact[]
+  expenseCategoryHints ExpenseCategoryHint[]
   questionPapers      GeneratedQuestionPaper[]
   assignmentDrafts    AssignmentDraft[]
   quizAttempts        QuizAttempt[]
@@ -810,20 +818,57 @@ model AiMessage {
 }
 
 model UploadedDocument {
-  id          String       @id @default(cuid())
-  userId      String       @map("user_id")
-  kind        DocumentKind @default(OTHER)
-  fileName    String       @map("file_name")
-  mimeType    String       @map("mime_type")
-  sizeBytes   Int          @map("size_bytes")
-  storageKey  String?      @map("storage_key")
-  textExcerpt String?      @map("text_excerpt") @db.Text
-  createdAt   DateTime     @default(now()) @map("created_at")
+  id             String                 @id @default(cuid())
+  userId         String                 @map("user_id")
+  kind           DocumentKind           @default(OTHER)
+  fileName       String                 @map("file_name")
+  mimeType       String                 @map("mime_type")
+  sizeBytes      Int                    @map("size_bytes")
+  storageKey     String?                @map("storage_key")
+  textExcerpt    String?                @map("text_excerpt") @db.Text
+  extractedText  String?                @map("extracted_text") @db.Text
+  pageCount      Int?                   @map("page_count")
+  processStatus  DocumentProcessStatus  @default(PROCESSING) @map("process_status")
+  errorCode      String?                @map("error_code")
+  createdAt      DateTime               @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([userId, processStatus])
   @@map("uploaded_documents")
+}
+
+model GeneratedArtifact {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  title          String
+  kind           String
+  fileName       String   @map("file_name")
+  mimeType       String   @map("mime_type")
+  storageKey     String   @map("storage_key")
+  conversationId String?  @map("conversation_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("generated_artifacts")
+}
+
+model ExpenseCategoryHint {
+  id          String          @id @default(cuid())
+  userId      String          @map("user_id")
+  merchantKey String          @map("merchant_key")
+  category    ExpenseCategory
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, merchantKey])
+  @@index([userId])
+  @@map("expense_category_hints")
 }
 
 model AssignmentDraft {

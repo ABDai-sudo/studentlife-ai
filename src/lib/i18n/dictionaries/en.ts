@@ -301,6 +301,13 @@ export const en = {
   "tutor.flashcards": "Generate Flashcards",
   "tutor.translate": "Translate",
   "tutor.continue": "Continue",
+  "tutor.attach": "Upload file",
+  "tutor.processing": "Reading file…",
+  "tutor.retry": "Retry",
+  "tutor.retryFile": "Retry file",
+  "tutor.makePdf": "Make PDF",
+  "tutor.modeTutor": "Tutor",
+  "tutor.modeExam": "Exam",
 
   // Money chrome extras
   "money.subtitle": "This month at a glance",
@@ -813,11 +820,11 @@ export const en = {
   "buddy.reason.noteQuick": "Quick revision from a note you saved.",
   "buddy.reason.weakFile": "From your reported weak topics or recent quiz/grade data.",
 
-  "personality.professional": "Professional — clear and formal",
-  "personality.friendly": "Friendly — warm and supportive",
-  "personality.campusBro": "Campus Bro — casual campus tone",
-  "personality.chronicallyOnline": "Chronically Online — Internet-native, playful student tone",
-  "personality.academicVillain": "Academic Villain — dramatic study energy",
+  "personality.professional": "Normal — clear and balanced",
+  "personality.friendly": "Tutor — step-by-step teaching",
+  "personality.campusBro": "Casual — natural student talk",
+  "personality.chronicallyOnline": "Casual (extra) — hidden from the main list",
+  "personality.academicVillain": "Exam — concise, high-signal answers",
 
   "header.themeToLight": "Switch to light theme",
   "header.themeToDark": "Switch to dark theme",

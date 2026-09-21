@@ -58,6 +58,13 @@ export async function createExpenseForUser(
     input.description && input.description.trim().length > 0
       ? input.description.trim()
       : null;
+  const { resolveExpenseCategory, rememberExpenseCategory } = await import(
+    "@/lib/money/category-suggest"
+  );
+  const category = await resolveExpenseCategory(userId, {
+    category: input.category,
+    description,
+  });
 
   if (input.clientRequestId) {
     const existing = await prisma.expense.findFirst({
@@ -68,7 +75,7 @@ export async function createExpenseForUser(
     const recent = await prisma.expense.findFirst({
       where: {
         userId,
-        category: input.category,
+        category,
         date,
         description,
         amount: new Prisma.Decimal(input.amount.toFixed(2)),
@@ -85,7 +92,7 @@ export async function createExpenseForUser(
         userId,
         amount: new Prisma.Decimal(input.amount.toFixed(2)),
         currency: input.currency,
-        category: input.category,
+        category,
         description,
         date,
         clientRequestId: input.clientRequestId ?? null,
@@ -104,6 +111,10 @@ export async function createExpenseForUser(
       },
       userId
     );
+
+    if (input.category && description) {
+      await rememberExpenseCategory(userId, description, category);
+    }
 
     return toDto(expense);
   } catch (error) {

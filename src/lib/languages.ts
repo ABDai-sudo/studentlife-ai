@@ -27,28 +27,27 @@ export const PERSONALITY_I18N_KEYS: Record<PersonalityMode, MessageKey> = {
 
 /** Full personality option labels (settings select). */
 export const PERSONALITY_LABELS: Record<string, string> = {
-  PROFESSIONAL: "Professional — clear and formal",
-  FRIENDLY: "Friendly — warm and supportive",
-  CAMPUS_BRO: "Campus Bro — casual campus tone",
-  CHRONICALLY_ONLINE:
-    "Chronically Online — Internet-native, playful student tone",
-  ACADEMIC_VILLAIN: "Academic Villain — dramatic study energy",
+  PROFESSIONAL: "Normal — clear and balanced",
+  FRIENDLY: "Tutor — step-by-step teaching",
+  CAMPUS_BRO: "Casual — natural student talk",
+  CHRONICALLY_ONLINE: "Casual (extra)",
+  ACADEMIC_VILLAIN: "Exam — concise, high-signal answers",
 };
 
 /** Short vibe names for the premium indicator near UI language. */
 export const PERSONALITY_SHORT_LABELS: Record<string, string> = {
-  PROFESSIONAL: "Professional",
-  FRIENDLY: "Friendly",
-  CAMPUS_BRO: "Campus Bro",
-  CHRONICALLY_ONLINE: "Chronically Online",
-  ACADEMIC_VILLAIN: "Academic Villain",
+  PROFESSIONAL: "Normal",
+  FRIENDLY: "Tutor",
+  CAMPUS_BRO: "Casual",
+  CHRONICALLY_ONLINE: "Casual",
+  ACADEMIC_VILLAIN: "Exam",
 };
 
 /** One-line vibe descriptions (not languages). */
 export const PERSONALITY_BLURBS: Record<string, string> = {
-  PROFESSIONAL: "Clear and formal",
-  FRIENDLY: "Warm and supportive",
-  CAMPUS_BRO: "Casual campus tone",
-  CHRONICALLY_ONLINE: "Internet-native, playful student tone",
-  ACADEMIC_VILLAIN: "Dramatic study energy",
+  PROFESSIONAL: "Clear, friendly, balanced default",
+  FRIENDLY: "Teaches step-by-step with examples",
+  CAMPUS_BRO: "Natural casual language",
+  CHRONICALLY_ONLINE: "Natural casual language",
+  ACADEMIC_VILLAIN: "Concise exam-ready answers",
 };

@@ -595,6 +595,9 @@ export async function getStudyBuddyOverview(userId: string) {
 async function maybeAiSummary(facts: Facts, items: DraftItem[]): Promise<string> {
   const lang = facts.explanationLang;
   const fallback = rulesSummary(facts, lang);
+  if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
+    return fallback;
+  }
   const factLines = [
     `Pending assignments: ${facts.pending.map((a) => `${a.title} due ${a.dueDate}`).join("; ") || "none"}`,
     `Upcoming exams: ${facts.exams.map((e) => `${e.title} ${e.examDate}`).join("; ") || "none"}`,
@@ -617,7 +620,19 @@ async function maybeAiSummary(facts: Facts, items: DraftItem[]): Promise<string>
   return text || fallback;
 }
 
+const planInflight = new Map<string, ReturnType<typeof generateStudyBuddyPlanInner>>();
+
 export async function generateStudyBuddyPlan(userId: string) {
+  const existing = planInflight.get(userId);
+  if (existing) return existing;
+  const run = generateStudyBuddyPlanInner(userId).finally(() => {
+    planInflight.delete(userId);
+  });
+  planInflight.set(userId, run);
+  return run;
+}
+
+async function generateStudyBuddyPlanInner(userId: string) {
   const facts = await gatherFacts(userId);
   const items = buildPlanItems(facts);
   const headline = headlineFromFacts(facts, items.length);

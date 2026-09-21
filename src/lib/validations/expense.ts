@@ -19,7 +19,7 @@ export const createExpenseSchema = z
   .object({
     amount: z.coerce.number().positive("Amount must be greater than 0").max(1_000_000),
     currency: z.enum(CURRENCIES).default("INR"),
-    category: z.enum(EXPENSE_CATEGORIES),
+    category: z.enum(EXPENSE_CATEGORIES).optional(),
     description: z
       .string()
       .trim()

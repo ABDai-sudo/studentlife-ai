@@ -101,8 +101,8 @@ export function DashboardGamificationHeader({
           name={display}
           presetId={data?.avatarPresetId}
           imageSrc={data?.avatarImageUrl}
-          frame={data?.avatarFrameUi ?? "none"}
-          presence={data?.avatarPresence}
+          frame="none"
+          presence={undefined}
           status={data?.avatarStatus}
           streak={streak}
           context={avatarContext}

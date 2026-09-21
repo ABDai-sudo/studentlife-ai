@@ -69,11 +69,6 @@ export function AppHeader({
     null;
   const avatarStatus =
     live?.avatarStatus ?? avatarStatusProp ?? identity?.avatarStatus ?? null;
-  const avatarPresence =
-    live?.avatarPresence ??
-    avatarPresenceProp ??
-    identity?.avatarPresence ??
-    "idle";
   const displayName = live?.displayName ?? initialName;
   const level = live?.level ?? null;
   const statusKey = avatarStatusMessageKey(avatarStatus);
@@ -219,7 +214,7 @@ export function AppHeader({
               name={displayName}
               presetId={avatarPresetId}
               imageSrc={avatarImageUrl}
-              presence={avatarPresence}
+              presence={undefined}
             />
             <span className="min-w-0">
               <span className="block truncate text-xs font-semibold leading-tight text-foreground sm:text-sm">

@@ -6,7 +6,8 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { PERSONALITY_I18N_KEYS } from "@/lib/languages";
-import { PERSONALITY_MODES, type PersonalityMode } from "@/lib/personality";
+import { STUDENT_FACING_PERSONALITY_MODES } from "@/services/ai/tones";
+import type { PersonalityMode } from "@/lib/personality";
 import { LanguageSelector } from "@/components/i18n/LanguageSelector";
 import { getExplanationLanguages } from "@/lib/i18n/languages-registry";
 import { useT } from "@/components/i18n/LocaleProvider";
@@ -344,7 +345,7 @@ export function OnboardingClient() {
                 setPersonalityMode(e.target.value as PersonalityMode)
               }
             >
-              {PERSONALITY_MODES.map((m) => (
+              {STUDENT_FACING_PERSONALITY_MODES.map((m) => (
                 <option key={m} value={m}>
                   {t(PERSONALITY_I18N_KEYS[m])}
                 </option>

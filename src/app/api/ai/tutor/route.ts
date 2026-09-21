@@ -1,13 +1,17 @@
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, serverError, unauthorized } from "@/lib/api";
 import { aiTutorSchema } from "@/lib/validations/ai-tools";
-import { askStudyTutor } from "@/services/ai-tutor.service";
+import { askStudyTutor, TutorProviderError } from "@/services/ai-tutor.service";
 import { sanitizeTutorVisibleText } from "@/services/ai/visible-output";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { safeLog } from "@/lib/security/safe-log";
 import { trackAnalyticsEvent } from "@/services/analytics.service";
 import { aiRateLimit } from "@/services/billing.service";
+
+export async function GET() {
+  return ok({ ok: true, route: "ai-tutor" });
+}
 
 export async function POST(request: Request) {
   try {
@@ -40,12 +44,20 @@ export async function POST(request: Request) {
       subject: parsed.data.subject,
       conversationId: parsed.data.conversationId,
       mode: parsed.data.mode,
+      documentIds: parsed.data.documentIds,
     });
 
     void trackAnalyticsEvent({ eventName: "ai_tutor_opened" }, user.id);
 
     const safeReply = sanitizeTutorVisibleText(result.reply || "");
-    const publicResult = { ...result, reply: safeReply || "I could not generate a reply. Please try again." };
+    const publicResult = { ...result, reply: safeReply };
+
+    if (!publicResult.reply) {
+      return fail("The AI service did not return an answer. Try again.", {
+        code: "PROVIDER_UNAVAILABLE",
+        status: 503,
+      });
+    }
 
     if (parsed.data.stream) {
       const encoder = new TextEncoder();
@@ -59,15 +71,21 @@ export async function POST(request: Request) {
       return new Response(stream, {
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
-          "Cache-Control": "no-cache",
+          "Cache-Control": "no-store",
           "X-Conversation-Id": result.conversationId,
           "X-AI-Provider": result.provider,
         },
       });
     }
 
-    return ok(publicResult);
+    return ok(publicResult, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    if (error instanceof TutorProviderError) {
+      return fail(error.message, {
+        code: error.code,
+        status: 503,
+      });
+    }
     safeLog("error", "AI tutor failed", { error: String(error) });
     return serverError("Tutor is temporarily unavailable.");
   }

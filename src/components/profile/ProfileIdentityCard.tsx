@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Flame, Pencil, Settings2, Sparkles, Target, TrendingUp } from "lucide-react";
+import { Flame, Pencil, Settings2, Target, TrendingUp } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { AvatarStudio, StatusChipPicker } from "@/components/avatar/AvatarStudio";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useT } from "@/components/i18n/LocaleProvider";
 import {
   displayAvatarStatus,
-  frameToUiRing,
   type AvatarFrameId,
 } from "@/lib/avatar/presets";
 import { userAvatarPhotoSrc } from "@/lib/avatar/selfie";
@@ -87,7 +86,6 @@ export function ProfileIdentityCard({
   const { t } = useT();
   const [studioOpen, setStudioOpen] = useState(false);
   const name = identity.displayName?.trim() || userName;
-  const frame = frameToUiRing(identity.cosmeticFrame);
   const xp = xpProgressFromTotal(identity.xpTotal);
   const shownStatus = identity.resolvedAvatarStatus || identity.avatarStatus;
   const shownStatusKey = avatarStatusMessageKey(shownStatus);
@@ -108,9 +106,6 @@ export function ProfileIdentityCard({
               shape={photoSrc ? "figure" : "circle"}
               presetId={identity.avatarPresetId}
               imageSrc={photoSrc}
-              frame={frame}
-              aura={identity.academicAura}
-              presence={identity.avatarPresence}
             />
           </div>
 
@@ -269,8 +264,7 @@ export function ProfileIdentityCard({
             </li>
           </ul>
           <div className="mt-4">
-            <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+            <p className="mb-2 text-sm font-medium text-foreground">
               {t("profile.achievements")}
             </p>
             {achievements.length ? (

@@ -57,7 +57,7 @@ export function AiCoachClient() {
     setMessages((prev) => [...prev, { role: "user", text: message.trim() }]);
     setInput("");
     try {
-      const res = await fetch("/api/ai/coach", {
+      const res = await fetch("/api/study/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: message.trim() }),

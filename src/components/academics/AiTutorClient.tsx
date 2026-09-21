@@ -20,28 +20,17 @@ type Msg = { id?: string; role: "user" | "assistant"; text: string };
 type Convo = { id: string; title: string; updatedAt: string };
 
 const ACTION_DEFS = [
-  { labelKey: "tutor.askAnything" as const, prompt: "Help me understand this topic: " },
+  { labelKey: "tutor.askAnything" as const, prompt: "" },
   { labelKey: "tutor.helpAssignment" as const, prompt: "Help me plan this assignment: " },
-  { labelKey: "tutor.explainNotes" as const, prompt: "Explain these notes simply: " },
-  { labelKey: "tutor.generatePaper" as const, prompt: "Create practice questions on: " },
+  { labelKey: "tutor.createNotes" as const, prompt: "Make notes PDF from this: " },
   { labelKey: "tutor.testMe" as const, prompt: "Test me with 5 questions on: " },
-  { labelKey: "tutor.examEmergency" as const, href: "/dashboard/emergency" },
-  { labelKey: "tutor.studyPlan" as const, prompt: "Create a realistic study plan for: " },
-  { labelKey: "tutor.simplify" as const, prompt: "Simplify this topic: " },
-  { labelKey: "tutor.viva" as const, prompt: "Generate viva questions on: " },
 ] as const;
 
 const QUICK_DEFS = [
-  { mode: "explain_simply", labelKey: "tutor.explainSimply" as const },
-  { mode: "explain_detail", labelKey: "tutor.explainDetail" as const },
-  { mode: "exam_ready", labelKey: "tutor.examReady" as const },
-  { mode: "example", labelKey: "tutor.giveExample" as const },
-  { mode: "diagram", labelKey: "tutor.showDiagram" as const },
+  { mode: "explain_simply", labelKey: "tutor.modeTutor" as const },
+  { mode: "exam_ready", labelKey: "tutor.modeExam" as const },
   { mode: "notes", labelKey: "tutor.createNotes" as const },
   { mode: "test_me", labelKey: "tutor.testMe" as const },
-  { mode: "flashcards", labelKey: "tutor.flashcards" as const },
-  { mode: "translate", labelKey: "tutor.translate" as const },
-  { mode: "continue", labelKey: "tutor.continue" as const },
 ] as const;
 
 export function AiTutorClient() {
@@ -61,11 +50,18 @@ export function AiTutorClient() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [convos, setConvos] = useState<Convo[]>([]);
   const [search, setSearch] = useState("");
+  const [documentIds, setDocumentIds] = useState<string[]>([]);
+  const [files, setFiles] = useState<
+    { id: string; fileName: string; processStatus: string; errorCode: string | null }[]
+  >([]);
+  const [uploading, setUploading] = useState(false);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const loadConvos = useCallback(async () => {
     const res = await fetch(
-      `/api/ai/conversations${search ? `?q=${encodeURIComponent(search)}` : ""}`,
+      `/api/study/conversations${search ? `?q=${encodeURIComponent(search)}` : ""}`,
       { cache: "no-store" }
     );
     const json = await res.json().catch(() => null);
@@ -73,7 +69,7 @@ export function AiTutorClient() {
   }, [search]);
 
   useEffect(() => {
-    const url = `/api/ai/conversations${search ? `?q=${encodeURIComponent(search)}` : ""}`;
+    const url = `/api/study/conversations${search ? `?q=${encodeURIComponent(search)}` : ""}`;
     return mountFetch(url, ({ ok, json }) => {
       const body = json as { success?: boolean; data?: Convo[] } | null;
       if (ok && body?.success) setConvos(body.data!);
@@ -86,7 +82,7 @@ export function AiTutorClient() {
 
   async function openConvo(id: string) {
     setError(null);
-    const res = await fetch(`/api/ai/conversations/${id}`, { cache: "no-store" });
+    const res = await fetch(`/api/study/conversations/${id}`, { cache: "no-store" });
     const json = await res.json().catch(() => null);
     if (!res.ok || !json?.success) {
       setError(json?.error?.message || "Could not open conversation.");
@@ -110,16 +106,66 @@ export function AiTutorClient() {
     setError(null);
   }
 
+  async function uploadFile(file: File) {
+    setUploading(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/files", { method: "POST", body: form });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        setError(json?.error?.message || "Could not upload file.");
+        return;
+      }
+      const row = json.data as {
+        id: string;
+        fileName: string;
+        processStatus: string;
+        errorCode: string | null;
+      };
+      setFiles((prev) => [row, ...prev].slice(0, 8));
+      if (row.processStatus === "READY") {
+        setDocumentIds((prev) => Array.from(new Set([row.id, ...prev])).slice(0, 5));
+      }
+    } catch {
+      setError("Could not upload file.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function retryFile(id: string) {
+    const res = await fetch("/api/files", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const json = await res.json().catch(() => null);
+    if (res.ok && json?.success) {
+      const row = json.data;
+      setFiles((prev) => prev.map((f) => (f.id === id ? row : f)));
+      if (row.processStatus === "READY") {
+        setDocumentIds((prev) => Array.from(new Set([row.id, ...prev])).slice(0, 5));
+      }
+    }
+  }
+
   async function ask(message: string, mode = "default") {
     if (!message.trim() || loading) return;
     setError(null);
     setLoading(true);
     const userText = message.trim();
-    setMessages((prev) => [...prev, { role: "user", text: userText }]);
+    setRetryMessage(userText);
+    setMessages((prev) => {
+      const last = prev.at(-1);
+      if (last?.role === "user" && last.text === userText) return prev;
+      return [...prev, { role: "user", text: userText }];
+    });
     setInput("");
 
     try {
-      const res = await fetch("/api/ai/tutor", {
+      const res = await fetch("/api/study/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,6 +173,7 @@ export function AiTutorClient() {
           conversationId: conversationId || undefined,
           mode,
           stream: false,
+          documentIds: documentIds.length ? documentIds : undefined,
         }),
       });
 
@@ -217,31 +264,18 @@ export function AiTutorClient() {
 
         {showHome ? (
           <div className="mb-4 grid gap-2 sm:grid-cols-2">
-            {ACTION_DEFS.map((a) =>
-              "href" in a && a.href ? (
-                <Button
-                  key={a.labelKey}
-                  href={a.href}
-                  variant="secondary"
-                  className="justify-start"
-                >
-                  {t(a.labelKey)}
-                </Button>
-              ) : (
+            {ACTION_DEFS.map((a) => (
                 <button
                   key={a.labelKey}
                   type="button"
                   className="border-t border-border py-3 text-left text-sm font-medium hover:text-primary"
                   onClick={() => {
-                    if ("prompt" in a && a.prompt) {
-                      setInput(a.prompt);
-                    }
+                    if (a.prompt) setInput(a.prompt);
                   }}
                 >
                   {t(a.labelKey)}
                 </button>
-              )
-            )}
+            ))}
           </div>
         ) : null}
 
@@ -283,15 +317,9 @@ export function AiTutorClient() {
                     <button
                       type="button"
                       className="rounded-md border border-border px-2 py-0.5 text-[0.7rem]"
-                      onClick={() => {
-                        const prevUser = [...messages]
-                          .slice(0, i)
-                          .reverse()
-                          .find((x) => x.role === "user");
-                        if (prevUser) void ask(prevUser.text);
-                      }}
+                      onClick={() => void ask(`Make this as PDF:\n${m.text.slice(0, 1500)}`)}
                     >
-                      {t("tutor.regenerate")}
+                      {t("tutor.makePdf")}
                     </button>
                   </div>
                 ) : null}
@@ -318,7 +346,7 @@ export function AiTutorClient() {
 
           <form
             onSubmit={onSubmit}
-            className="flex flex-col gap-2 border-t border-border p-3 sm:flex-row"
+            className="flex flex-col gap-2 border-t border-border p-3 sm:flex-row sm:items-end"
           >
             <textarea
               className="field-input min-h-[44px] flex-1 resize-y text-sm"
@@ -328,7 +356,26 @@ export function AiTutorClient() {
               placeholder={t("tutor.placeholder")}
               aria-label="Message"
             />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="sr-only"
+                accept=".pdf,.txt,.docx,image/png,image/jpeg,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadFile(file);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading || uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading ? t("tutor.processing") : t("tutor.attach")}
+              </Button>
               <Button
                 type="submit"
                 variant="primary"
@@ -339,9 +386,41 @@ export function AiTutorClient() {
             </div>
           </form>
         </div>
+        {files.length ? (
+          <ul className="mt-3 space-y-1 text-xs text-muted">
+            {files.map((f) => (
+              <li key={f.id} className="flex items-center justify-between gap-2">
+                <span>
+                  {f.fileName} — {f.processStatus.toLowerCase()}
+                  {f.errorCode ? ` (${f.errorCode})` : ""}
+                </span>
+                {f.processStatus === "FAILED" ? (
+                  <button
+                    type="button"
+                    className="text-primary underline"
+                    onClick={() => void retryFile(f.id)}
+                  >
+                    {t("tutor.retryFile")}
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {error ? (
           <p className="mt-3 text-sm text-error" role="alert">
-            {error}
+            {error}{" "}
+            {retryMessage ? (
+              <button
+                type="button"
+                className="underline"
+                onClick={() => {
+                  if (retryMessage) void ask(retryMessage);
+                }}
+              >
+                {t("tutor.retry")}
+              </button>
+            ) : null}
           </p>
         ) : null}
       </div>

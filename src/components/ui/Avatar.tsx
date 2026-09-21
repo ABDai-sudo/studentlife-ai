@@ -130,10 +130,9 @@ export function Avatar({
             />
           </span>
           {showPresence ? (
-            <span
-              className={`avatar-presence avatar-presence-figure avatar-presence-${presence}`}
-              data-presence={presence}
-            />
+            <span className="sr-only">
+              {presence}
+            </span>
           ) : null}
         </span>
       </span>
@@ -163,16 +162,11 @@ export function Avatar({
           )}
         </span>
         {showPresence ? (
-          <span
-            className={`avatar-presence avatar-presence-${presence}`}
-            data-presence={presence}
-          />
+          <span className="sr-only">{presence}</span>
         ) : null}
       </span>
-      {showChip ? (
-        <span className="absolute -bottom-1 max-w-[6.5rem] truncate rounded-md border border-border bg-surface px-1.5 py-0.5 text-[0.6rem] font-medium text-secondary">
-          {statusLabel}
-        </span>
+          {showChip ? (
+        <span className="sr-only">{statusLabel}</span>
       ) : null}
     </span>
   );

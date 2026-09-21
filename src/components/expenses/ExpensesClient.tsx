@@ -62,7 +62,7 @@ export function ExpensesClient() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
 
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<(typeof EXPENSE_CATEGORIES)[number]>("FOOD");
+  const [category, setCategory] = useState<(typeof EXPENSE_CATEGORIES)[number] | "">("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(todayIso);
 
@@ -151,7 +151,7 @@ export function ExpensesClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: Number(amount),
-          category,
+          ...(category ? { category } : {}),
           description,
           date,
           currency: "INR",
@@ -167,7 +167,7 @@ export function ExpensesClient() {
       setAmount("");
       setDescription("");
       setDate(todayIso());
-      setCategory("FOOD");
+      setCategory("");
       await load(1, categoryFilter);
     } catch {
       setFormError("Could not reach the server.");
@@ -216,14 +216,14 @@ export function ExpensesClient() {
       >
         <div>
           <h2 className="text-base font-semibold text-foreground">
-            Log an expense
+            Quick add
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Saved to your account — only you can see it.
+            Enter an amount and tap Add. Category is optional.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField id="amount" label="Amount" error={null}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <FormField id="amount" label="Amount (₹)" error={null}>
             <input
               id="amount"
               type="number"
@@ -234,13 +234,22 @@ export function ExpensesClient() {
               onChange={(e) => setAmount(e.target.value)}
               className="field-input"
               placeholder="120"
+              inputMode="decimal"
             />
           </FormField>
+          <Button type="submit" disabled={saving} size="lg">
+            {saving ? "Saving…" : "Add"}
+          </Button>
+        </div>
+        <details className="rounded-lg border border-border px-3 py-2">
+          <summary className="cursor-pointer text-sm font-medium">
+            Optional details
+          </summary>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <FormField id="date" label="Date">
             <input
               id="date"
               type="date"
-              required
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="field-input"
@@ -251,10 +260,13 @@ export function ExpensesClient() {
               id="category"
               value={category}
               onChange={(e) =>
-                setCategory(e.target.value as (typeof EXPENSE_CATEGORIES)[number])
+                setCategory(
+                  (e.target.value || "") as (typeof EXPENSE_CATEGORIES)[number] | ""
+                )
               }
               className="field-input"
             >
+              <option value="">Uncategorized</option>
               {EXPENSE_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {EXPENSE_CATEGORY_LABELS[c]}
@@ -272,15 +284,13 @@ export function ExpensesClient() {
               maxLength={200}
             />
           </FormField>
-        </div>
+          </div>
+        </details>
         {formError ? (
           <p className="text-sm text-error" role="alert">
             {formError}
           </p>
         ) : null}
-        <Button type="submit" disabled={saving} size="lg">
-          {saving ? "Saving…" : "Save expense"}
-        </Button>
       </form>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

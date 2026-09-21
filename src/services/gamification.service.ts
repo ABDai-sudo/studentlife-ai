@@ -120,7 +120,7 @@ export async function awardXp(
       level: lvl.level,
       levelName: lvl.name,
     };
-  });
+  }, { timeout: 15000 });
 }
 
 export async function recordMeaningfulActivity(
@@ -172,7 +172,7 @@ export async function recordMeaningfulActivity(
         lastLoggedAt: today,
       },
     });
-  });
+  }, { timeout: 15000 });
 }
 
 export async function ensureDailyQuests(
@@ -372,7 +372,7 @@ export async function incrementWeeklyChallenge(
       xpReward: row.xpReward,
       code: row.code,
     };
-  });
+  }, { timeout: 15000 });
 
   if (!result) return null;
   if (result.award) {

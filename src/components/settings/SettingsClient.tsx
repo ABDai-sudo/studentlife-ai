@@ -23,10 +23,8 @@ import { LogoutButton } from "@/components/app/LogoutButton";
 import { COMPANY } from "@/lib/company";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { ThemeSelector } from "@/components/theme/ThemeSelector";
-import {
-  PERSONALITY_MODES,
-  type PersonalityMode,
-} from "@/lib/personality";
+import { STUDENT_FACING_PERSONALITY_MODES } from "@/services/ai/tones";
+import type { PersonalityMode } from "@/lib/personality";
 import { PERSONALITY_I18N_KEYS } from "@/lib/languages";
 import {
   getExplanationLanguages,
@@ -465,7 +463,10 @@ export function SettingsClient({
                 }
               }}
             >
-              {PERSONALITY_MODES.map((m) => (
+              {(STUDENT_FACING_PERSONALITY_MODES.includes(displayPersonality)
+                ? STUDENT_FACING_PERSONALITY_MODES
+                : [displayPersonality, ...STUDENT_FACING_PERSONALITY_MODES]
+              ).map((m) => (
                 <option key={m} value={m}>
                   {t(PERSONALITY_I18N_KEYS[m])}
                 </option>
