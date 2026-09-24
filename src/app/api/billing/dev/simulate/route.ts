@@ -11,8 +11,9 @@ import { z } from "zod";
 /** Explicit test-only simulation. Never enabled for Stripe/production. */
 export async function POST(request: Request) {
   try {
-    if (resolveBillingProviderKind() !== "dev") {
-      return fail("Dev billing is not enabled.", { code: "FORBIDDEN", status: 403 });
+    if (process.env.NODE_ENV === "production" || resolveBillingProviderKind() !== "dev") {
+      const status = process.env.NODE_ENV === "production" ? 404 : 403;
+      return fail("Dev billing is not enabled.", { code: "FORBIDDEN", status });
     }
     const ctx = await getRequestContext();
     if (!isAllowedOrigin(ctx.origin)) {

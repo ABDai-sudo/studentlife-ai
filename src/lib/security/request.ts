@@ -31,8 +31,8 @@ export function isAllowedOrigin(origin: string | null): boolean {
     const { hostname, origin: requestOrigin } = new URL(origin);
 
     // Local development (loopback and private LAN so phones can hit the dev server)
-    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
     if (process.env.NODE_ENV !== "production") {
+      if (hostname === "localhost" || hostname === "127.0.0.1") return true;
       if (
         /^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
         /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) ||

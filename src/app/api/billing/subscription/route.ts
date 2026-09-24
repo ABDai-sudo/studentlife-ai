@@ -12,6 +12,7 @@ import {
 } from "@/services/billing.service";
 import { getRequestContext, isAllowedOrigin } from "@/lib/security/request";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { AppUrlConfigError, resolveAppBaseUrl } from "@/lib/app-url";
 import { z } from "zod";
 
 export async function GET() {
@@ -65,11 +66,7 @@ export async function POST(request: Request) {
     }
 
     const plan = (parsed.data.plan || "PRO_MONTHLY") as CheckoutPlan;
-    const origin =
-      ctx.origin ||
-      process.env.APP_BASE_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      "http://localhost:3000";
+    const origin = ctx.origin || resolveAppBaseUrl();
     const checkout = await startCheckout({
       userId: user.id,
       email: user.email,
@@ -82,6 +79,9 @@ export async function POST(request: Request) {
       sessionId: checkout.providerSessionId,
     });
   } catch (error) {
+    if (error instanceof AppUrlConfigError) {
+      return fail(error.message, { code: error.code, status: 503 });
+    }
     if (error instanceof BillingConfigRequiredError) {
       return fail("PAYMENT_PROVIDER_CONFIG_REQUIRED", {
         code: "PAYMENT_PROVIDER_CONFIG_REQUIRED",

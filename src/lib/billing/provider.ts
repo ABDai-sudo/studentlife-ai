@@ -61,22 +61,25 @@ export interface BillingProvider {
   ): Promise<NormalizedBillingEvent[]>;
 }
 
-export function resolveBillingProviderKind(): BillingProviderKind {
-  const forced = (process.env.BILLING_PROVIDER || "").trim().toLowerCase();
-  if (forced === "dev") return "dev";
-  if (forced === "none") return "none";
-  if (forced === "stripe") {
-    return stripeConfigured() ? "stripe" : "none";
+export function resolveBillingProviderKind(
+  env: NodeJS.ProcessEnv = process.env
+): BillingProviderKind {
+  const forced = (env.BILLING_PROVIDER || "").trim().toLowerCase();
+  if (forced === "dev") {
+    if (env.NODE_ENV === "production") return "none";
+    return "dev";
   }
-  if (stripeConfigured()) return "stripe";
+  if (forced === "stripe") {
+    return stripeConfigured(env) ? "stripe" : "none";
+  }
   return "none";
 }
 
-export function stripeConfigured(): boolean {
+export function stripeConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
   return Boolean(
-    process.env.STRIPE_SECRET_KEY?.trim() &&
-      process.env.STRIPE_WEBHOOK_SECRET?.trim() &&
-      process.env.STRIPE_PRICE_PRO_MONTHLY?.trim() &&
-      process.env.STRIPE_PRICE_PRO_YEARLY?.trim()
+    env.STRIPE_SECRET_KEY?.trim() &&
+      env.STRIPE_WEBHOOK_SECRET?.trim() &&
+      env.STRIPE_PRICE_PRO_MONTHLY?.trim() &&
+      env.STRIPE_PRICE_PRO_YEARLY?.trim()
   );
 }

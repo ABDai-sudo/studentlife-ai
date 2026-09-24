@@ -5,13 +5,10 @@ import type {
 } from "./provider";
 import { BillingConfigRequiredError } from "./provider";
 import { verifyDevWebhookSignature } from "./webhook-signature";
+import { resolveAppBaseUrl } from "@/lib/app-url";
 
 function baseUrl() {
-  return (
-    process.env.APP_BASE_URL?.replace(/\/$/, "") ||
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000"
-  );
+  return resolveAppBaseUrl();
 }
 
 function periodFor(plan: "PRO_MONTHLY" | "PRO_YEARLY", from = new Date()) {
