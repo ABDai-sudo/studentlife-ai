@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { resolveActiveSession } from "@/lib/auth/active-session";
 
 const SESSION_COOKIE = "sl_session";
 const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/settings", "/admin"];
@@ -11,6 +12,16 @@ function getSecret(): Uint8Array | null {
   return new TextEncoder().encode(secret);
 }
 
+function clearSessionCookie(response: NextResponse) {
+  response.cookies.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
+/** JWT plus a live, unrevoked auth_sessions row. Fails closed if the lookup throws. */
 async function hasValidSession(request: NextRequest): Promise<boolean> {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (!token) return false;
@@ -18,7 +29,12 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
   if (!secret) return false;
   try {
     await jwtVerify(token, secret);
-    return true;
+  } catch {
+    return false;
+  }
+  try {
+    const active = await resolveActiveSession(token);
+    return active !== null;
   } catch {
     return false;
   }
@@ -50,6 +66,7 @@ export async function proxy(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     const res = NextResponse.redirect(loginUrl);
+    if (request.cookies.get(SESSION_COOKIE)?.value) clearSessionCookie(res);
     res.headers.set("x-request-id", requestId);
     return res;
   }
@@ -63,6 +80,9 @@ export async function proxy(request: NextRequest) {
   }
 
   const res = NextResponse.next();
+  if (isAuthPage && request.cookies.get(SESSION_COOKIE)?.value) {
+    clearSessionCookie(res);
+  }
   res.headers.set("x-request-id", requestId);
   return res;
 }

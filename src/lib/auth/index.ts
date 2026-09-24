@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import { prisma, withDbRetry } from "@/lib/db";
 import {
   SESSION_COOKIE,
-  getSessionFromCookies,
+  clearSessionCookie,
   verifySessionToken,
   type SessionPayload,
 } from "@/lib/auth/session";
+import { resolveActiveSession } from "@/lib/auth/active-session";
 import { recordAuditLog } from "@/services/audit.service";
 import { safeLog } from "@/lib/security/safe-log";
 import { getRequestContext } from "@/lib/security/request";
@@ -37,7 +38,10 @@ export type OwnerUser = {
 };
 
 export async function getSession(): Promise<SessionPayload | null> {
-  return getSessionFromCookies();
+  const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+  return resolveActiveSession(token);
 }
 
 async function loadAuthUser(userId: string): Promise<AuthUser | null> {
@@ -88,8 +92,17 @@ async function loadAuthUser(userId: string): Promise<AuthUser | null> {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const session = await getSessionFromCookies();
-  if (!session) return null;
+  const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+
+  const session = await resolveActiveSession(token);
+  if (!session) {
+    const jwt = await verifySessionToken(token);
+    if (jwt) await clearSessionCookie();
+    return null;
+  }
+
   const user = await loadAuthUser(session.userId);
   if (!user) return null;
   if (user.status === "DISABLED" || user.status === "SUSPENDED") return null;
@@ -111,8 +124,11 @@ export async function requireAuthenticatedUser(): Promise<AuthUser> {
 }
 
 export async function requireOwner(): Promise<OwnerUser> {
-  const session = await getSessionFromCookies();
+  const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  const session = token ? await resolveActiveSession(token) : null;
   if (!session) {
+    if (token && (await verifySessionToken(token))) await clearSessionCookie();
     await recordUnauthorizedAdminAttempt(null, "missing_session");
     throw new AuthorizationError("Authentication required", "UNAUTHORIZED", 401);
   }
@@ -158,7 +174,9 @@ export async function requireSession(): Promise<SessionPayload | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return verifySessionToken(token);
+  const session = await resolveActiveSession(token);
+  if (!session && (await verifySessionToken(token))) await clearSessionCookie();
+  return session;
 }
 
 async function recordUnauthorizedAdminAttempt(

@@ -1,4 +1,9 @@
 import { safeLog } from "@/lib/security/safe-log";
+import {
+  GEMINI_MAX_ATTEMPTS,
+  geminiBackoffMs,
+  isRetryableGeminiStatus,
+} from "@/services/ai/gemini-retry";
 
 export type AiProviderName = "openai" | "gemini" | "rules";
 
@@ -23,6 +28,7 @@ export type CompleteChatResult = {
   provider: AiProviderName;
   error?:
     | "PROVIDER_UNAVAILABLE"
+    | "PROVIDER_BUSY"
     | "MULTIMODAL_PROVIDER_REQUIRED"
     | "PROVIDER_ERROR";
 };
@@ -92,7 +98,7 @@ export async function completeChat(
   const images = hasImages(normalized.messages);
 
   if (pref === "rules") {
-    return { text: null, provider: "rules", error: "PROVIDER_UNAVAILABLE" };
+    return { text: null, provider: "rules" };
   }
 
   if (images && !openaiConfigured() && !geminiConfigured()) {
@@ -113,8 +119,8 @@ export async function completeChat(
   };
 
   if (pref === "gemini") {
-    const text = await tryGemini();
-    if (text) return { text, provider: "gemini" };
+    const gemini = await tryGemini();
+    if (gemini?.text) return { text: gemini.text, provider: "gemini" };
     const fallback = await tryOpenAI();
     if (fallback) return { text: fallback, provider: "openai" };
     return {
@@ -122,20 +128,24 @@ export async function completeChat(
       provider: "gemini",
       error: images && !openaiConfigured() && !geminiConfigured()
         ? "MULTIMODAL_PROVIDER_REQUIRED"
-        : "PROVIDER_UNAVAILABLE",
+        : gemini?.busy
+          ? "PROVIDER_BUSY"
+          : "PROVIDER_UNAVAILABLE",
     };
   }
 
   const text = await tryOpenAI();
   if (text) return { text, provider: "openai" };
-  const fallback = await tryGemini();
-  if (fallback) return { text: fallback, provider: "gemini" };
+  const gemini = await tryGemini();
+  if (gemini?.text) return { text: gemini.text, provider: "gemini" };
   return {
     text: null,
     provider: "openai",
     error: images && !openaiConfigured() && !geminiConfigured()
       ? "MULTIMODAL_PROVIDER_REQUIRED"
-      : "PROVIDER_UNAVAILABLE",
+      : gemini?.busy
+        ? "PROVIDER_BUSY"
+        : "PROVIDER_UNAVAILABLE",
   };
 }
 
@@ -248,61 +258,108 @@ function toGeminiContents(messages: ChatTurn[]): { role: string; parts: GeminiPa
   return merged;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+type GeminiAttempt =
+  | { text: string }
+  | { retryable: true; retryAfter: string | null }
+  | { retryable: false };
+
 async function callGemini(
   system: string,
   messages: ChatTurn[],
   maxTokens: number,
   temperature: number
-) {
+): Promise<{ text: string | null; busy: boolean }> {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return null;
+  if (!key) return { text: null, busy: false };
   const contents = toGeminiContents(messages);
-  if (!contents.length) return null;
+  if (!contents.length) return { text: null, busy: false };
 
-  for (const model of geminiModels()) {
-    try {
-      const res = await fetchWithTimeout(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": key,
-          },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: system }] },
-            contents,
-            generationConfig: { temperature, maxOutputTokens: maxTokens },
-          }),
-        }
-      );
-      if (!res.ok) {
-        const errText = (await res.text()).slice(0, 400).replace(key, "[REDACTED]");
-        safeLog("warn", "Gemini request failed", {
-          model,
-          status: res.status,
-          error: errText,
-        });
-        if (res.status === 404 || res.status === 400 || res.status === 429 || res.status === 503) {
-          continue;
-        }
-        return null;
-      }
-      const json = (await res.json()) as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
-      };
-      const parts = json.candidates?.[0]?.content?.parts ?? [];
-      const text = parts
-        .map((p) => p.text || "")
-        .join("\n")
-        .trim();
-      if (text) return text;
-    } catch (error) {
-      safeLog("warn", "Gemini request threw", {
+  const models = geminiModels();
+  let attempt = 0;
+  let retriesUsed = 0;
+  let sawRetryable = false;
+
+  for (const model of models) {
+    while (attempt < GEMINI_MAX_ATTEMPTS) {
+      attempt += 1;
+      const outcome = await geminiOnce(
+        key,
         model,
-        error: String(error).replace(key, "[REDACTED]"),
-      });
+        system,
+        contents,
+        maxTokens,
+        temperature
+      );
+      if ("text" in outcome) return { text: outcome.text, busy: false };
+      if (!outcome.retryable) break;
+      sawRetryable = true;
+      if (attempt >= GEMINI_MAX_ATTEMPTS) {
+        return { text: null, busy: true };
+      }
+      await sleep(geminiBackoffMs(retriesUsed, outcome.retryAfter));
+      retriesUsed += 1;
     }
   }
-  return null;
+
+  return { text: null, busy: sawRetryable };
+}
+
+async function geminiOnce(
+  key: string,
+  model: string,
+  system: string,
+  contents: { role: string; parts: GeminiPart[] }[],
+  maxTokens: number,
+  temperature: number
+): Promise<GeminiAttempt> {
+  try {
+    const res = await fetchWithTimeout(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": key,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents,
+          generationConfig: { temperature, maxOutputTokens: maxTokens },
+        }),
+      },
+      25_000
+    );
+    if (!res.ok) {
+      const errText = (await res.text()).slice(0, 400).replace(key, "[REDACTED]");
+      safeLog("warn", "Gemini request failed", {
+        model,
+        status: res.status,
+        error: errText,
+      });
+      if (isRetryableGeminiStatus(res.status)) {
+        return { retryable: true, retryAfter: res.headers.get("retry-after") };
+      }
+      return { retryable: false };
+    }
+    const json = (await res.json()) as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+    const parts = json.candidates?.[0]?.content?.parts ?? [];
+    const text = parts
+      .map((p) => p.text || "")
+      .join("\n")
+      .trim();
+    if (text) return { text };
+    return { retryable: false };
+  } catch (error) {
+    safeLog("warn", "Gemini request threw", {
+      model,
+      error: String(error).replace(key, "[REDACTED]"),
+    });
+    return { retryable: true, retryAfter: null };
+  }
 }

@@ -27,9 +27,9 @@ export type AiTutorReply = {
 };
 
 export class TutorProviderError extends Error {
-  code: "PROVIDER_UNAVAILABLE" | "MULTIMODAL_PROVIDER_REQUIRED";
+  code: "PROVIDER_UNAVAILABLE" | "PROVIDER_BUSY" | "MULTIMODAL_PROVIDER_REQUIRED";
   constructor(
-    code: "PROVIDER_UNAVAILABLE" | "MULTIMODAL_PROVIDER_REQUIRED",
+    code: "PROVIDER_UNAVAILABLE" | "PROVIDER_BUSY" | "MULTIMODAL_PROVIDER_REQUIRED",
     message: string
   ) {
     super(message);
@@ -216,6 +216,13 @@ async function askStudyTutorInner(
     throw new TutorProviderError(
       "MULTIMODAL_PROVIDER_REQUIRED",
       "This photo needs a vision-capable AI. Configure OpenAI or Gemini, then retry."
+    );
+  }
+
+  if (!text && error === "PROVIDER_BUSY") {
+    throw new TutorProviderError(
+      "PROVIDER_BUSY",
+      "The AI service is busy right now. Try again in a moment."
     );
   }
 

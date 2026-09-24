@@ -101,8 +101,15 @@ export async function POST(request: Request) {
         return fail("Unknown action", { code: "VALIDATION_ERROR", status: 422 });
     }
   } catch (error) {
-    if (String(error).includes("NOT_FOUND")) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("NOT_FOUND")) {
       return fail("Not found", { code: "NOT_FOUND", status: 404 });
+    }
+    if (message === "PROVIDER_BUSY" || message === "PROVIDER_UNAVAILABLE") {
+      return fail("The AI service is busy right now. Try again in a moment.", {
+        code: "PROVIDER_UNAVAILABLE",
+        status: 503,
+      });
     }
     safeLog("error", "Study Buddy action failed", { error: String(error) });
     return serverError("Study Buddy is temporarily unavailable.");

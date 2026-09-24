@@ -70,6 +70,44 @@ export async function snoozeNotification(
 }
 
 /**
+ * Insert one notification. Concurrent callers with the same
+ * (userId, idempotencyKey) share one row. Unique conflicts do not throw.
+ * Other database errors propagate.
+ */
+async function insertNotificationOnce(input: {
+  userId: string;
+  category: NotificationCategory;
+  title: string;
+  body: string;
+  href?: string;
+  idempotencyKey: string;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  await prisma.userNotification.createMany({
+    data: [
+      {
+        userId: input.userId,
+        category: input.category,
+        title: input.title,
+        body: input.body,
+        href: input.href,
+        idempotencyKey: input.idempotencyKey,
+        metadata: input.metadata,
+      },
+    ],
+    skipDuplicates: true,
+  });
+  return prisma.userNotification.findUnique({
+    where: {
+      userId_idempotencyKey: {
+        userId: input.userId,
+        idempotencyKey: input.idempotencyKey,
+      },
+    },
+  });
+}
+
+/**
  * Create an in-app notification with idempotency.
  * Skips when study notifications flag is off or preferences pause all.
  */
@@ -88,29 +126,7 @@ export async function enqueueInAppNotification(input: {
 
   const prefs = await ensureNotificationPreferences(input.userId);
   if (prefs.pauseAll) return null;
-
-  try {
-    return await prisma.userNotification.create({
-      data: {
-        userId: input.userId,
-        category: input.category,
-        title: input.title,
-        body: input.body,
-        href: input.href,
-        idempotencyKey: input.idempotencyKey,
-        metadata: input.metadata,
-      },
-    });
-  } catch {
-    return prisma.userNotification.findUnique({
-      where: {
-        userId_idempotencyKey: {
-          userId: input.userId,
-          idempotencyKey: input.idempotencyKey,
-        },
-      },
-    });
-  }
+  return insertNotificationOnce(input);
 }
 
 /**
@@ -131,28 +147,15 @@ export async function enqueueCampusCircleNotification(input: {
   if (prefs.pauseAll) return null;
   if (prefs.campusSocial === false) return null;
 
-  try {
-    return await prisma.userNotification.create({
-      data: {
-        userId: input.userId,
-        category: "CAMPUS_CIRCLE",
-        title: input.title,
-        body: input.body,
-        href: input.href ?? "/dashboard/campus-circle",
-        idempotencyKey: input.idempotencyKey,
-        metadata: input.metadata,
-      },
-    });
-  } catch {
-    return prisma.userNotification.findUnique({
-      where: {
-        userId_idempotencyKey: {
-          userId: input.userId,
-          idempotencyKey: input.idempotencyKey,
-        },
-      },
-    });
-  }
+  return insertNotificationOnce({
+    userId: input.userId,
+    category: "CAMPUS_CIRCLE",
+    title: input.title,
+    body: input.body,
+    href: input.href ?? "/dashboard/campus-circle",
+    idempotencyKey: input.idempotencyKey,
+    metadata: input.metadata,
+  });
 }
 
 export async function markAllNotificationsRead(userId: string) {

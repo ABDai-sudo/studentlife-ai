@@ -196,40 +196,32 @@ async function createAndStoreSession(
   context?: { ipHash?: string; userAgentCat?: string }
 ) {
   const token = await createSessionToken({ userId, email });
-  await setSessionCookie(token);
 
   const maxAge = Number.parseInt(process.env.AUTH_SESSION_MAX_AGE || "604800", 10);
   const expiresAt = new Date(
     Date.now() + (Number.isFinite(maxAge) ? maxAge : 604800) * 1000
   );
 
-  try {
-    await prisma.authSession.create({
-      data: {
-        userId,
-        sessionTokenHash: hashToken(token),
-        userAgentCategory: context?.userAgentCat ?? null,
-        ipHash: context?.ipHash ?? null,
-        expiresAt,
-      },
-    });
-  } catch {
-    // optional until migration applied
-  }
+  await prisma.authSession.create({
+    data: {
+      userId,
+      sessionTokenHash: hashToken(token),
+      userAgentCategory: context?.userAgentCat ?? null,
+      ipHash: context?.ipHash ?? null,
+      expiresAt,
+    },
+  });
+  await setSessionCookie(token);
 }
 
 export async function logoutUser(): Promise<void> {
-  try {
-    const jar = await cookies();
-    const token = jar.get(SESSION_COOKIE)?.value;
-    if (token) {
-      await prisma.authSession.updateMany({
-        where: { sessionTokenHash: hashToken(token), revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-    }
-  } catch {
-    // ignore
+  const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  if (token) {
+    await prisma.authSession.updateMany({
+      where: { sessionTokenHash: hashToken(token), revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   }
   await clearSessionCookie();
   void trackAnalyticsEvent({ eventName: "logout" });

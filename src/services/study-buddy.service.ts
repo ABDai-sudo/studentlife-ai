@@ -606,7 +606,7 @@ async function maybeAiSummary(facts: Facts, items: DraftItem[]): Promise<string>
     `Plan items: ${items.map((i) => i.title).join("; ") || "none"}`,
   ].join("\n");
 
-  const { text } = await completeChat({
+  const { text, error } = await completeChat({
     system: [
       "You are Study Buddy for StudentLife AI.",
       "Write 2–4 short sentences explaining today's study order.",
@@ -617,7 +617,11 @@ async function maybeAiSummary(facts: Facts, items: DraftItem[]): Promise<string>
     user: `FACTS:\n${factLines}`,
     maxTokens: 280,
   });
-  return text || fallback;
+  if (text) return text;
+  if (error === "PROVIDER_BUSY" || error === "PROVIDER_UNAVAILABLE") {
+    return "The AI summary is temporarily unavailable. This plan uses your saved assignments and exams. Try again in a moment.";
+  }
+  return fallback;
 }
 
 const planInflight = new Map<string, ReturnType<typeof generateStudyBuddyPlanInner>>();
@@ -873,7 +877,7 @@ export async function askStudyBuddy(
 
   await appendMessage(userId, id, "USER", message);
 
-  const { text, provider } = await completeChat({
+  const { text, provider, error } = await completeChat({
     system: [
       "You are Study Buddy, a personal academic companion in StudentLife AI.",
       "Help the student decide what to study using only the FACTS block.",
@@ -885,7 +889,16 @@ export async function askStudyBuddy(
     maxTokens: 700,
   });
 
-  const reply = text || rulesChat(message, facts);
+  if (!text) {
+    if (error === "PROVIDER_BUSY" || error === "PROVIDER_UNAVAILABLE") {
+      throw new Error(error);
+    }
+    const reply = rulesChat(message, facts);
+    await appendMessage(userId, id, "ASSISTANT", reply, provider);
+    return { conversationId: id, reply, provider };
+  }
+
+  const reply = text;
   await appendMessage(userId, id, "ASSISTANT", reply, provider);
 
   return { reply, provider, conversationId: id };
