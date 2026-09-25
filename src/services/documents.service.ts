@@ -105,28 +105,38 @@ export async function ingestUploadedFile(
             : ".jpg"
           : ".bin";
 
+  const processed = processBytes(mime, input.bytes);
+  let storageKey: string | null = null;
   try {
-    const storageKey = await saveUserFile(userId, row.id, input.bytes, ext);
-    const processed = processBytes(mime, input.bytes);
-    const updated = await prisma.uploadedDocument.update({
-      where: { id: row.id },
-      data: {
-        storageKey,
-        processStatus: processed.status,
-        extractedText: processed.text,
-        textExcerpt: processed.text.slice(0, 1500) || null,
-        pageCount: processed.pageCount,
-        errorCode: processed.errorCode,
-      },
-    });
-    return toDto(updated);
+    storageKey = await saveUserFile(userId, row.id, input.bytes, ext);
   } catch {
-    const failed = await prisma.uploadedDocument.update({
-      where: { id: row.id },
-      data: { processStatus: "FAILED", errorCode: "PROCESS_FAILED" },
-    });
-    return toDto(failed);
+    storageKey = null;
   }
+
+  const imageInline =
+    mime.startsWith("image/") && !storageKey && input.bytes.length <= 500_000
+      ? input.bytes.toString("base64")
+      : "";
+  const extractedText = processed.text || imageInline;
+  const status =
+    mime.startsWith("image/") && (storageKey || imageInline)
+      ? "READY"
+      : processed.status;
+  const errorCode =
+    status === "READY" ? null : processed.errorCode || (storageKey ? null : "PROCESS_FAILED");
+
+  const updated = await prisma.uploadedDocument.update({
+    where: { id: row.id },
+    data: {
+      storageKey,
+      processStatus: status,
+      extractedText,
+      textExcerpt: (processed.text || "").slice(0, 1500) || null,
+      pageCount: processed.pageCount,
+      errorCode,
+    },
+  });
+  return toDto(updated);
 }
 
 function processBytes(
@@ -265,12 +275,11 @@ export async function getReadyDocumentContext(
       continue;
     }
     if (doc.kind === "IMAGE" || doc.mimeType.startsWith("image/")) {
-      if (!doc.storageKey) {
-        failed.push(doc.fileName);
-        continue;
-      }
-      const bytes = await readUserFile(doc.storageKey);
-      if (!bytes) {
+      const stored = doc.storageKey ? await readUserFile(doc.storageKey) : null;
+      const bytes =
+        stored ??
+        (doc.extractedText ? Buffer.from(doc.extractedText, "base64") : null);
+      if (!bytes?.length) {
         failed.push(doc.fileName);
         continue;
       }
