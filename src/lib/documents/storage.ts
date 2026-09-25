@@ -18,12 +18,21 @@ export async function saveUserFile(
   ext = ""
 ): Promise<string> {
   const filePath = userFilePath(userId, id, ext);
-  await mkdir(path.dirname(filePath), { recursive: true });
-  await writeFile(filePath, bytes);
-  return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
+  try {
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, bytes);
+    return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
+  } catch {
+    if (bytes.length > 1_500_000) throw new Error("FILE_STORE_FAILED");
+    return `inline:${bytes.toString("base64")}`;
+  }
 }
 
 export async function readUserFile(storageKey: string): Promise<Buffer | null> {
+  if (storageKey.startsWith("inline:")) {
+    const bytes = Buffer.from(storageKey.slice("inline:".length), "base64");
+    return bytes.length ? bytes : null;
+  }
   try {
     const abs = path.isAbsolute(storageKey)
       ? storageKey
@@ -38,7 +47,7 @@ export async function readUserFile(storageKey: string): Promise<Buffer | null> {
 }
 
 export async function deleteUserFile(storageKey: string | null | undefined) {
-  if (!storageKey) return;
+  if (!storageKey || storageKey.startsWith("inline:")) return;
   try {
     const abs = path.join(process.cwd(), storageKey);
     await unlink(abs);
