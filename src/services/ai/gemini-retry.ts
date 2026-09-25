@@ -11,7 +11,8 @@ export function isRetryableGeminiStatus(status: number): boolean {
  */
 export function geminiBackoffMs(
   attemptIndex: number,
-  retryAfterHeader: string | null
+  retryAfterHeader: string | null,
+  jitterMs = 0
 ): number {
   const rawBase = Number(process.env.GEMINI_RETRY_BASE_MS || "400");
   const base =
@@ -23,5 +24,6 @@ export function geminiBackoffMs(
     }
   }
   const exp = Math.min(2_000, Math.round(base * 2 ** Math.max(0, attemptIndex)));
-  return exp;
+  const jitter = Number.isFinite(jitterMs) ? Math.max(0, Math.min(250, jitterMs)) : 0;
+  return Math.min(2_000, exp + Math.round(jitter));
 }

@@ -212,17 +212,17 @@ async function askStudyTutorInner(
     temperature: personality === "ACADEMIC_VILLAIN" ? 0.25 : 0.5,
   });
 
-  if (error === "MULTIMODAL_PROVIDER_REQUIRED" || (!text && files.images.length && error)) {
-    throw new TutorProviderError(
-      "MULTIMODAL_PROVIDER_REQUIRED",
-      "This photo needs a vision-capable AI. Configure OpenAI or Gemini, then retry."
-    );
-  }
-
   if (!text && error === "PROVIDER_BUSY") {
     throw new TutorProviderError(
       "PROVIDER_BUSY",
       "The AI service is busy right now. Try again in a moment."
+    );
+  }
+
+  if (error === "MULTIMODAL_PROVIDER_REQUIRED") {
+    throw new TutorProviderError(
+      "MULTIMODAL_PROVIDER_REQUIRED",
+      "This photo needs a vision-capable AI. Configure OpenAI or Gemini, then retry."
     );
   }
 

@@ -94,7 +94,67 @@ describe("gemini retry policy", () => {
     });
     assert.equal(result.text, null);
     assert.equal(result.error, "PROVIDER_BUSY");
-    assert.equal(calls, GEMINI_MAX_ATTEMPTS);
-    assert.ok(calls <= 3);
+    assert.equal(calls, GEMINI_MAX_ATTEMPTS * 3);
+    assert.ok(calls <= 9);
+  });
+
+  it("tries the next model after three busy responses", async () => {
+    process.env.AI_PROVIDER = "gemini";
+    process.env.GEMINI_API_KEY = "unit-test-key";
+    process.env.GEMINI_MODEL = "gemini-test";
+    process.env.GEMINI_RETRY_BASE_MS = "1";
+    delete process.env.OPENAI_API_KEY;
+    let calls = 0;
+    globalThis.fetch = (async () => {
+      calls += 1;
+      if (calls <= GEMINI_MAX_ATTEMPTS) {
+        return new Response(JSON.stringify({ error: { message: "high demand" } }), {
+          status: 503,
+        });
+      }
+      return new Response(
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: "fallback answer" }] } }],
+        }),
+        { status: 200 }
+      );
+    }) as typeof fetch;
+
+    const result = await completeChat({
+      system: "test",
+      user: "question",
+      maxTokens: 20,
+    });
+    assert.equal(result.text, "fallback answer");
+    assert.equal(result.error, undefined);
+    assert.equal(calls, GEMINI_MAX_ATTEMPTS + 1);
+  });
+
+  it("maps image capacity failures to PROVIDER_BUSY", async () => {
+    process.env.AI_PROVIDER = "gemini";
+    process.env.GEMINI_API_KEY = "unit-test-key";
+    process.env.GEMINI_MODEL = "gemini-test";
+    process.env.GEMINI_RETRY_BASE_MS = "1";
+    delete process.env.OPENAI_API_KEY;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ error: { message: "high demand" } }), {
+        status: 503,
+      })) as typeof fetch;
+
+    const result = await completeChat({
+      system: "test",
+      messages: [
+        {
+          role: "user",
+          parts: [
+            { type: "text", text: "What is in this image?" },
+            { type: "image", mimeType: "image/png", base64: "aGk=" },
+          ],
+        },
+      ],
+      maxTokens: 20,
+    });
+    assert.equal(result.text, null);
+    assert.equal(result.error, "PROVIDER_BUSY");
   });
 });

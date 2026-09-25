@@ -222,9 +222,12 @@ function toOpenAiContent(parts: ChatContentPart[]) {
   ];
 }
 
+export const GEMINI_PRIMARY_MODEL = "gemini-3.8-flash";
+export const GEMINI_FALLBACK_MODEL = "gemini-3.7-flash";
+
 function geminiModels(): string[] {
   const preferred = process.env.GEMINI_MODEL?.trim();
-  const list = [preferred, "gemini-3.6-flash", "gemini-flash-latest"].filter(
+  const list = [preferred, GEMINI_PRIMARY_MODEL, GEMINI_FALLBACK_MODEL].filter(
     (m): m is string => Boolean(m)
   );
   return [...new Set(list)];
@@ -279,13 +282,10 @@ async function callGemini(
   if (!contents.length) return { text: null, busy: false };
 
   const models = geminiModels();
-  let attempt = 0;
-  let retriesUsed = 0;
   let sawRetryable = false;
 
   for (const model of models) {
-    while (attempt < GEMINI_MAX_ATTEMPTS) {
-      attempt += 1;
+    for (let attempt = 0; attempt < GEMINI_MAX_ATTEMPTS; attempt += 1) {
       const outcome = await geminiOnce(
         key,
         model,
@@ -297,11 +297,9 @@ async function callGemini(
       if ("text" in outcome) return { text: outcome.text, busy: false };
       if (!outcome.retryable) break;
       sawRetryable = true;
-      if (attempt >= GEMINI_MAX_ATTEMPTS) {
-        return { text: null, busy: true };
-      }
-      await sleep(geminiBackoffMs(retriesUsed, outcome.retryAfter));
-      retriesUsed += 1;
+      if (attempt + 1 >= GEMINI_MAX_ATTEMPTS) break;
+      const jitter = Math.floor(Math.random() * 200);
+      await sleep(geminiBackoffMs(attempt, outcome.retryAfter, jitter));
     }
   }
 
